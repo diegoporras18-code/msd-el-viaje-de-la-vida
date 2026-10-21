@@ -22,7 +22,7 @@ npm run preview  # sirve el build
 
 ## Datos
 
-Las cifras de la sección 2 son **estimaciones de GLOBOCAN 2022** (Global Cancer Observatory, IARC/OMS) para Colombia, no conteos observados de 2026. La fuente se muestra en la página.
+Las cifras de la sección 2 son **estimaciones de GLOBOCAN 2024** (Global Cancer Observatory, IARC/OMS) para Colombia, ambos sexos, no conteos observados de 2026. La fuente se muestra en la página.
 
 ## Publicación en GitHub Pages
 

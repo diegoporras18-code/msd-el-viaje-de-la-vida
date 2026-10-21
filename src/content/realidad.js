@@ -1,7 +1,8 @@
 // Contenido editable de la Sección 2 · Una realidad que no podemos ignorar.
 //
-// IMPORTANTE sobre las cifras: son ESTIMACIONES de GLOBOCAN 2022 (IARC/OMS)
-// para Colombia, tal como las publica el Global Cancer Observatory.
+// IMPORTANTE sobre las cifras: son ESTIMACIONES de GLOBOCAN 2024 (IARC/OMS)
+// para Colombia, ambos sexos, tal como las publica el Global Cancer Observatory
+// (ficha de Colombia, "Statistics at a glance, 2024").
 // No son conteos observados de 2026. Si se actualizan, cambia también `fuente`.
 
 export const realidad = {
@@ -39,9 +40,9 @@ export const realidad = {
   ],
 
   aviso:
-    'Cifras estimadas, no conteos observados de 2026. Corresponden a las estimaciones de GLOBOCAN 2022 para Colombia.',
+    'Cifras estimadas, no conteos observados de 2026. Corresponden a las estimaciones de GLOBOCAN 2024 para Colombia (ambos sexos).',
   fuente: {
-    texto: 'Fuente: GLOBOCAN 2022 · Global Cancer Observatory, Agencia Internacional de Investigación sobre el Cáncer (IARC/OMS).',
+    texto: 'Fuente: GLOBOCAN 2024 · Global Cancer Observatory, Agencia Internacional de Investigación sobre el Cáncer (IARC/OMS).',
     url: 'https://gco.iarc.who.int/today/en/fact-sheets-populations/170/colombia',
   },
 
