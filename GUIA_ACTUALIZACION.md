@@ -1,8 +1,10 @@
 # Guía de actualización — El Viaje de la Vida
 
-Toda la escucha social sale de **una sola base maestra** acumulativa de SentiOne. Para actualizarla, adjunta la nueva exportación a Claude Code: Claude la incorpora sin duplicar, clasifica por contenido las menciones nuevas, actualiza las cifras y los hallazgos, y abre un Pull Request. Al fusionarlo, la web pública se actualiza sola en uno o dos minutos.
+Toda la escucha social sale de **una sola base maestra** acumulativa de SentiOne, guardada en el repositorio **privado** `msd-el-viaje-de-la-vida-datos`. Este repositorio público solo recibe los resultados agregados que ve el cliente.
 
-**Adjuntar Excel → Analizar → Actualizar resultados → Pull Request → Fusionar.**
+Para actualizar, adjunta la nueva exportación a Claude Code. Claude conecta el repositorio privado y recupera la base. Luego incorpora la exportación sin duplicar, clasifica por contenido las menciones nuevas y guarda la base actualizada en el repositorio privado. Por último, abre un Pull Request en el repositorio público solo con los agregados y los hallazgos. Al fusionarlo, la web se actualiza sola en uno o dos minutos.
+
+**Adjuntar Excel → Base privada actualizada → Pull Request público con agregados → Fusionar.**
 
 ## Desde el iPhone
 
@@ -12,13 +14,14 @@ Toda la escucha social sale de **una sola base maestra** acumulativa de SentiOne
 
    > Procesa el Excel adjunto de SentiOne, incorpóralo a la base maestra sin duplicar registros, clasifica con Claude las menciones nuevas por sentimiento, temática, emoción y marcas, actualiza las cifras, los gráficos y los hallazgos sustentados, ejecuta las pruebas y crea un Pull Request para publicar la actualización.
 
-4. Claude responde con un resumen:
+4. Si la app pregunta si permites conectar `msd-el-viaje-de-la-vida-datos` a la sesión, acepta. Es el repositorio privado de la base maestra.
+5. Claude responde con un resumen:
    - Filas exportadas y menciones únicas.
    - Menciones nuevas y ya existentes.
    - Cifras que cambian y por qué.
    - Casos marcados para revisión.
-5. Revisa el Pull Request. Cuando la comprobación **Validar Pull Request** esté en verde, pulsa **Merge** en la app de GitHub o pídeselo a Claude.
-6. En uno o dos minutos, la web pública muestra la nueva versión: https://diegoporras18-code.github.io/msd-el-viaje-de-la-vida/
+6. Revisa el Pull Request. Cuando la comprobación **Validar Pull Request** esté en verde, pulsa **Merge** en la app de GitHub o pídeselo a Claude.
+7. En uno o dos minutos, la web pública muestra la nueva versión: https://diegoporras18-code.github.io/msd-el-viaje-de-la-vida/
 
 Si solo quieres revisar el resultado antes de crear el Pull Request, añade al mensaje: *«Muéstrame el resumen antes de crear el Pull Request.»*
 
@@ -38,14 +41,16 @@ Si solo quieres revisar el resultado antes de crear el Pull Request, añade al m
 - **Histórico acumulado.** Las menciones ya clasificadas conservan su clasificación. Solo se clasifican las nuevas o las editadas.
 - **Clasificación por contenido.** Incluye sentimiento (general, hacia MSD o la campaña y hacia el sistema de salud), temáticas múltiples, emoción, intención de acción, marcas y relevancia, cada una con un nivel de confianza. El sentimiento original de SentiOne se conserva como referencia. Los criterios están en `datos/CRITERIOS_CLASIFICACION.md`.
 - **Sin filtros geográficos.** Se usan todos los registros, con o sin país.
-- **Privacidad.** El repositorio nunca contiene el Excel, los textos, las URLs de publicaciones privadas ni los autores. La web solo recibe resultados agregados y evidencias públicas aprobadas.
-- **Cifras explicadas.** Cada actualización genera un informe en `datos/informes/` con las cifras que cambian y el motivo.
+- **Privacidad.** La base maestra y los informes internos solo están en el repositorio privado. Antes de cada guardado se comprueba en GitHub que sigue siendo privado; si no lo es, no se guarda nada. Ningún repositorio contiene el Excel, los textos, las URLs de publicaciones privadas ni los autores. La web solo recibe resultados agregados y evidencias públicas aprobadas.
+- **Cifras explicadas.** Cada actualización genera un informe interno en el repositorio privado con las cifras que cambian y el motivo. El Pull Request resume esas cifras.
 
 ## Primera actualización real
 
 La web muestra hoy una **referencia preliminar**: 2.837 registros del 21 de septiembre al 20 de octubre de 2026, 2.611 de ellos en octubre. Para pasar a la base maestra clasificada, adjunta **el Excel original de esa exportación** con el prompt de arriba. Claude comprobará que las filas coinciden con la referencia antes de reemplazarla. Las cifras pasarán a contar menciones únicas, y pueden ser algo menores si había duplicados.
 
 ## Si algo falla
+
+- **Claude no puede abrir el repositorio privado:** en https://github.com/apps/claude/installations/select_target, en tu cuenta → **Configure** → **Repository access**, añade `msd-el-viaje-de-la-vida-datos` y pulsa **Save**.
 
 - **Validar Pull Request en rojo:** pídele a Claude Code que revise el error y lo corrija en el mismo Pull Request.
 - **La web no cambia:** comprueba en GitHub → *Actions* que *Deploy to GitHub Pages* terminó y recarga la página.

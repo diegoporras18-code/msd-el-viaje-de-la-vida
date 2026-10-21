@@ -1,8 +1,10 @@
 // Pruebas de la base maestra de SentiOne y de los resultados públicos: `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { execFileSync, execSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import writeXlsxFile from 'write-excel-file/node';
 import { readSheet } from 'read-excel-file/node';
 
@@ -37,7 +39,6 @@ test('referencia preliminar: 2.837 registros, 2.611 en octubre, distribuciones c
   assert.equal(sum(referencia.distribuciones.plataformas), 2611);
   assert.equal(sum(referencia.distribuciones.sentimiento), 2611);
   assert.deepEqual(validarResultados(publicado), []);
-  assert.deepEqual(validarMaestra(leer('../datos/maestra/base-maestra.json')), []);
 });
 
 test('cifras publicadas: promedio, pico, crecimiento normalizado y días sin datos', () => {
@@ -202,10 +203,73 @@ test('conclusiones: hechos existentes, tres hallazgos disponibles', async () => 
 test('el sitio público no incluye administración ni datos originales', () => {
   const tracked = execSync('git ls-files', { encoding: 'utf8' }).split('\n');
   assert.ok(!tracked.some((f) => /\.(xlsx|xlsm|xls|csv)$/i.test(f) || f.startsWith('entradas/')), 'no hay exportaciones originales en el repositorio');
+  assert.ok(!tracked.some((f) => /base-maestra|(^|\/)informes\/|(^|\/)lotes\//.test(f)), 'la base maestra y los informes solo viven en el repositorio privado');
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
   const cliente = walk('src').filter((f) => /\.(jsx?|css)$/.test(f) && !f.startsWith('src/lib/data/'));
   for (const f of cliente) {
     const s = readFileSync(f, 'utf8');
     assert.ok(!/maestra\.js|publicar\.js|process\.js|papaparse|read-excel-file|#\/importar|localStorage/.test(s), `${f} no debe incluir herramientas de administración`);
   }
+});
+
+test('flujo completo de la CLI con un repositorio privado simulado', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'evdlv-'));
+  const remoto = join(tmp, 'remoto.git');
+  const datos = join(tmp, 'datos');
+  const resultados = join(tmp, 'resultados.json');
+  const sh = (cmd, a, cwd) => execFileSync(cmd, a, { cwd, encoding: 'utf8', env: { ...process.env, SENTIONE_DATOS: datos, SENTIONE_RESULTADOS: resultados, SENTIONE_PRUEBA: '1' } });
+  const lotes = new URL('../entradas/lotes/', import.meta.url);
+  const habiaLotes = existsSync(lotes);
+  try {
+    sh('git', ['init', '-q', '--bare', remoto]);
+    sh('git', ['clone', '-q', remoto, datos]);
+    sh('npm', ['run', '-s', 'sentione', '--', 'inicializar']);
+    const xlsx = join(tmp, 'export.xlsx');
+    writeFileSync(
+      xlsx,
+      await writeXlsxFile([
+        HEADERS.map((value) => ({ value })),
+        ...[1, 2, 3].map((i) => [{ value: `X${i}` }, { value: new Date(Date.UTC(2026, 9, 24, 20 + i)), type: Date, format: 'yyyy-mm-dd hh:mm' }, { value: 'Instagram' }, { value: `https://instagram.com/p/${i}` }, { value: i < 3 ? 'Gracias MSD y Fonseca #ElViajeDeLaVida' : 'Mi tía fue diagnosticada' }, { value: `persona${i}` }, { value: '' }, { value: '' }, { value: 5 }]),
+      ]).toBuffer(),
+    );
+    sh('npm', ['run', '-s', 'sentione', '--', 'importar', xlsx]);
+    const lote = JSON.parse(readFileSync(new URL('lote-001.json', lotes), 'utf8'));
+    assert.equal(lote.items.length, 2, 'los textos idénticos se clasifican una vez');
+    writeFileSync(new URL('lote-001.resultado.json', lotes), JSON.stringify({ lote: lote.lote, fuente: 'claude', resultados: lote.items.map((it) => ({ clave: it.clave, ...CLS, marcas: it.menciones })) }));
+    sh('npm', ['run', '-s', 'sentione', '--', 'aplicar']);
+    sh('npm', ['run', '-s', 'sentione', '--', 'publicar']);
+    sh('npm', ['run', '-s', 'sentione', '--', 'guardar']);
+
+    const res = JSON.parse(readFileSync(resultados, 'utf8'));
+    assert.deepEqual(validarResultados(res), []);
+    assert.deepEqual([res.totales.unicos, res.totales.clasificados], [3, 3]);
+    const publico = readFileSync(resultados, 'utf8');
+    for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!publico.includes(x), `los resultados públicos no contienen «${x}»`);
+
+    const enRemoto = execFileSync('git', ['--git-dir', remoto, 'ls-tree', '-r', '--name-only', 'HEAD'], { encoding: 'utf8' });
+    assert.match(enRemoto, /maestra\/base-maestra\.json/);
+    assert.match(enRemoto, /informes\/actualizacion-/);
+    const maestraRemota = execFileSync('git', ['--git-dir', remoto, 'show', 'HEAD:maestra/base-maestra.json'], { encoding: 'utf8' });
+    assert.deepEqual(validarMaestra(JSON.parse(maestraRemota)), []);
+    for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!maestraRemota.includes(x), `la base privada no guarda «${x}»`);
+    assert.ok(!/\.xlsx|lote-/.test(enRemoto), 'ni el Excel ni los lotes llegan al repositorio privado');
+
+    // Segunda exportación solapada: no duplica y no reclasifica.
+    sh('npm', ['run', '-s', 'sentione', '--', 'importar', xlsx]);
+    const sin = readFileSync(new URL('lote-001.json', lotes), 'utf8');
+    assert.equal(sin, '', 'sin registros nuevos no hay lotes que clasificar');
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+    if (!habiaLotes) rmSync(new URL('../entradas/', import.meta.url), { recursive: true, force: true });
+  }
+});
+
+test('la CLI se niega a guardar la base maestra dentro del repositorio público', () => {
+  let error = '';
+  try {
+    execFileSync('npm', ['run', '-s', 'sentione', '--', 'estado'], { encoding: 'utf8', stdio: 'pipe', env: { ...process.env, SENTIONE_DATOS: new URL('../datos', import.meta.url).pathname } });
+  } catch (e) {
+    error = String(e.stderr);
+  }
+  assert.match(error, /no puede estar dentro del repositorio público/);
 });

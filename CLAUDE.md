@@ -10,7 +10,11 @@ Micrositio de storytelling y escucha social sobre la campaña de concientizació
 
 ## Datos
 
-- **Base maestra única:** `datos/maestra/base-maestra.json`. Es privada del proceso y la web no la usa. Tiene una línea por mención única, seudonimizada y sin textos, URLs, autores ni país.
+- **Dos repositorios:**
+  - Este repositorio es **público**: presentación, código, skills, criterios, referencia agregada y resultados agregados.
+  - La **base maestra** y los **informes de actualización** viven solo en el repositorio **privado** `diegoporras18-code/msd-el-viaje-de-la-vida-datos` (`maestra/base-maestra.json`, `informes/`). Se clona junto a este, en `../msd-el-viaje-de-la-vida-datos`, conectándolo a la sesión con `add_repo` (acceso `push`).
+  - La base maestra tiene una línea por mención única, seudonimizada y sin textos, URLs, autores ni país.
+- **Nunca** copies la base maestra, los informes ni registros individuales a este repositorio. Nunca cambies la visibilidad del repositorio privado. `npm run sentione -- guardar` verifica que es privado antes de cada push.
 - **Resultados públicos:** `src/data/resultados.json`. Solo agregados (cubo de conteos) y hashtags con al menos 2 usos. Se generan con `npm run sentione -- publicar`.
 - **Referencia de validación:** `datos/maestra/referencia.json`, con los agregados revisados del 21 de septiembre al 20 de octubre de 2026 (2.837 registros; 2.611 en octubre).
 - **Exportaciones originales:** solo en `entradas/`, que está en `.gitignore`. Nunca se suben.

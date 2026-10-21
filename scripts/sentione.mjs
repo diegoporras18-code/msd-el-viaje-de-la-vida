@@ -1,14 +1,23 @@
 #!/usr/bin/env node
-// Actualización privada de la base maestra de SentiOne (solo para Claude Code / desarrollo).
+// Actualización de la escucha social de SentiOne (solo Claude Code / desarrollo; nunca en la web).
 //
+// La base maestra y los informes viven en el repositorio PRIVADO msd-el-viaje-de-la-vida-datos,
+// clonado junto a este repositorio (../msd-el-viaje-de-la-vida-datos) o en SENTIONE_DATOS / --datos.
+// Este repositorio público solo recibe src/data/resultados.json (agregados).
+//
+//   npm run sentione -- inicializar        # prepara un repositorio privado vacío (una sola vez)
 //   npm run sentione -- estado
 //   npm run sentione -- importar entradas/exportacion.xlsx [--desde AAAA-MM-DD --hasta AAAA-MM-DD] [--hoja N] [--columna campo=Encabezado] [--seco]
 //   npm run sentione -- aplicar            # aplica entradas/lotes/lote-NNN.resultado.json
-//   npm run sentione -- publicar           # genera src/data/resultados.json y el informe
+//   npm run sentione -- publicar           # genera src/data/resultados.json y el informe privado
+//   npm run sentione -- guardar            # verifica que el repositorio es privado, hace commit y push
 //   npm run sentione -- verificar
 //
-// Nada de entradas/ (Excel, textos, lotes) se sube al repositorio: está en .gitignore.
+// Nada de entradas/ (Excel, textos, lotes) se guarda en ningún repositorio: está en .gitignore.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { relative, resolve, isAbsolute } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import readExcelFile from 'read-excel-file/node';
 import Papa from 'papaparse';
 import { CAMPOS, detectHeaderRow, suggestMapping, validateMapping } from '../src/lib/data/columns.js';
@@ -19,30 +28,76 @@ import { hechos } from '../src/lib/data/hechos.js';
 import { normalizeText } from '../src/lib/data/text.js';
 import { CRITERIOS_VERSION } from '../src/config/clasificacion.js';
 
-const RUTA = {
-  maestra: new URL('../datos/maestra/base-maestra.json', import.meta.url),
-  referencia: new URL('../datos/maestra/referencia.json', import.meta.url),
-  resultados: new URL('../src/data/resultados.json', import.meta.url),
-  informes: new URL('../datos/informes/', import.meta.url),
-  lotes: new URL('../entradas/lotes/', import.meta.url),
-};
-
 const [cmd, ...args] = process.argv.slice(2);
 const opt = (name) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : undefined;
 };
 const opts = (name) => args.flatMap((a, i) => (a === `--${name}` ? [args[i + 1]] : []));
+
+export const REPO_PRIVADO = 'diegoporras18-code/msd-el-viaje-de-la-vida-datos';
+const RAIZ = fileURLToPath(new URL('..', import.meta.url));
+const DATOS = resolve(opt('datos') ?? process.env.SENTIONE_DATOS ?? resolve(RAIZ, '..', 'msd-el-viaje-de-la-vida-datos'));
+const carpeta = (p) => pathToFileURL(`${p.replace(/\/+$/, '')}/`);
+const RUTA = {
+  maestra: new URL('maestra/base-maestra.json', carpeta(DATOS)),
+  informes: new URL('informes/', carpeta(DATOS)),
+  referencia: new URL('../datos/maestra/referencia.json', import.meta.url),
+  resultados: process.env.SENTIONE_RESULTADOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS)) : new URL('../src/data/resultados.json', import.meta.url),
+  lotes: new URL('../entradas/lotes/', import.meta.url),
+};
+
 const leer = (url) => JSON.parse(readFileSync(url, 'utf8'));
-const leerMaestra = () => (existsSync(RUTA.maestra) ? leer(RUTA.maestra) : emptyMaestra());
 const hoy = () => new Date().toISOString().slice(0, 10);
 const fmt = (n) => new Intl.NumberFormat('es-CO').format(n);
 const fallar = (msg) => {
   console.error(`✗ ${msg}`);
   process.exit(1);
 };
+const git = (...a) => execFileSync('git', ['-C', DATOS, ...a], { encoding: 'utf8' }).trim();
+
+/** La base maestra nunca puede vivir dentro del repositorio público. */
+function comprobarUbicacion() {
+  const rel = relative(RAIZ, DATOS);
+  if (!rel || (!rel.startsWith('..') && !isAbsolute(rel))) fallar('La base maestra no puede estar dentro del repositorio público.');
+  if (!existsSync(DATOS)) fallar(`No encuentro el repositorio privado en ${DATOS}. Conéctalo y clónalo junto a este repositorio (skill actualizar-sentione, paso 1).`);
+}
+
+/**
+ * Antes de escribir o publicar en el repositorio de datos, confirma en GitHub que es privado.
+ * Solo las pruebas automáticas (SENTIONE_PRUEBA=1) pueden usar un repositorio local sin GitHub.
+ */
+function comprobarPrivado() {
+  comprobarUbicacion();
+  let remoto = '';
+  try {
+    remoto = git('remote', 'get-url', 'origin');
+  } catch {
+    fallar('El repositorio de datos no tiene remoto «origin».');
+  }
+  const m = remoto.match(/github\.com[/:]([^/]+\/[^/.]+?)(?:\.git)?$/);
+  if (!m) {
+    if (process.env.SENTIONE_PRUEBA === '1') return 'local (prueba)';
+    fallar(`El remoto «${remoto}» no es un repositorio de GitHub verificable.`);
+  }
+  if (m[1].toLowerCase() !== REPO_PRIVADO) fallar(`El repositorio de datos debe ser ${REPO_PRIVADO}, no ${m[1]}.`);
+  let privado;
+  try {
+    privado = execFileSync('gh', ['api', `repos/${m[1]}`, '--jq', '.private'], { encoding: 'utf8' }).trim();
+  } catch {
+    fallar(`No pude comprobar en GitHub la visibilidad de ${m[1]}: no se guarda nada.`);
+  }
+  if (privado !== 'true') fallar(`${m[1]} NO es privado en GitHub: no se guarda nada. Vuelve a hacerlo privado antes de continuar.`);
+  return m[1];
+}
+
+const leerMaestra = () => {
+  comprobarUbicacion();
+  return existsSync(RUTA.maestra) ? leer(RUTA.maestra) : emptyMaestra();
+};
 
 function guardarMaestra(m) {
+  mkdirSync(new URL('.', RUTA.maestra), { recursive: true });
   const errores = validarMaestra(m);
   if (errores.length) fallar(`La base maestra no es válida:\n  ${errores.join('\n  ')}`);
   writeFileSync(RUTA.maestra, serializarMaestra(m));
@@ -206,12 +261,51 @@ function estado() {
 }
 
 function verificar() {
-  const e1 = validarMaestra(leerMaestra());
   const e2 = validarResultados(leer(RUTA.resultados));
+  const e1 = existsSync(DATOS) ? validarMaestra(leerMaestra()) : [];
   if (e1.length || e2.length) fallar([...e1, ...e2].join('\n  '));
-  console.log('✓ Base maestra y resultados válidos.');
+  console.log(`✓ Resultados públicos válidos${existsSync(DATOS) ? ' y base maestra privada válida' : ' (repositorio privado no conectado: base maestra no comprobada)'}.`);
 }
 
-const COMANDOS = { importar, aplicar, publicar, estado, verificar };
+function inicializar() {
+  comprobarUbicacion();
+  mkdirSync(new URL('maestra/', carpeta(DATOS)), { recursive: true });
+  mkdirSync(RUTA.informes, { recursive: true });
+  if (!existsSync(RUTA.maestra)) writeFileSync(RUTA.maestra, serializarMaestra(emptyMaestra()));
+  if (!existsSync(new URL('informes/.gitkeep', carpeta(DATOS)))) writeFileSync(new URL('informes/.gitkeep', carpeta(DATOS)), '');
+  writeFileSync(new URL('.gitignore', carpeta(DATOS)), '# Nunca guardar exportaciones originales ni textos de publicaciones.\nentradas/\n*.xlsx\n*.xlsm\n*.xls\n*.csv\nlotes/\n');
+  writeFileSync(
+    new URL('README.md', carpeta(DATOS)),
+    `# El Viaje de la Vida · datos privados
+
+**Repositorio privado. No cambiar nunca su visibilidad a pública.**
+
+Contiene la base maestra acumulativa de escucha social de SentiOne (\`maestra/base-maestra.json\`): una línea por mención única, seudonimizada, con su clasificación semántica, el histórico de importaciones y las revisiones manuales, más los informes internos de cada actualización (\`informes/\`).
+
+No contiene exportaciones originales, textos de publicaciones, URLs, autores ni país.
+
+Lo gestiona Claude Code con la skill \`actualizar-sentione\` del repositorio público \`msd-el-viaje-de-la-vida\`, que solo recibe resultados agregados.
+`,
+  );
+  console.log(`✓ Repositorio de datos preparado en ${DATOS}.`);
+}
+
+function guardar() {
+  const repo = comprobarPrivado();
+  const errores = validarMaestra(leerMaestra());
+  if (errores.length) fallar(`La base maestra no es válida:\n  ${errores.join('\n  ')}`);
+  const sueltos = git('ls-files', '--others', '--cached', '--exclude-standard').split('\n').filter((f) => /\.(xlsx|xlsm|xls|csv)$/i.test(f) || f.startsWith('entradas/') || f.startsWith('lotes/'));
+  if (sueltos.length) fallar(`Hay archivos que no deben guardarse: ${sueltos.join(', ')}`);
+  git('add', '-A', 'maestra', 'informes', 'README.md', '.gitignore');
+  if (!git('status', '--porcelain')) return console.log('Sin cambios en el repositorio de datos.');
+  const m = leerMaestra();
+  const ult = m.importaciones[m.importaciones.length - 1];
+  const msg = opt('mensaje') ?? `Actualización ${hoy()}: ${m.registros.length} menciones únicas${ult ? `, ${ult.nuevos} nuevas` : ''}, ${m.registros.filter(clasificado).length} clasificadas`;
+  git('-c', 'user.name=Claude Code', '-c', 'user.email=noreply@anthropic.com', 'commit', '-q', '-m', msg);
+  if (!args.includes('--sin-push')) git('push', '-q', 'origin', 'HEAD');
+  console.log(`✓ Base maestra guardada en ${repo}: ${msg}`);
+}
+
+const COMANDOS = { inicializar, importar, aplicar, publicar, guardar, estado, verificar };
 if (!COMANDOS[cmd]) fallar(`Comando desconocido. Usa: ${Object.keys(COMANDOS).join(', ')}.`);
 await COMANDOS[cmd]();

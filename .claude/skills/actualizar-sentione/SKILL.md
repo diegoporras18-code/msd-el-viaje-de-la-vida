@@ -1,6 +1,6 @@
 ---
 name: actualizar-sentione
-description: Procesa una nueva exportación de SentiOne (Excel o CSV adjunto) para El Viaje de la Vida. La incorpora a la base maestra sin duplicar, clasifica con Claude por contenido las menciones nuevas o modificadas, regenera los resultados públicos y los hallazgos sustentados, valida las cifras y abre un Pull Request. Úsala cuando el usuario adjunte o mencione una exportación de SentiOne o pida actualizar los resultados.
+description: Procesa una nueva exportación de SentiOne (Excel o CSV adjunto) para El Viaje de la Vida. Conecta el repositorio privado de datos, incorpora la exportación a la base maestra sin duplicar, clasifica con Claude por contenido las menciones nuevas o modificadas, regenera los resultados públicos y los hallazgos sustentados, valida las cifras y abre un Pull Request. Úsala cuando el usuario adjunte o mencione una exportación de SentiOne o pida actualizar los resultados.
 ---
 
 # Actualizar la escucha social desde SentiOne
@@ -9,7 +9,11 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
 
 ## Reglas que no se negocian
 
-- **Una sola base maestra** (`datos/maestra/base-maestra.json`). Cada mención aparece una sola vez, aunque tenga varias temáticas o marcas.
+- **Dos repositorios.**
+  - La base maestra y los informes viven **solo** en el repositorio privado `diegoporras18-code/msd-el-viaje-de-la-vida-datos` (`maestra/base-maestra.json`, `informes/`).
+  - El repositorio público `msd-el-viaje-de-la-vida` solo recibe `src/data/resultados.json` (agregados) y cambios de contenido.
+  - Nunca copies la base maestra ni los informes al repositorio público. Nunca cambies la visibilidad del repositorio privado.
+- **Una sola base maestra.** Cada mención aparece una sola vez, aunque tenga varias temáticas o marcas.
 - **Sin filtros geográficos.** Se usan todos los registros, con o sin país.
 - **Privacidad.** Nunca subas al repositorio el Excel, los textos, las URLs de publicaciones privadas, los autores ni los lotes (`entradas/` está en `.gitignore`). No copies textos de publicaciones en commits, en Pull Requests ni en el chat.
 - **Sin clasificaciones inventadas.** Solo cuenta como «clasificado por contenido» lo que clasificaste leyendo el texto. Sin el Excel original no hay textos: no clasifiques nada y pide el archivo.
@@ -18,7 +22,13 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
 
 ## Pasos
 
-1. **Preparar.** Parte de la última versión de `main` en tu rama de trabajo. Ejecuta `npm ci` si no están instaladas las dependencias. Copia el archivo adjunto a `entradas/`, por ejemplo `entradas/sentione-2026-10-31.xlsx`.
+1. **Preparar.**
+   - En el repositorio público, parte de la última versión de `main` en tu rama de trabajo. Ejecuta `npm ci` si no están instaladas las dependencias.
+   - **Conecta el repositorio privado** con la herramienta `add_repo` (owner `diegoporras18-code`, repo `msd-el-viaje-de-la-vida-datos`, access `push`).
+   - Clónalo **junto** al repositorio público, en `../msd-el-viaje-de-la-vida-datos`, con el comando de clonado que devuelve `add_repo`. Si ya existe, actualízalo con `git -C ../msd-el-viaje-de-la-vida-datos pull`.
+   - Si `add_repo` niega el acceso, detente. Pide al usuario que autorice ese repositorio para la app de Claude en https://github.com/apps/claude/installations/select_target y vuelve a intentarlo.
+   - Si el repositorio privado todavía no tiene `maestra/`, ejecuta `npm run sentione -- inicializar`.
+   - Copia el archivo adjunto a `entradas/` del repositorio público, por ejemplo `entradas/sentione-2026-10-31.xlsx`. Está en `.gitignore`.
 
 2. **Importar.**
    ```bash
@@ -46,7 +56,7 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
    ```bash
    npm run sentione -- publicar
    ```
-   Genera `src/data/resultados.json`, que solo contiene agregados, y `datos/informes/actualizacion-AAAA-MM-DD.md`.
+   Genera `src/data/resultados.json` en el repositorio público, que solo contiene agregados, y el informe `informes/actualizacion-AAAA-MM-DD.md` en el repositorio privado.
 
 6. **Actualizar los hallazgos.**
    - Las frases con cifras se calculan solas (`src/lib/data/hechos.js`).
@@ -67,10 +77,16 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
    ```
    Confirma que no aparecen `entradas/` ni archivos `.xlsx` o `.csv`.
 
-9. **Pull Request.**
-   - Haz commit de `datos/maestra/base-maestra.json`, `src/data/resultados.json`, `datos/informes/…` y los cambios de contenido.
+9. **Guardar la base privada.**
+   ```bash
+   npm run sentione -- guardar
+   ```
+   Antes de hacer commit y push en el repositorio privado, confirma en GitHub que es privado. Si no puede confirmarlo, o si hay archivos no permitidos, no guarda nada. Hazlo antes del Pull Request público, para no publicar resultados de una base que no quedó guardada.
+
+10. **Pull Request público.**
+   - En el repositorio público, haz commit solo de `src/data/resultados.json` y de los cambios de contenido. `git status` no debe mostrar `base-maestra`, `informes/` ni `entradas/`.
    - Abre un Pull Request contra `main` con:
-     - El resumen del informe: filas brutas, únicas, nuevas, existentes y actualizadas.
+     - El resumen del informe privado, solo con cifras agregadas y nunca con textos ni identificadores: filas brutas, únicas, nuevas, existentes y actualizadas.
      - La cobertura de la clasificación y los casos para revisión.
      - Las cifras que cambian y por qué.
      - Las limitaciones.

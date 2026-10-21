@@ -20,7 +20,7 @@ React + Vite + Tailwind CSS + Motion para React. Sitio estático en GitHub Pages
 
 | Archivo | Contenido | Público en la web |
 |---|---|---|
-| `datos/maestra/base-maestra.json` | Una línea por mención única, seudonimizada, con su clasificación. Sin textos, URLs ni autores. | No |
+| Repositorio privado `msd-el-viaje-de-la-vida-datos` | Base maestra (una línea por mención única, seudonimizada, con su clasificación, histórico y revisiones) e informes internos. Sin textos, URLs ni autores. | No |
 | `datos/maestra/referencia.json` | Agregados revisados del 21 sep al 20 oct de 2026, usados para validar. | Solo como agregados |
 | `datos/CRITERIOS_CLASIFICACION.md` | Criterios de la clasificación semántica con Claude. | No |
 | `src/data/resultados.json` | Resultados agregados que consume la web. | Sí |

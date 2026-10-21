@@ -9,3 +9,8 @@ entradas/
 *.xlsm
 *.xls
 *.csv
+
+# Datos individuales: solo en el repositorio privado msd-el-viaje-de-la-vida-datos.
+**/base-maestra*.json
+datos/informes/
+lotes/
