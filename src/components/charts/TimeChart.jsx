@@ -11,9 +11,9 @@ const niceMax = (v) => {
 };
 
 const SRC = {
-  bloque: 'Solo existe el total del periodo (sin detalle diario)',
-  'base-filtrada': 'La línea base agregada no admite este filtro',
-  null: 'Sin datos: día no cubierto por ninguna exportación',
+  bloque: 'Solo existe el total del periodo, sin detalle diario',
+  'referencia-filtrada': 'La referencia preliminar no admite este filtro',
+  null: 'Sin datos para este día',
 };
 
 /**
@@ -130,7 +130,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
                 width={Math.max(1, band - Math.min(4, band * 0.3))}
                 rx={Math.min(2, band / 4)}
                 fill={esPico ? '#E2457F' : (series[0].color ?? '#F4A6C4')}
-                opacity={idx == null || idx === i ? (p.src === 'base' ? 0.92 : 1) : 0.35}
+                opacity={idx == null || idx === i ? (p.src === 'referencia' ? 0.92 : 1) : 0.35}
                 initial={{ height: 0, y: M.t + ih }}
                 animate={inView ? { height: h, y: M.t + ih - h } : { height: 0, y: M.t + ih }}
                 transition={{ duration: dur, ease: ease.out, delay: reduce ? 0 : Math.min(i * 0.018, 0.6) }}
@@ -231,7 +231,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
                   {p.v != null ? (
                     <>
                       <span className="num text-marfil">{formatNumber(p.v)}</span> {unidad}
-                      {p.src === 'base' && <span className="block text-bruma/80">Agregado preliminar</span>}
+                      {p.src === 'referencia' && <span className="block text-bruma/80">Referencia preliminar de SentiOne</span>}
                     </>
                   ) : (
                     (SRC[p.src] ?? SRC.null)

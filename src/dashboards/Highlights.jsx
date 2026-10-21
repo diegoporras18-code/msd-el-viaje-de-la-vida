@@ -1,32 +1,18 @@
 import Pending from '../components/charts/Pending.jsx';
-import { useData } from '../state/DataContext.jsx';
 import { evidencias } from '../content/evidencias.js';
 import { longDate } from '../lib/data/dates.js';
 import { nombrePlataforma } from '../config/clasificacion.js';
 
 const TIPO = { medio: 'Medio', publicacion: 'Publicación', creador: 'Creador' };
 
-/**
- * Contenidos individuales revisados: destacados del importador + evidencias verificadas.
- * Nunca muestra registros sin revisión ni datos personales de particulares.
- */
-export default function Highlights({ universo, universos, desde, hasta, tipos, vacio }) {
-  const { dataset } = useData();
-  const items = [
-    ...(dataset.destacados ?? []).filter((d) => d.revisado),
-    ...evidencias.filter((e) => e.verificado).map((e) => ({ ...e, universo: e.universo ?? 'categoria', extracto: e.titulo })),
-  ]
-    .filter((d) => (!universo || d.universo === universo || (d.marcas ?? []).includes(universo)) && (!universos || universos.some((x) => d.universo === x || (d.marcas ?? []).includes(x))) && (!desde || d.fecha >= desde) && (!hasta || d.fecha <= hasta) && (!tipos || tipos.includes(d.tipo)))
+/** Evidencias públicas verificadas (noticias, publicaciones, creadores). */
+export default function Highlights({ desde, hasta, tipos, marcas, vacio }) {
+  const items = evidencias
+    .filter((e) => e.verificado)
+    .filter((e) => (!desde || e.fecha >= desde) && (!hasta || e.fecha <= hasta) && (!tipos || tipos.includes(e.tipo)) && (!marcas || marcas.some((m) => (e.marcas ?? []).includes(m))))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-  if (!items.length)
-    return (
-      <Pending
-        estado={vacio?.estado ?? 'revision'}
-        titulo={vacio?.titulo ?? 'Aún no hay contenidos revisados para publicar en este rango.'}
-        detalle={vacio?.detalle ?? 'Se agregan desde el importador (revisión manual) o en src/content/evidencias.js. Los autores particulares no se publican.'}
-      />
-    );
+  if (!items.length) return <Pending compacto estado={vacio?.estado ?? 'medicion'} titulo={vacio?.titulo ?? 'Aún no hay evidencias públicas verificadas para este periodo.'} />;
 
   return (
     <ul className="divide-y divide-rosa/10">
@@ -38,12 +24,12 @@ export default function Highlights({ universo, universos, desde, hasta, tipos, v
             <span className="block">{nombrePlataforma(d.plataforma)}</span>
           </p>
           <div>
-            <p className="font-display text-[length:var(--step-1)] italic leading-snug text-marfil">«{d.extracto}»</p>
+            <p className="font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{d.titulo}</p>
             <p className="mt-2 text-sm text-bruma">
-              {d.fuente || d.autorPublico ? <span className="text-marfil">{d.fuente ?? d.autorPublico}</span> : 'Cuenta particular (anonimizada)'}
+              {d.fuente && <span className="text-marfil">{d.fuente}</span>}
               {d.url && (
                 <>
-                  {' · '}
+                  {d.fuente && ' · '}
                   <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-rosa underline underline-offset-4">
                     Ver contenido<span className="sr-only"> (se abre en una pestaña nueva)</span>
                   </a>

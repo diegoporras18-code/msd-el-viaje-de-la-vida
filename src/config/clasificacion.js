@@ -1,7 +1,9 @@
-// Diccionarios editables para normalizar y SUGERIR clasificaciones.
-// Todo lo que sale de estas reglas se marca como «sugerido»: nunca como validado.
-// Los patrones se comparan sin tildes y en minúsculas, al inicio de palabra
-// (p. ej. 'mamograf' encuentra «mamografía» y «mamografías»).
+// Taxonomía de la clasificación semántica (la aplica Claude en cada actualización).
+// Los criterios completos están en datos/CRITERIOS_CLASIFICACION.md. Si cambias
+// categorías o criterios, sube CRITERIOS_VERSION: los registros con otra versión
+// se pueden reclasificar de forma controlada.
+
+export const CRITERIOS_VERSION = 'v1';
 
 export const PLATAFORMAS = [
   { id: 'video', nombre: 'Video', patrones: ['video', 'youtube', 'vimeo', 'twitch'] },
@@ -16,103 +18,75 @@ export const PLATAFORMAS = [
   { id: 'otros', nombre: 'Otras fuentes', patrones: [] },
 ];
 
-export const SENTIMIENTOS = [
+// Sentimiento original de SentiOne: se conserva como referencia, sin modificar.
+export const SENTIMIENTOS_ORIGINALES = [
   { id: 'positivo', nombre: 'Positivo', color: '#6FD3C1', patrones: ['positive', 'positivo', 'pos'] },
   { id: 'neutral', nombre: 'Neutral', color: '#C9B3C0', patrones: ['neutral', 'neutro', 'neu'] },
   { id: 'negativo', nombre: 'Negativo', color: '#E8916B', patrones: ['negative', 'negativo', 'neg'] },
   { id: 'sin_clasificar', nombre: 'Sin clasificar', color: '#5E4457', patrones: [] },
 ];
 
-// Narrativas (una publicación puede tener varias).
-export const NARRATIVAS = [
-  {
-    id: 'prevencion',
-    nombre: 'Prevención y detección temprana',
-    patrones: ['autoexamen', 'autoexplora', 'mamograf', 'deteccion temprana', 'detectar a tiempo', 'chequeo', 'prevenir', 'prevencion', 'tamizaje', 'ecografia mamaria', 'tocate'],
-  },
-  {
-    id: 'testimonios',
-    nombre: 'Testimonios',
-    patrones: ['mi historia', 'sobrevivi', 'me diagnosticaron', 'mi diagnostico', 'mi mama tuvo', 'mi madre', 'mi lucha', 'mi tratamiento', 'supere el cancer', 'mi quimio'],
-  },
-  {
-    id: 'acceso',
-    nombre: 'Dificultades de acceso',
-    patrones: ['eps', 'autorizacion', 'demora', 'tutela', 'no me han', 'sin cita', 'barrera', 'acceso a', 'negaron', 'falta de medicamento', 'lista de espera'],
-  },
-  {
-    id: 'avances',
-    nombre: 'Avances médicos',
-    patrones: ['ensayo clinico', 'investigacion', 'nuevo tratamiento', 'terapia dirigida', 'inmunoterapia', 'aprobacion', 'fda', 'invima', 'avance', 'estudio clinico'],
-  },
-  {
-    id: 'concientizacion',
-    nombre: 'Concientización y Octubre Rosa',
-    patrones: ['octubre rosa', 'lazo rosa', 'mes rosa', 'concientiza', 'dia mundial', 'dia internacional'],
-  },
-  {
-    id: 'evento',
-    nombre: 'Concierto y campaña',
-    patrones: ['fonseca', 'concierto', 'el viaje de la vida', 'viajedelavida'],
-  },
+// Sentimiento revisado por contenido.
+export const SENTIMIENTOS = [
+  { id: 'positivo', nombre: 'Positivo', color: '#6FD3C1' },
+  { id: 'neutral', nombre: 'Neutral', color: '#C9B3C0' },
+  { id: 'negativo', nombre: 'Negativo', color: '#E8916B' },
+  { id: 'mixto', nombre: 'Mixto', color: '#F2C46D' },
+  { id: 'indeterminado', nombre: 'Indeterminado', color: '#7A5C70' },
+];
+
+// Sentimiento hacia un objeto concreto (MSD o la campaña; el sistema de salud).
+export const HACIA = ['positivo', 'neutral', 'negativo', 'mixto', 'no_aplica'];
+
+export const RELEVANCIA = [
+  { id: 'si', nombre: 'Habla de cáncer de mama' },
+  { id: 'dudosa', nombre: 'Relación dudosa' },
+  { id: 'no', nombre: 'Coincidencia ajena al tema' },
+];
+
+export const TEMAS = [
+  { id: 'educacion', nombre: 'Educación' },
+  { id: 'concientizacion', nombre: 'Concientización' },
+  { id: 'prevencion', nombre: 'Prevención' },
+  { id: 'mamografias', nombre: 'Mamografías' },
+  { id: 'diagnostico_temprano', nombre: 'Diagnóstico temprano' },
+  { id: 'tratamiento', nombre: 'Tratamiento' },
+  { id: 'barreras_atencion', nombre: 'Barreras de atención' },
+  { id: 'acceso_sistema_salud', nombre: 'Acceso al sistema de salud' },
+  { id: 'innovacion_medica', nombre: 'Innovación médica' },
+  { id: 'historias_pacientes', nombre: 'Historias de pacientes' },
+  { id: 'apoyo_emocional', nombre: 'Apoyo emocional' },
+  { id: 'campanas', nombre: 'Campañas' },
+  { id: 'noticias', nombre: 'Noticias' },
+  { id: 'otros', nombre: 'Otras temáticas' },
 ];
 
 export const EMOCIONES = [
-  { id: 'esperanza', nombre: 'Esperanza', patrones: ['esperanza', 'fuerza', 'animo', 'si se puede', 'fe en dios'] },
-  { id: 'gratitud', nombre: 'Gratitud', patrones: ['gracias', 'agradec', 'bendicion'] },
-  { id: 'orgullo', nombre: 'Orgullo', patrones: ['orgull', 'valiente', 'guerrera', 'admiracion'] },
-  { id: 'miedo', nombre: 'Miedo', patrones: ['miedo', 'temor', 'susto', 'angustia', 'ansiedad'] },
-  { id: 'tristeza', nombre: 'Tristeza', patrones: ['triste', 'dolor', 'fallecio', 'partio', 'luto', 'extrano'] },
-  { id: 'indignacion', nombre: 'Indignación', patrones: ['indign', 'injusticia', 'verguenza', 'abandono', 'inaceptable'] },
+  { id: 'esperanza', nombre: 'Esperanza' },
+  { id: 'miedo', nombre: 'Miedo' },
+  { id: 'tristeza', nombre: 'Tristeza' },
+  { id: 'indignacion', nombre: 'Indignación' },
+  { id: 'solidaridad', nombre: 'Solidaridad' },
+  { id: 'gratitud', nombre: 'Gratitud' },
+  { id: 'alegria', nombre: 'Alegría' },
+  { id: 'no_identificable', nombre: 'No identificable' },
 ];
 
-// Señales de intención preventiva (llamados o decisiones de acción).
-export const INTENCION_PREVENTIVA = [
-  'me voy a hacer', 'me hare', 'agende', 'agendar', 'pedi cita', 'pedir cita', 'sacar cita', 'hazte', 'tocate', 'revisa tus senos',
-  'autoexamen', 'mamograf', 'consulta a tu medico', 've al medico', 'chequeate',
+export const INTENCIONES = [
+  { id: 'buscar_informacion', nombre: 'Buscar información' },
+  { id: 'consultar_medico', nombre: 'Consultar al médico' },
+  { id: 'mamografia_indicada', nombre: 'Hacerse una mamografía cuando esté indicada' },
+  { id: 'compartir_informacion', nombre: 'Compartir información' },
+  { id: 'apoyar_paciente', nombre: 'Apoyar a una paciente' },
+  { id: 'solicitar_atencion', nombre: 'Solicitar atención' },
+  { id: 'ninguna', nombre: 'Ninguna intención explícita' },
 ];
 
-// Pistas de sentimiento SUGERIDO. Las palabras de la enfermedad (cáncer, diagnóstico,
-// muerte, tumor…) NO cuentan: un mensaje educativo no es negativo por mencionarlas.
-export const PISTAS_SENTIMIENTO = {
-  positivo: ['gracias', 'felicit', 'orgull', 'esperanza', 'sobrevivi', 'excelente', 'maravillos', 'hermosa iniciativa', 'bonita iniciativa', 'apoyo total'],
-  negativo: ['negaron', 'no me atienden', 'demora', 'verguenza', 'indignante', 'abandono', 'pesimo', 'mal servicio', 'no hay citas', 'queja', 'inaceptable'],
-};
+// Por debajo de esta confianza, el registro queda marcado para revisión.
+export const CONFIANZA_MINIMA = 0.6;
 
-// Entidades detectadas por palabra clave (marcas, artista, agencia).
-// `marca` enlaza con el universo del mismo id en src/config/universos.js.
-export const ENTIDADES = [
-  { id: 'msd', nombre: 'MSD', marca: true, patrones: ['msd', 'merck sharp', '#msd'] },
-  { id: 'daiichi-sankyo', nombre: 'Daiichi Sankyo', marca: true, patrones: ['daiichi'] },
-  { id: 'astrazeneca', nombre: 'AstraZeneca', marca: true, patrones: ['astrazeneca', 'astra zeneca'] },
-  { id: 'fonseca', nombre: 'Fonseca', marca: false, patrones: ['fonseca'] },
-  { id: 'lotengo', nombre: 'Lotengo', marca: false, patrones: ['lotengo'] },
-];
-
-// Vocabulario controlado de palabras clave: solo se publican conteos de estos términos,
-// nunca palabras libres extraídas de los textos.
-export const PALABRAS_CLAVE = [
-  { id: 'mamografia', nombre: 'mamografía', patrones: ['mamograf'] },
-  { id: 'autoexamen', nombre: 'autoexamen', patrones: ['autoexamen', 'autoexplora', 'tocate'] },
-  { id: 'deteccion', nombre: 'detección temprana', patrones: ['deteccion temprana', 'detectar a tiempo', 'diagnostico temprano'] },
-  { id: 'prevencion', nombre: 'prevención', patrones: ['prevencion', 'prevenir'] },
-  { id: 'diagnostico', nombre: 'diagnóstico', patrones: ['diagnostic'] },
-  { id: 'tratamiento', nombre: 'tratamiento', patrones: ['tratamiento', 'quimio', 'radioterapia', 'cirugia'] },
-  { id: 'metastasis', nombre: 'metástasis', patrones: ['metasta'] },
-  { id: 'eps', nombre: 'EPS', patrones: ['eps'] },
-  { id: 'sobreviviente', nombre: 'sobreviviente', patrones: ['sobrevivi'] },
-  { id: 'octubre-rosa', nombre: 'Octubre Rosa', patrones: ['octubre rosa'] },
-  { id: 'fonseca', nombre: 'Fonseca', patrones: ['fonseca'] },
-  { id: 'concierto', nombre: 'concierto', patrones: ['concierto'] },
-];
-
-export const RELACIONES = [
-  { id: 'msd', nombre: 'Atribuible a MSD' },
-  { id: 'competencia', nombre: 'Menciona competidores' },
-  { id: 'categoria', nombre: 'Categoría general' },
-];
-
-export const nombrePlataforma = (id) => PLATAFORMAS.find((p) => p.id === id)?.nombre ?? id;
-export const nombreNarrativa = (id) => NARRATIVAS.find((n) => n.id === id)?.nombre ?? id;
-export const nombreEmocion = (id) => EMOCIONES.find((n) => n.id === id)?.nombre ?? id;
-export const nombreSentimiento = (id) => SENTIMIENTOS.find((s) => s.id === id)?.nombre ?? id;
+const nombre = (lista) => (id) => lista.find((x) => x.id === id)?.nombre ?? id;
+export const nombrePlataforma = nombre(PLATAFORMAS);
+export const nombreTema = nombre(TEMAS);
+export const nombreEmocion = nombre(EMOCIONES);
+export const nombreIntencion = nombre(INTENCIONES);

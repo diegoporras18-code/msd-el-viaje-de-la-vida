@@ -15,12 +15,11 @@ export function useMeasure() {
   return [ref, width];
 }
 
-/** Ruta por hash: '#/explorar', '#/importar' o presentación (cualquier otro hash, p. ej. anclas). */
+/** Ruta por hash: '#/explorar[/pestaña]' o presentación (cualquier otro hash, p. ej. anclas). */
 export function useHashRoute() {
   const read = () => {
     const h = window.location.hash;
     if (h.startsWith('#/explorar')) return 'explorar';
-    if (h.startsWith('#/importar')) return 'importar';
     return 'presentacion';
   };
   const [route, setRoute] = useState(read);

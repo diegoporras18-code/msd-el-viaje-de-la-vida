@@ -1,4 +1,4 @@
-import { PLATAFORMAS, SENTIMIENTOS } from '../../config/clasificacion.js';
+import { PLATAFORMAS, SENTIMIENTOS_ORIGINALES } from '../../config/clasificacion.js';
 import { normalizeText } from './text.js';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -143,6 +143,6 @@ export function normalizePlatform(fuente, dominio, url) {
 export function normalizeSentiment(v) {
   const t = normalizeText(v);
   if (!t) return 'sin_clasificar';
-  for (const s of SENTIMIENTOS) if (s.patrones.some((p) => t === p || t.startsWith(p))) return s.id;
+  for (const s of SENTIMIENTOS_ORIGINALES) if (s.patrones.some((p) => t === p || t.startsWith(p))) return s.id;
   return 'sin_clasificar';
 }

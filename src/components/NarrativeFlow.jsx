@@ -36,7 +36,7 @@ export default function NarrativeFlow({ pasos, etiqueta }) {
         <motion.path d={V_PATH} fill="none" stroke="#E2457F" strokeWidth="2.5" vectorEffect="non-scaling-stroke" style={{ pathLength: reduce ? 1 : draw }} />
       </svg>
 
-      <ol aria-label={etiqueta} className="relative grid gap-10 pl-14 lg:grid-cols-6 lg:gap-6 lg:pl-0 lg:pt-24">
+      <ol aria-label={etiqueta} className="relative grid gap-10 pl-14 lg:grid-cols-[repeat(var(--pasos),minmax(0,1fr))] lg:gap-6 lg:pl-0 lg:pt-24" style={{ '--pasos': pasos.length }}>
         {pasos.map((p, i) => {
           const on = i < alcance;
           return (
