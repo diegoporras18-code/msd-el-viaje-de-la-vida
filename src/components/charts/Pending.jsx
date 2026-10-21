@@ -1,8 +1,8 @@
 const ESTADOS = {
   medicion: { etiqueta: 'Pendiente de medición', tono: 'text-rosa border-rosa/40' },
   evento: { etiqueta: 'Disponible después del evento', tono: 'text-fucsia border-fucsia/50' },
-  importar: { etiqueta: 'Requiere importar datos', tono: 'text-rosa border-rosa/40' },
-  revision: { etiqueta: 'Pendiente de revisión', tono: 'text-bruma border-bruma/40' },
+  analisis: { etiqueta: 'Disponible en la próxima actualización', tono: 'text-rosa border-rosa/40' },
+  sin_datos: { etiqueta: 'Sin datos para este filtro', tono: 'text-bruma border-bruma/40' },
 };
 
 // Barras fantasma deterministas: evocan la onda musical sin sugerir valores.
@@ -29,7 +29,7 @@ export default function Pending({ estado = 'medicion', titulo, detalle, requiere
         {detalle && <p className="mt-2 max-w-xl text-sm text-bruma">{detalle}</p>}
         {requiere && (
           <p className="mt-3 text-xs uppercase tracking-[0.16em] text-bruma/80">
-            Requiere: <span className="normal-case tracking-normal text-marfil/90">{requiere}</span>
+            Se incluirá: <span className="normal-case tracking-normal text-marfil/90">{requiere}</span>
           </p>
         )}
       </div>
