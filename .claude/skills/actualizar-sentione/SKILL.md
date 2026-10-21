@@ -25,7 +25,11 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
 1. **Preparar.**
    - En el repositorio público, parte de la última versión de `main` en tu rama de trabajo. Ejecuta `npm ci` si no están instaladas las dependencias.
    - **Conecta el repositorio privado** con la herramienta `add_repo` (owner `diegoporras18-code`, repo `msd-el-viaje-de-la-vida-datos`, access `push`).
-   - Clónalo **junto** al repositorio público, en `../msd-el-viaje-de-la-vida-datos`, con el comando de clonado que devuelve `add_repo`. Si ya existe, actualízalo con `git -C ../msd-el-viaje-de-la-vida-datos pull`.
+   - Clónalo **junto** al repositorio público, siempre en la rama `main`:
+     `git clone --depth 1 --branch main https://github.com/diegoporras18-code/msd-el-viaje-de-la-vida-datos ../msd-el-viaje-de-la-vida-datos`. Usa un tiempo de espera amplio.
+   - Si ya existe, actualízalo con `git -C ../msd-el-viaje-de-la-vida-datos fetch origin main && git -C ../msd-el-viaje-de-la-vida-datos checkout main && git -C ../msd-el-viaje-de-la-vida-datos reset --hard origin/main`.
+   - La base maestra solo vive en `main`. Puede existir una rama vacía `prueba-acceso`: ignórala. El script se niega a trabajar fuera de `main`.
+   - Confirma la visibilidad: `gh api repos/diegoporras18-code/msd-el-viaje-de-la-vida-datos --jq .private` debe responder `true`. Si no, detente y avisa al usuario.
    - Si `add_repo` niega el acceso, detente. Pide al usuario que autorice ese repositorio para la app de Claude en https://github.com/apps/claude/installations/select_target y vuelve a intentarlo.
    - Si el repositorio privado todavía no tiene `maestra/`, ejecuta `npm run sentione -- inicializar`.
    - Copia el archivo adjunto a `entradas/` del repositorio público, por ejemplo `entradas/sentione-2026-10-31.xlsx`. Está en `.gitignore`.
@@ -81,7 +85,7 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
    ```bash
    npm run sentione -- guardar
    ```
-   Antes de hacer commit y push en el repositorio privado, confirma en GitHub que es privado. Si no puede confirmarlo, o si hay archivos no permitidos, no guarda nada. Hazlo antes del Pull Request público, para no publicar resultados de una base que no quedó guardada.
+   Antes de hacer commit y push a `main` del repositorio privado, confirma en GitHub que es privado. Si no puede confirmarlo, o si hay archivos no permitidos, no guarda nada. Hazlo antes del Pull Request público, para no publicar resultados de una base que no quedó guardada.
 
 10. **Pull Request público.**
    - En el repositorio público, haz commit solo de `src/data/resultados.json` y de los cambios de contenido. `git status` no debe mostrar `base-maestra`, `informes/` ni `entradas/`.

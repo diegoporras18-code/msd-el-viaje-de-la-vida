@@ -55,3 +55,10 @@ La web muestra hoy una **referencia preliminar**: 2.837 registros del 21 de sept
 - **Validar Pull Request en rojo:** pídele a Claude Code que revise el error y lo corrija en el mismo Pull Request.
 - **La web no cambia:** comprueba en GitHub → *Actions* que *Deploy to GitHub Pages* terminó y recarga la página.
 - **Primera vez:** en GitHub, en *Settings → Pages → Source*, debe estar elegido **GitHub Actions**.
+
+## Mantenimiento opcional del repositorio privado
+
+Claude Code no puede cambiar la configuración del repositorio ni borrar ramas. No afecta al funcionamiento, porque el proceso siempre usa `main`. Si quieres dejarlo ordenado:
+1. En GitHub, abre `msd-el-viaje-de-la-vida-datos` y ve a **Settings → General → Default branch**. Pulsa el icono de flechas, elige **main** y confirma con **Update**.
+2. En **Branches**, borra la rama vacía `prueba-acceso` con el icono de papelera.
+

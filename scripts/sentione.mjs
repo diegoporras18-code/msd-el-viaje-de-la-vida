@@ -61,6 +61,14 @@ function comprobarUbicacion() {
   const rel = relative(RAIZ, DATOS);
   if (!rel || (!rel.startsWith('..') && !isAbsolute(rel))) fallar('La base maestra no puede estar dentro del repositorio público.');
   if (!existsSync(DATOS)) fallar(`No encuentro el repositorio privado en ${DATOS}. Conéctalo y clónalo junto a este repositorio (skill actualizar-sentione, paso 1).`);
+  // La base maestra solo vive en la rama main: nunca se lee ni se guarda en otra rama.
+  let rama = '';
+  try {
+    rama = git('rev-parse', '--abbrev-ref', 'HEAD');
+  } catch {
+    rama = git('symbolic-ref', '--short', 'HEAD');
+  }
+  if (rama !== 'main') fallar(`El repositorio de datos está en la rama «${rama}». Ejecuta: git -C ${DATOS} fetch origin main && git -C ${DATOS} checkout main`);
 }
 
 /**
@@ -302,7 +310,7 @@ function guardar() {
   const ult = m.importaciones[m.importaciones.length - 1];
   const msg = opt('mensaje') ?? `Actualización ${hoy()}: ${m.registros.length} menciones únicas${ult ? `, ${ult.nuevos} nuevas` : ''}, ${m.registros.filter(clasificado).length} clasificadas`;
   git('-c', 'user.name=Claude Code', '-c', 'user.email=noreply@anthropic.com', 'commit', '-q', '-m', msg);
-  if (!args.includes('--sin-push')) git('push', '-q', 'origin', 'HEAD');
+  if (!args.includes('--sin-push')) git('push', '-q', 'origin', 'HEAD:main');
   console.log(`✓ Base maestra guardada en ${repo}: ${msg}`);
 }
 

@@ -223,6 +223,7 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
   try {
     sh('git', ['init', '-q', '--bare', remoto]);
     sh('git', ['clone', '-q', remoto, datos]);
+    sh('git', ['-C', datos, 'checkout', '-q', '-b', 'main']);
     sh('npm', ['run', '-s', 'sentione', '--', 'inicializar']);
     const xlsx = join(tmp, 'export.xlsx');
     writeFileSync(
@@ -246,10 +247,10 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
     const publico = readFileSync(resultados, 'utf8');
     for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!publico.includes(x), `los resultados públicos no contienen «${x}»`);
 
-    const enRemoto = execFileSync('git', ['--git-dir', remoto, 'ls-tree', '-r', '--name-only', 'HEAD'], { encoding: 'utf8' });
+    const enRemoto = execFileSync('git', ['--git-dir', remoto, 'ls-tree', '-r', '--name-only', 'main'], { encoding: 'utf8' });
     assert.match(enRemoto, /maestra\/base-maestra\.json/);
     assert.match(enRemoto, /informes\/actualizacion-/);
-    const maestraRemota = execFileSync('git', ['--git-dir', remoto, 'show', 'HEAD:maestra/base-maestra.json'], { encoding: 'utf8' });
+    const maestraRemota = execFileSync('git', ['--git-dir', remoto, 'show', 'main:maestra/base-maestra.json'], { encoding: 'utf8' });
     assert.deepEqual(validarMaestra(JSON.parse(maestraRemota)), []);
     for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!maestraRemota.includes(x), `la base privada no guarda «${x}»`);
     assert.ok(!/\.xlsx|lote-/.test(enRemoto), 'ni el Excel ni los lotes llegan al repositorio privado');
