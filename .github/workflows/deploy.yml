@@ -24,6 +24,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Valida el procesamiento y el dataset publicado antes de desplegar.
+      - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
