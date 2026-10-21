@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #1a0b16;
+    --color-text: #f7ecf1;
+    --color-muted: #c9b3c0;
+    --color-rosa: #f4a6c4;
+    --color-fucsia: #e2457f;
+    --color-line: rgb(244 166 196 / 0.18);
+
+    /* Escala tipográfica fluida (editorial). */
+    --step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
+    --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+    --step-1: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+    --step-2: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+    --step-3: clamp(2.4rem, 1.6rem + 3.6vw, 4.75rem);
+    --step-4: clamp(3.4rem, 1.8rem + 7.5vw, 9rem);
+    --step-5: clamp(4rem, 1.2rem + 13vw, 12rem);
+
+    --gutter: clamp(1rem, 0.5rem + 3vw, 3.5rem);
+    color-scheme: dark;
+  }
+
+  html {
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background: var(--color-bg);
+    font-size: var(--step-0);
+    line-height: 1.6;
+    overflow-x: hidden;
+    overflow-x: clip; /* no rompe position: sticky */
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--color-fucsia);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-rosa);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply fixed left-4 top-4 z-50 -translate-y-24 bg-rosa px-4 py-3 font-semibold text-ciruela transition-transform;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
+
+  .shell {
+    padding-inline: max(var(--gutter), env(safe-area-inset-left));
+  }
+
+  .eyebrow {
+    font-size: var(--step--1);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .display {
+    @apply font-display;
+    font-optical-sizing: auto;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+  }
+
+  .num {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* Grano sutil de película sobre todo el sitio. */
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Onda musical: cada barra respira con transform (barato) en bucle continuo. */
+@keyframes breathe {
+  0%, 100% { transform: scaleY(var(--lo)); }
+  50% { transform: scaleY(1); }
+}
+
+.wave-bar {
+  transform-origin: center;
+  animation: breathe var(--dur) ease-in-out var(--delay) infinite;
+}
+
+.wave[data-paused='true'] .wave-bar {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-bar {
+    animation: none;
+    transform: scaleY(0.8);
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
