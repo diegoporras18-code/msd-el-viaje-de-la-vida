@@ -2,3 +2,10 @@ node_modules
 dist
 .DS_Store
 *.log
+
+# Exportaciones originales de SentiOne: nunca se publican (pueden contener datos personales).
+entradas/
+*.xlsx
+*.xlsm
+*.xls
+*.csv

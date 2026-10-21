@@ -1,0 +1,22 @@
+name: Validar Pull Request
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Pruebas de procesamiento: duplicados, cifras agregadas y ausencia de datos personales en dataset.json.
+      - run: npm test
+      - run: npm run build

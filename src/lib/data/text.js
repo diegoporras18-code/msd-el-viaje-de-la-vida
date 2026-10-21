@@ -1,0 +1,28 @@
+// Utilidades de texto puras (sin dependencias de navegador).
+
+export const normalizeText = (s) =>
+  String(s ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Compila una lista de patrones en una expresión que exige inicio de palabra.
+export function compilePatterns(patterns) {
+  const list = patterns.map((p) => normalizeText(p)).filter(Boolean);
+  if (!list.length) return null;
+  return new RegExp(`(?:^|[^a-z0-9#])(?:${list.map(escapeRe).join('|')})`);
+}
+
+export const matches = (re, normText) => Boolean(re && re.test(normText));
+
+// Hashtags en minúsculas y sin tildes; se publican solo como conteos agregados.
+export function extractHashtags(text) {
+  const out = new Set();
+  const re = /#([\p{L}\p{N}_]{2,60})/gu;
+  for (const m of String(text ?? '').matchAll(re)) out.add(`#${normalizeText(m[1])}`);
+  return [...out];
+}
