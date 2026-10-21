@@ -71,6 +71,7 @@ export default function BarList({ items, total, etiquetas = { v: 'Registros', v2
                     {it.nombre}: {formatNumber(tot)} {unidad}
                     {suma > 0 && ` (${formatPct(share(tot, suma))} del total)`}
                     {it.v2 != null && ` · ${etiquetas.v}: ${formatNumber(it.v)} · ${etiquetas.v2}: ${formatNumber(it.v2)}`}
+                    {it.agrupa?.length > 0 && ` · Agrupa: ${it.agrupa.join(', ')}`}
                   </span>
                 </motion.p>
               )}

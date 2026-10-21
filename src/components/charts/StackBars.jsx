@@ -7,7 +7,7 @@ import { ease } from '../../lib/motion.js';
  * Barras apiladas al 100 % por fila (marcas × plataformas, sentimiento por marca…).
  * Tocar un segmento muestra su detalle debajo de la fila.
  */
-export default function StackBars({ filas }) {
+export default function StackBars({ filas, unidad = 'menciones' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.2 });
   const reduce = useReducedMotion();
@@ -22,7 +22,7 @@ export default function StackBars({ filas }) {
           <div key={f.id}>
             <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
               <span className="text-marfil">{f.nombre}</span>
-              <span className="num text-bruma">{total ? `${formatNumber(total)} registros` : 'Sin datos'}</span>
+              <span className="num text-bruma">{total ? `${formatNumber(total)} ${unidad}` : 'Sin datos'}</span>
             </div>
             <div className="flex h-7 w-full overflow-hidden rounded-[3px] bg-rosa/[0.06]">
               {f.segmentos.map((s, i) => {
@@ -48,7 +48,7 @@ export default function StackBars({ filas }) {
               })}
             </div>
             <p className="mt-1.5 min-h-[1.25rem] text-xs text-bruma" role="status">
-              {sel ? `${sel.nombre}: ${formatNumber(sel.v)} registros · ${formatPct(share(sel.v, total))}` : ''}
+              {sel ? `${sel.nombre}${sel.agrupa?.length ? ` (${sel.agrupa.join(', ')})` : ''}: ${formatNumber(sel.v)} ${unidad} · ${formatPct(share(sel.v, total))}` : ''}
             </p>
           </div>
         );

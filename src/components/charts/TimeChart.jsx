@@ -19,8 +19,10 @@ const SRC = {
 /**
  * Serie temporal diaria. Días sin datos se dibujan como hueco rayado, nunca como cero.
  * series: [{ id, nombre, color, puntos: [{ d, v|null, src }] }]
+ * tipo: 'barras' (una serie), 'superpuestas' (la segunda serie, parte de la primera, se dibuja
+ * dentro de cada barra) o 'lineas'. anotaciones: [{ d | desde+hasta, titulo, detalle, tono }] sobre días o tramos.
  */
-export default function TimeChart({ series, tipo = 'barras', alto = 260, picos = [], marcadores = [], bloques = [], unidad = 'registros', descripcion }) {
+export default function TimeChart({ series, tipo = 'barras', alto = 260, picos = [], marcadores = [], bloques = [], anotaciones = [], unidad = 'registros', descripcion }) {
   const [wrapRef, w] = useMeasure();
   const inView = useInView(wrapRef, { once: true, amount: 0.25 });
   const reduce = useReducedMotion();
@@ -30,7 +32,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
   const n = fechas.length;
   const W = Math.max(w, 280);
   const H = alto;
-  const M = { l: 42, r: 10, t: 30, b: 28 };
+  const M = { l: 42, r: 10, t: anotaciones.length ? 58 : 30, b: 28 };
   const iw = W - M.l - M.r;
   const ih = H - M.t - M.b;
   const valores = series
@@ -118,10 +120,10 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
           );
         })}
 
-        {tipo === 'barras' &&
+        {(tipo === 'barras' || tipo === 'superpuestas') &&
           series[0]?.puntos.map((p, i) => {
             if (p.v == null) return null;
-            const esPico = picoSet.has(p.d);
+            const esPico = tipo === 'barras' && picoSet.has(p.d);
             const h = Math.max(p.v > 0 ? 1.5 : 0, (p.v / max) * ih);
             return (
               <motion.rect
@@ -137,6 +139,49 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
               />
             );
           })}
+
+        {tipo === 'superpuestas' &&
+          series[1]?.puntos.map((p, i) => {
+            if (p.v == null) return null;
+            const h = Math.max(p.v > 0 ? 1.5 : 0, (p.v / max) * ih);
+            return (
+              <motion.rect
+                key={p.d}
+                x={x(i) + Math.min(2, band * 0.15)}
+                width={Math.max(1, band - Math.min(4, band * 0.3))}
+                rx={Math.min(2, band / 4)}
+                fill={series[1].color}
+                opacity={idx == null || idx === i ? 1 : 0.35}
+                initial={{ height: 0, y: M.t + ih }}
+                animate={inView ? { height: h, y: M.t + ih - h } : { height: 0, y: M.t + ih }}
+                transition={{ duration: dur, ease: ease.out, delay: reduce ? 0 : 0.5 + Math.min(i * 0.018, 0.6) }}
+              />
+            );
+          })}
+
+        {anotaciones.map((a, k) => {
+          const i0 = fechas.indexOf(a.desde ?? a.d);
+          const i1 = fechas.indexOf(a.hasta ?? a.d);
+          if (i0 < 0 || i1 < 0) return null;
+          const v = Math.max(0, ...series[0].puntos.slice(i0, i1 + 1).map((p) => p.v ?? 0));
+          const mx = (cx(i0) + cx(i1)) / 2;
+          const anchor = mx > W * 0.75 ? 'end' : mx < W * 0.2 ? 'start' : 'middle';
+          const color = a.tono === 'tema' ? '#E2457F' : '#C9B3C0';
+          return (
+            <motion.g key={a.desde ?? a.d} initial={{ opacity: 0 }} animate={{ opacity: inView ? 1 : 0 }} transition={{ delay: reduce ? 0 : 1.1 + k * 0.2, duration: 0.5 }}>
+              {i1 > i0 && <line x1={x(i0) + 1} x2={x(i1 + 1) - 1} y1={M.t - 20} y2={M.t - 20} stroke={color} strokeWidth="2" strokeLinecap="round" />}
+              <line x1={mx} x2={mx} y1={M.t - 20} y2={y(v) - 4} stroke={color} strokeOpacity="0.6" strokeDasharray="2 3" />
+              <text x={mx} y={M.t - 42} textAnchor={anchor} className="text-[12px] font-semibold" fill={color}>
+                {a.titulo}
+              </text>
+              {a.detalle && (
+                <text x={mx} y={M.t - 28} textAnchor={anchor} className="num fill-bruma text-[11px]">
+                  {a.detalle}
+                </text>
+              )}
+            </motion.g>
+          );
+        })}
 
         {tipo === 'lineas' &&
           series.map((s) => {

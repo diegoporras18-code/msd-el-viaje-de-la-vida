@@ -8,7 +8,7 @@ export const CRITERIOS_VERSION = 'v1';
 export const PLATAFORMAS = [
   { id: 'video', nombre: 'Video', patrones: ['video', 'youtube', 'vimeo', 'twitch'] },
   { id: 'facebook', nombre: 'Facebook', patrones: ['facebook', 'fb.com'] },
-  { id: 'web', nombre: 'Sitios web', patrones: ['web', 'news', 'noticia', 'sitio', 'portal', 'article', 'articulo', 'prensa', 'online'] },
+  { id: 'web', nombre: 'Sitios web', patrones: ['web', 'websites', 'website', 'news', 'noticia', 'sitio', 'portal', 'article', 'articulo', 'prensa', 'online'] },
   { id: 'x', nombre: 'X', patrones: ['x', 'twitter', 'x.com', 'tweet'] },
   { id: 'tiktok', nombre: 'TikTok', patrones: ['tiktok'] },
   { id: 'instagram', nombre: 'Instagram', patrones: ['instagram', 'ig'] },

@@ -214,7 +214,7 @@ function aplicar() {
 }
 
 function cifrasClave(res) {
-  if (!res?.cubo) return {};
+  if (!res?.diario) return {};
   const h = hechos(res, hoy());
   const out = { 'Menciones únicas en la base': res.totales?.unicos ?? 0, 'Clasificadas por contenido': res.totales?.clasificados ?? 0 };
   for (const [k, x] of Object.entries(h)) if (x.disponible && x.cifra) out[`${k}: ${x.unidad}`] = x.cifra;
@@ -239,6 +239,8 @@ function publicar() {
   if (ult) motivos.push(`Última exportación: ${fmt(ult.filasBrutas)} filas brutas → ${fmt(ult.unicasArchivo)} únicas en el archivo → ${fmt(ult.nuevos)} nuevas en la base (${fmt(ult.existentes)} ya existían; ${fmt(ult.actualizados)} con métricas actualizadas).`);
   if (previo && !previo.cobertura?.length && res.cobertura.length)
     motivos.push('Las cifras de los días cubiertos pasan de la referencia preliminar (filas exportadas) a menciones únicas deduplicadas de la base maestra; por eso pueden ser menores que la referencia.');
+  if (previo && previo.version !== res.version)
+    motivos.push(`Los resultados públicos pasan al formato ${res.version}: solo serie diaria y distribuciones de una dimensión por periodo base, sin celdas menores que ${res.umbral} (agrupadas o como muestra insuficiente). El detalle sigue disponible únicamente en esta base privada.`);
   if (previo && res.totales.clasificados !== (previo.totales?.clasificados ?? 0)) motivos.push(`Clasificación semántica: ${fmt(res.totales.clasificados)} de ${fmt(res.totales.unicos)} menciones (${fmt(res.totales.revisar)} marcadas para revisión).`);
   const informe = `# Actualización de resultados · ${hoy()}
 
@@ -254,7 +256,10 @@ ${motivos.map((m) => `- ${m}`).join('\n') || '- Sin cambios en la base.'}
 ${cambios.length ? `| Cifra | Antes | Ahora |\n|---|---|---|\n${cambios.join('\n')}` : 'Ninguna.'}
 `;
   mkdirSync(RUTA.informes, { recursive: true });
-  writeFileSync(new URL(`actualizacion-${hoy()}.md`, RUTA.informes), informe);
+  // Nunca sobrescribe un informe anterior del mismo día.
+  let nombre = `actualizacion-${hoy()}.md`;
+  for (let i = 2; existsSync(new URL(nombre, RUTA.informes)); i++) nombre = `actualizacion-${hoy()}-${i}.md`;
+  writeFileSync(new URL(nombre, RUTA.informes), informe);
   console.log(informe);
   console.log('✓ src/data/resultados.json actualizado. Revisa src/content/conclusiones.js si los hechos cambiaron.');
 }
