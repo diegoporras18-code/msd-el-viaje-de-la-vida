@@ -70,8 +70,8 @@ export default function ConversationDashboard() {
           <ChartFrame
             className="lg:col-span-12"
             index="01"
-            titulo="Más conversación no siempre significa más conciencia"
-            subtitulo={`Todo lo captado frente a lo que habla de cáncer de mama · ${distRango}`}
+            titulo="Lo captado frente a la conversación real"
+            subtitulo={`Metodología: qué parte de lo que capta la consulta habla de cáncer de mama · ${distRango}`}
             notas={[...v.notas, 'Las barras son proporcionales a lo captado; el porcentaje se calcula sobre las menciones ya clasificadas por contenido.']}
             fuente={fuente}
           >
@@ -81,7 +81,8 @@ export default function ConversationDashboard() {
               </div>
               <div className="lg:col-span-7">
                 <p className="eyebrow mb-4 text-bruma">El resto de lo captado</p>
-                <StackBars filas={[{ id: 'resto', nombre: 'No hablan de cáncer de mama o aún sin clasificar', segmentos: restoAgrupado ? [{ id: 'resto', nombre: 'Coincidencias ajenas, dudosas o sin clasificar', v: vt.relevancia.resto, color: '#5E4457' }] : resto }]} />
+                <StackBars filas={[{ id: 'resto', nombre: 'Excluidas de la medición principal', segmentos: restoAgrupado ? [{ id: 'resto', nombre: 'Ruido, contextuales o sin clasificar', v: vt.relevancia.resto, color: '#5E4457' }] : resto }]} />
+                <p className="text-sm text-bruma">Contextuales: el cáncer de mama aparece, pero el tema principal es otro (una figura política, un informe de gobierno, una reacción sin contenido propio). Ruido: no aporta información sobre la enfermedad; se concentra en la reacción política del 3 al 5 de octubre.</p>
               </div>
             </div>
           </ChartFrame>
@@ -91,9 +92,14 @@ export default function ConversationDashboard() {
           className="lg:col-span-12"
           index="02"
           titulo="Evolución diaria"
-          subtitulo={semantico ? `Menciones captadas y sobre cáncer de mama por día · ${rango}` : `Menciones por día · ${rango}`}
+          subtitulo={semantico ? (rel ? `Menciones sobre cáncer de mama por día · ${rango}` : `Menciones captadas y sobre cáncer de mama por día · ${rango}`) : `Menciones por día · ${rango}`}
           leyenda={[
-            ...(semantico
+            ...(semantico && rel
+              ? [
+                  { label: 'Sobre cáncer de mama', color: '#F4A6C4' },
+                  { label: 'Día pico', color: '#E2457F' },
+                ]
+              : semantico
               ? [
                   { label: 'Todo lo captado', color: 'rgba(244,166,196,0.35)' },
                   { label: 'Sobre cáncer de mama', color: '#E2457F' },
@@ -108,14 +114,24 @@ export default function ConversationDashboard() {
           fuente={fuente}
           pendiente={!vt.stats ? { estado: 'sin_datos', titulo: 'No hay menciones para este periodo.' } : null}
         >
-          {semantico ? (
+          {semantico && rel ? (
+            <TimeChart
+              series={[{ id: 'rel', nombre: 'Sobre cáncer de mama', color: '#F4A6C4', puntos: relDias }]}
+              picos={v.picos.slice(0, 1)}
+              etiquetasPico={false}
+              anotaciones={anotacionesPicos(res)}
+              marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto' }]}
+              unidad="menciones sobre cáncer de mama"
+              descripcion={`Menciones sobre cáncer de mama por día, ${rango}.`}
+            />
+          ) : semantico ? (
             <TimeChart
               tipo="superpuestas"
               series={[
                 { id: 'todas', nombre: 'Todo lo captado', color: 'rgba(244,166,196,0.35)', puntos: todasDias },
                 { id: 'rel', nombre: 'Sobre cáncer de mama', color: '#E2457F', puntos: relDias },
               ]}
-              anotaciones={anotacionesPicos(res)}
+              anotaciones={anotacionesPicos(res, { ruido: true, relevantes: false })}
               marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto' }]}
               unidad="menciones"
               descripcion={`Menciones captadas y sobre cáncer de mama por día, ${rango}.`}

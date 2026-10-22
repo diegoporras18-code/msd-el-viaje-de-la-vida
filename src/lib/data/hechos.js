@@ -4,9 +4,10 @@
 // Reglas de redacción: cada porcentaje dice su denominador; «menciones» no son personas
 // alcanzadas; el sentimiento es el tono hacia el tema, no favorabilidad hacia una marca; las
 // cifras bajo el umbral de publicación se expresan como «menos de N».
-import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, diasCubiertos, growth, marcasView, peaks, periodStats, relevanciaDia, tieneBaseMaestra, umbral, view } from './resultados.js';
+import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, diasCubiertos, growth, marcasView, peaks, periodStats, tieneBaseMaestra, umbral, view } from './resultados.js';
 import { EVENTO, PERIODO_PREVIO, PERIODOS_IMPACTO } from '../../config/periodos.js';
-import { BENCHMARK, entidad } from '../../config/marcas.js';
+import { LABORATORIOS, entidad } from '../../config/marcas.js';
+import { PATRONES_SENTIMIENTO } from '../../config/patrones.js';
 import { nombreTema } from '../../config/clasificacion.js';
 import { formatDecimal, formatNumber, formatOne, formatPct } from '../format.js';
 
@@ -52,23 +53,52 @@ export function hechos(res, hoy = '2026-10-21') {
   const rango = st ? rangoTexto(st.desde, st.hasta) : '';
   const corte = st && st.hasta < F.hasta ? ` (corte de datos; el periodo previo al concierto llega hasta el ${diaTexto(F.hasta)})` : '';
 
-  // Volumen captado y crecimiento normalizado.
-  if (st) {
-    const g = growth(res, FT);
-    const sr = conRelevancia ? periodStats(res, F) : null;
+  // Volumen y comportamiento: la medida principal son las menciones que hablan de cáncer de mama.
+  const sr = conRelevancia ? periodStats(res, F) : null;
+  const diasRel = conRelevancia ? dailyTotals(res, F) : null;
+  const maxRel = diasRel ? diasRel.filter((x) => x.v != null).sort((a, b) => b.v - a.v)[0] : null;
+  if (sr) {
+    const g = growth(res, F);
     out.volumen = {
       disponible: true,
       tipo: 'medido',
+      cifra: formatNumber(sr.total),
+      unidad: `menciones sobre cáncer de mama ${rango}`,
+      texto:
+        `${mayus(rango)}${corte}, ${formatNumber(sr.total)} menciones hablaron realmente de cáncer de mama: ${formatDecimal(sr.promedioDiario)} por día` +
+        (g.ok ? `, frente a ${formatOne(g.anterior.promedioDiario)} ${rangoTexto(g.anterior.desde, g.anterior.hasta)} (${formatPct(g.pct, true)})` : '') +
+        `. La mediana diaria fue ${formatOne(sr.mediana)} y el máximo, ${formatNumber(maxRel.v)} el ${diaTexto(maxRel.d)}. Son menciones, no personas alcanzadas.`,
+      stats: sr,
+      crecimiento: g.ok ? g.pct : null,
+      maximo: maxRel,
+    };
+  } else if (st) {
+    const g = growth(res, FT);
+    out.volumen = {
+      disponible: true,
+      tipo: base ? 'medido' : 'referencia',
       cifra: formatDecimal(st.promedioDiario),
       unidad: `${unidad} captadas por día`,
       texto:
         `${mayus(rango)}${corte} la consulta captó ${formatNumber(st.total)} ${unidad}: ${formatDecimal(st.promedioDiario)} por día` +
         (g.ok ? `, frente a ${formatOne(g.anterior.promedioDiario)} ${rangoTexto(g.anterior.desde, g.anterior.hasta)} (${formatPct(g.pct, true)})` : '') +
-        `. La mediana diaria fue ${formatOne(st.mediana)}.` +
-        (sr ? ` De ellas, ${formatNumber(sr.total)} hablan realmente de cáncer de mama (${formatDecimal(sr.promedioDiario)} por día; mediana ${formatOne(sr.mediana)}).` : '') +
-        ' Son menciones, no personas alcanzadas.',
+        `. La mediana diaria fue ${formatOne(st.mediana)}. Son menciones, no personas alcanzadas.`,
     };
   } else out.volumen = no();
+
+  // Universo captado: contexto metodológico, nunca medida principal.
+  if (conRelevancia) {
+    const { si, dudosa, no: ruido, pendiente } = v.relevancia;
+    out.universo = {
+      disponible: true,
+      tipo: 'medido',
+      cifra: formatNumber(v.universo),
+      unidad: 'menciones captadas por la consulta',
+      texto:
+        `La consulta captó ${formatNumber(v.universo)} menciones ${rango}; la medición principal usa las ${formatNumber(si)} que hablan de cáncer de mama` +
+        ` y deja fuera ${lista([ruido != null && `${formatNumber(ruido)} de ruido`, dudosa != null && `${formatNumber(dudosa)} contextuales o dudosas`, pendiente ? `${formatNumber(pendiente)} aún sin clasificar` : null].filter(Boolean))}.`,
+    };
+  } else out.universo = no('analisis');
 
   // Relevancia: qué parte de lo que capta la consulta habla realmente de cáncer de mama.
   if (conRelevancia) {
@@ -80,33 +110,27 @@ export function hechos(res, hoy = '2026-10-21') {
       unidad: `de ${formatNumber(v.clasificados)} menciones clasificadas habla realmente de cáncer de mama`,
       texto:
         `${mayus(rango)}, de ${formatNumber(v.clasificados)} menciones clasificadas por contenido, ${formatNumber(si)} (${formatPct(pct(si, v.clasificados))}) hablan realmente de cáncer de mama` +
-        (ajenas != null ? `; ${formatNumber(ajenas)} (${formatPct(pct(ajenas, v.clasificados))}) son coincidencias ajenas al tema` : '') +
-        (dudosa != null ? ` y ${formatNumber(dudosa)} tienen una relación dudosa` : '') +
+        (dudosa != null ? `; ${formatNumber(dudosa)} (${formatPct(pct(dudosa, v.clasificados))}) son contextuales o dudosas` : '') +
+        (ajenas != null ? ` y ${formatNumber(ajenas)} (${formatPct(pct(ajenas, v.clasificados))}) son ruido que no aporta sobre la enfermedad` : '') +
         `.${pendiente ? ` Otras ${formatNumber(pendiente)} de las ${formatNumber(v.universo)} captadas aún no se han clasificado.` : ''}`,
     };
   } else out.relevancia = no('analisis');
 
-  // Picos del universo captado y su proporción de menciones sobre cáncer de mama (serie diaria).
-  const dias = dailyTotals(res, FT);
-  const pk = peaks(dias);
-  if (st && pk.length >= 1) {
-    const top = pk.slice(0, 2);
-    const suma = top.reduce((a, x) => a + x.v, 0);
-    const resto = pk.slice(2);
-    const rd = (d) => relevanciaDia(res, d);
+  // Picos de la conversación sobre cáncer de mama (o del universo si aún no hay clasificación).
+  const diasPico = diasRel ?? dailyTotals(res, FT);
+  const pk = peaks(diasPico);
+  const totalPico = sr?.total ?? st?.total;
+  if (totalPico && pk.length >= 1) {
+    const [top, ...resto] = pk;
+    const grupo = sr ? 'menciones sobre cáncer de mama' : `${unidad} captadas`;
     out.picos = {
       disponible: true,
       tipo: 'medido',
-      cifra: formatPct(pct(suma, st.total)),
-      unidad: `de las ${formatNumber(st.total)} menciones captadas, en ${top.length === 1 ? 'un día' : 'dos días'}`,
+      cifra: formatPct(pct(top.v, totalPico)),
+      unidad: `de las ${formatNumber(totalPico)} ${grupo}, en un solo día`,
       texto:
-        `${lista(top.map((x) => `el ${diaTexto(x.d)} (${formatNumber(x.v)})`)).replace(/^el/, 'El')} ${top.length === 1 ? 'concentra' : 'concentran'} el ${formatPct(pct(suma, st.total))} de las ${formatNumber(st.total)} ${unidad} captadas ${rango}.` +
-        (resto.length ? ` También destacan ${lista(resto.map((x) => `el ${diaTexto(x.d)} (${formatNumber(x.v)})`))}.` : '') +
-        (conRelevancia
-          ? ` Hablan de cáncer de mama ${lista(
-              pk.filter((x) => rd(x.d)).map((x) => `${formatNumber(rd(x.d).rel)} de ${formatNumber(rd(x.d).cl)} clasificadas el ${diaTexto(x.d)} (${formatPct(rd(x.d).pct)})`),
-            )}.`
-          : ''),
+        `El ${diaTexto(top.d)} (${formatNumber(top.v)}) reúne el ${formatPct(pct(top.v, totalPico))} de las ${formatNumber(totalPico)} ${grupo} ${rango}.` +
+        (resto.length ? ` También destacan ${lista(resto.map((x) => `el ${diaTexto(x.d)} (${formatNumber(x.v)})`))}.` : ''),
       dias: pk,
     };
   } else out.picos = no();
@@ -201,9 +225,36 @@ export function hechos(res, hoy = '2026-10-21') {
     };
   } else out.calidad = no('analisis');
 
+  // Preocupaciones y emociones: lo negativo se concentra en barreras de acceso.
+  if (conRelevancia) {
+    const neg = vr.sentimiento.items.find((x) => x.id === 'negativo');
+    const barreras = vr.patrones.negativo_barreras;
+    const emo = vr.emociones.items.filter((x) => !['no_identificable', 'otras'].includes(x.id)).slice(0, 3);
+    out.preocupaciones = {
+      disponible: true,
+      tipo: 'medido',
+      cifra: neg ? formatPct(pct(neg.v, vr.registros)) : `< ${k}`,
+      unidad: `de ${formatNumber(vr.registros)} menciones sobre cáncer de mama son negativas`,
+      texto:
+        (neg ? `${formatNumber(neg.v)} de las ${formatNumber(vr.registros)} menciones (${formatPct(pct(neg.v, vr.registros))}) tienen un tono negativo` : `Menos de ${k} menciones tienen un tono negativo`) +
+        (barreras != null && neg ? ` y ${formatNumber(barreras)} de ellas hablan de barreras o de acceso a la atención` : '') +
+        `. Las emociones más frecuentes son ${lista(emo.map((x) => `${x.nombre.toLowerCase()} (${formatPct(pct(x.v, vr.registros))})`))}.`,
+    };
+    // Ejemplos representativos: solo los patrones que alcanzan el umbral.
+    out.ejemplos = {
+      disponible: true,
+      tipo: 'medido',
+      patrones: Object.fromEntries(PATRONES_SENTIMIENTO.map((p) => [p.id, vr.patrones[p.id] ?? null])),
+      total: vr.registros,
+    };
+  } else {
+    out.preocupaciones = no('analisis');
+    out.ejemplos = no('analisis');
+  }
+
   // MSD y marcas: presencia en esta consulta, nunca Share of Voice.
   if (base) {
-    const [msd, ...otras] = marcasView(res, F, ['msd', ...BENCHMARK.filter((id) => id !== 'msd')]);
+    const [msd] = marcasView(res, F, ['msd']);
     out.msd = {
       disponible: true,
       tipo: 'medido',
@@ -214,15 +265,38 @@ export function hechos(res, hoy = '2026-10-21') {
         (conRelevancia ? ` y en ${cuenta(msd.relevantes, k)} de las ${formatNumber(vr.registros)} que hablan de cáncer de mama` : '') +
         '. Refleja presencia en esta consulta, no la conversación pública total sobre MSD.',
     };
-    const labs = [msd, ...otras];
+    // Laboratorios: todos los del catálogo con presencia verificada en la conversación relevante.
+    const labs = marcasView(res, F, LABORATORIOS.map((l) => l.id)).filter((x) => x.relevantes !== 0);
+    const conCifra = labs.filter((x) => x.relevantes != null).sort((a, b) => b.relevantes - a.relevantes);
+    const menores = labs.filter((x) => x.relevantes == null).map((x) => entidad(x.id).nombre).sort((a, b) => a.localeCompare(b, 'es'));
     out.marcas = {
       disponible: true,
       tipo: 'medido',
-      texto: `Menciones explícitas en ${conRelevancia ? `las ${formatNumber(vr.registros)} menciones sobre cáncer de mama` : 'la base'}: ${lista(labs.map((x) => `${entidad(x.id).nombre} ${cuenta(conRelevancia ? x.relevantes : x.todas, k)}`))}. Solo reflejan presencia en esta consulta, que no está diseñada para capturar a cada laboratorio con el mismo criterio: no son un Share of Voice representativo.`,
+      texto:
+        `Laboratorios nombrados en ${conRelevancia ? `las ${formatNumber(vr.registros)} menciones sobre cáncer de mama` : 'la base'}: ` +
+        lista([...conCifra.map((x) => `${entidad(x.id).nombre} ${formatNumber(x.relevantes)}`), ...(menores.length ? [`${lista(menores)}, con menos de ${k} cada uno`] : [])]) +
+        '. Solo reflejan presencia en esta consulta, que no está diseñada para capturar a cada laboratorio con el mismo criterio: no son un Share of Voice representativo.',
+      laboratorios: labs.map((x) => ({ id: x.id, nombre: entidad(x.id).nombre, n: x.relevantes })),
     };
+    if (conRelevancia && vr.conLaboratorio !== 0) {
+      const t = vr.temasConLaboratorio;
+      const top = t.items.filter((x) => x.id !== 'noticias').slice(0, 3);
+      const menoresClave = ['historias_pacientes', 'apoyo_emocional', 'barreras_atencion'].map(nombreTema).filter((x) => t.menores.includes(x));
+      out.laboratorios = {
+        disponible: true,
+        tipo: 'medido',
+        cifra: vr.conLaboratorio == null ? `< ${k}` : formatPct(pct(vr.conLaboratorio, vr.registros)),
+        unidad: `de ${formatNumber(vr.registros)} menciones sobre cáncer de mama nombran a algún laboratorio`,
+        texto:
+          `${vr.conLaboratorio == null ? `Menos de ${k}` : formatNumber(vr.conLaboratorio)} de las ${formatNumber(vr.registros)} menciones sobre cáncer de mama nombran a algún laboratorio.` +
+          (top.length ? ` En conjunto hablan sobre todo de ${lista(top.map((x) => `${x.nombre.toLowerCase()} (${formatNumber(x.v)})`))}` : '') +
+          (menoresClave.length ? `; ${lista(menoresClave.map((x) => x.toLowerCase()))} quedan por debajo de ${k}.` : '.'),
+      };
+    } else out.laboratorios = no('analisis');
   } else {
     out.msd = no('analisis');
     out.marcas = no('analisis');
+    out.laboratorios = no('analisis');
   }
 
   // Impacto del concierto: solo con datos del 24 de octubre en adelante.

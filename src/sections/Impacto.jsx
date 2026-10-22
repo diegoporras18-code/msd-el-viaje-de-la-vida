@@ -37,7 +37,7 @@ export default function Impacto() {
   return (
     <section id="impacto" aria-labelledby="impacto-titulo" className="relative scroll-mt-16">
       <ChapterOpener compacto capitulo={impacto.capitulo} titulo={impacto.titulo} tituloId="impacto-titulo" />
-      <div className="shell mx-auto max-w-[1440px] pb-12">
+      <div className="shell mx-auto max-w-[1440px] pb-6">
         {h.impacto.disponible ? (
           <Scene index="04.1" kicker="Antes, durante y después" titulo={{ linea1: 'Lo que cambió', linea2: 'alrededor de la noche' }} conclusion={h.impacto.texto} cta={<ExploreLink tab="impacto">Explorar el impacto en detalle</ExploreLink>}>
             <PeriodBars
@@ -83,7 +83,7 @@ export default function Impacto() {
           </Scene>
         ) : (
           <motion.div
-            className="relative overflow-hidden border-y border-rosa/15 py-16 sm:py-24"
+            className="relative overflow-hidden border-y border-rosa/15 py-10 sm:py-14"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -115,7 +115,7 @@ export default function Impacto() {
                 ))}
               </ol>
             </div>
-            <p className="relative mt-12 max-w-2xl text-xs text-bruma/80">{impacto.causalidad}</p>
+            <p className="relative mt-8 max-w-2xl text-xs text-bruma/80">{impacto.causalidad}</p>
           </motion.div>
         )}
       </div>

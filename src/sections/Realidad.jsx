@@ -24,7 +24,7 @@ export default function Realidad() {
 
   return (
     <section id="realidad" aria-labelledby="realidad-titulo" className="relative scroll-mt-4">
-      <div className="shell mx-auto max-w-[1440px] pt-24 sm:pt-32 lg:pt-44">
+      <div className="shell mx-auto max-w-[1440px] pt-16 sm:pt-24 lg:pt-32">
         <motion.div className="flex items-center gap-4" {...reveal()}>
           <span className="eyebrow text-rosa">{capitulo}</span>
           <span className="h-px flex-1 bg-rosa/25" aria-hidden="true" />
@@ -39,7 +39,7 @@ export default function Realidad() {
           ]}
         />
 
-        <div className="mt-12 grid gap-10 sm:mt-16 lg:grid-cols-12 lg:gap-8">
+        <div className="mt-8 grid gap-6 sm:mt-12 lg:grid-cols-12 lg:gap-8">
           <motion.p
             className="font-display text-[length:var(--step-2)] leading-snug text-marfil lg:col-span-7 first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[3.4em] first-letter:leading-[0.8] first-letter:text-fucsia"
             {...reveal(0.1)}
@@ -55,7 +55,7 @@ export default function Realidad() {
           </div>
         </div>
 
-        <div className="mt-20 overflow-hidden sm:mt-28" role="group" aria-label="Cifras estimadas del cáncer de mama en Colombia">
+        <div className="mt-10 overflow-hidden sm:mt-14" role="group" aria-label="Cifras estimadas del cáncer de mama en Colombia">
           {cifras.map((c, i) => (
             <StatFigure
               key={c.id}
@@ -92,7 +92,7 @@ export default function Realidad() {
         </motion.aside>
       </div>
 
-      <div className="mt-16 sm:mt-24">
+      <div className="mt-8 sm:mt-12">
         <BarrierRoute content={ruta} />
       </div>
     </section>

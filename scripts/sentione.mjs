@@ -9,6 +9,7 @@
 //   npm run sentione -- estado
 //   npm run sentione -- importar entradas/exportacion.xlsx [--desde AAAA-MM-DD --hasta AAAA-MM-DD] [--hoja N] [--columna campo=Encabezado] [--seco]
 //   npm run sentione -- aplicar            # aplica entradas/lotes/lote-NNN.resultado.json
+//   npm run sentione -- revisar entradas/auditoria/revision.json   # revisión manual focalizada (trazable)
 //   npm run sentione -- publicar           # genera src/data/resultados.json y el informe privado
 //   npm run sentione -- guardar            # verifica que el repositorio es privado, hace commit y push
 //   npm run sentione -- verificar
@@ -22,7 +23,7 @@ import readExcelFile from 'read-excel-file/node';
 import Papa from 'papaparse';
 import { CAMPOS, detectHeaderRow, suggestMapping, validateMapping } from '../src/lib/data/columns.js';
 import { processRows } from '../src/lib/data/process.js';
-import { aplicarResultados, buildLotes, clasificado, emptyMaestra, mergeExport, pendientes, serializarMaestra, validarMaestra } from '../src/lib/data/maestra.js';
+import { CODIGOS_REVISION, aplicarRevision, aplicarResultados, buildLotes, clasificado, emptyMaestra, mergeExport, pendientes, serializarMaestra, validarMaestra } from '../src/lib/data/maestra.js';
 import { buildResultados, validarResultados } from '../src/lib/data/publicar.js';
 import { hechos } from '../src/lib/data/hechos.js';
 import { normalizeText } from '../src/lib/data/text.js';
@@ -44,7 +45,8 @@ const RUTA = {
   informes: new URL('informes/', carpeta(DATOS)),
   referencia: new URL('../datos/maestra/referencia.json', import.meta.url),
   resultados: process.env.SENTIONE_RESULTADOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS)) : new URL('../src/data/resultados.json', import.meta.url),
-  lotes: new URL('../entradas/lotes/', import.meta.url),
+  // Las pruebas usan una carpeta temporal para no tocar los lotes locales de trabajo.
+  lotes: process.env.SENTIONE_LOTES ? pathToFileURL(`${resolve(process.env.SENTIONE_LOTES)}/`) : new URL('../entradas/lotes/', import.meta.url),
 };
 
 const leer = (url) => JSON.parse(readFileSync(url, 'utf8'));
@@ -319,6 +321,26 @@ function guardar() {
   console.log(`✓ Base maestra guardada en ${repo}: ${msg}`);
 }
 
-const COMANDOS = { inicializar, importar, aplicar, publicar, guardar, estado, verificar };
+/**
+ * Revisión manual focalizada (auditorías semánticas): cambia solo los registros indicados por
+ * su huella, conserva la clasificación anterior y nunca borra registros. El archivo de cambios
+ * vive en entradas/ (no se versiona) y no contiene textos.
+ */
+function revisar() {
+  const archivo = args.find((a) => !a.startsWith('--'));
+  if (!archivo) fallar('Indica el archivo de cambios: npm run sentione -- revisar entradas/auditoria/revision.json');
+  const cambios = leer(new URL(archivo, `file://${process.cwd()}/`));
+  const maestra = leerMaestra();
+  const fecha = opt('fecha') ?? hoy();
+  const { maestra: nueva, informe } = aplicarRevision(maestra, cambios, { fecha });
+  if (informe.errores.length) fallar(`Revisión rechazada:\n  ${informe.errores.slice(0, 20).join('\n  ')}`);
+  const porCodigo = {};
+  for (const x of cambios) porCodigo[x.codigo] = (porCodigo[x.codigo] ?? 0) + x.hs.length;
+  guardarMaestra({ ...nueva, revisiones: [...(maestra.revisiones ?? []), { fecha, aplicados: informe.aplicados, porCodigo }] });
+  console.log(`✓ ${fmt(informe.aplicados)} registros revisados (clasificación anterior conservada):`);
+  for (const [k, n] of Object.entries(porCodigo)) console.log(`  ${k.padEnd(26)} ${fmt(n)}  · ${CODIGOS_REVISION[k]}`);
+}
+
+const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar };
 if (!COMANDOS[cmd]) fallar(`Comando desconocido. Usa: ${Object.keys(COMANDOS).join(', ')}.`);
 await COMANDOS[cmd]();

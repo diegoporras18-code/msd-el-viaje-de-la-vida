@@ -35,8 +35,8 @@ export const TIPOS = [
   { id: 'sin_tipo', nombre: 'Sin tipo' },
 ];
 export const ESTADOS_RESTO = [
-  { id: 'no', nombre: 'Coincidencia ajena al tema', color: '#5E4457' },
-  { id: 'dudosa', nombre: 'Relación dudosa', color: '#8A6C80' },
+  { id: 'no', nombre: 'Ruido: no aporta sobre cáncer de mama', color: '#5E4457' },
+  { id: 'dudosa', nombre: 'Contextual o dudosa', color: '#8A6C80' },
   { id: 'pendiente', nombre: 'Aún sin clasificar', color: '#4A2A40' },
 ];
 
@@ -152,6 +152,13 @@ export function sumarMultiples(partes) {
   return { v, menores: [...menores].filter((id) => !v.has(id)).sort() };
 }
 
+/** Suma objetos de celdas { id: n | null }: un null en cualquier parte deja el total en null. */
+export function sumarCeldas(partes) {
+  const out = {};
+  for (const parte of partes) for (const [id, n] of Object.entries(parte)) out[id] = out[id] === null || n == null ? null : (out[id] ?? 0) + n;
+  return out;
+}
+
 const OTRAS_COLOR = '#5E4457';
 /**
  * Lista ordenada para los gráficos. `excluir`: categorías que no se muestran (p. ej. «no aplica»);
@@ -239,6 +246,14 @@ export function view(res, f) {
     intenciones: rel ? mu('intenciones', INTENCIONES) : vacia,
     marcas: mu('marcas', ENTIDADES),
     hashtags: rel ? mu('hashtags', []) : vacia,
+    // Celdas sumables entre periodos: si alguna parte está suprimida, el total no se cifra.
+    patrones: rel ? sumarCeldas(periodos.map((p) => p.relevantes.patrones ?? {})) : {},
+    temasConLaboratorio: !rel
+      ? vacia
+      : periodos.some((p) => p.relevantes.conLaboratorio !== 0 && p.relevantes.temasConLaboratorio == null)
+        ? { ...vacia, incompleta: true }
+        : mu('temasConLaboratorio', TEMAS),
+    conLaboratorio: sumarCeldas(periodos.map((p) => ({ x: p.relevantes.conLaboratorio ?? 0 }))).x ?? null,
     interacciones: inter.length && inter.every(Boolean) ? { total: inter.reduce((a, x) => a + x.total, 0), registros: inter.reduce((a, x) => a + x.registros, 0) } : null,
     notas,
   };
