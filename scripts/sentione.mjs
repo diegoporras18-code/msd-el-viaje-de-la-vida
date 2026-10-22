@@ -13,6 +13,7 @@
 //   npm run sentione -- publicar           # genera src/data/resultados.json y el informe privado
 //   npm run sentione -- guardar            # verifica que el repositorio es privado, hace commit y push
 //   npm run sentione -- verificar
+//   npm run sentione -- publicaciones entradas/exportacion.xlsx [--columna campo=Encabezado]   # candidatas privadas para «Ver publicaciones» (05.1)
 //
 // Nada de entradas/ (Excel, textos, lotes) se guarda en ningún repositorio: está en .gitignore.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -28,6 +29,8 @@ import { buildResultados, validarResultados } from '../src/lib/data/publicar.js'
 import { hechos } from '../src/lib/data/hechos.js';
 import { normalizeText } from '../src/lib/data/text.js';
 import { CRITERIOS_VERSION } from '../src/config/clasificacion.js';
+import { LABORATORIOS } from '../src/config/marcas.js';
+import { PUBLICACIONES } from '../src/content/publicaciones.js';
 
 const [cmd, ...args] = process.argv.slice(2);
 const opt = (name) => {
@@ -47,6 +50,7 @@ const RUTA = {
   resultados: process.env.SENTIONE_RESULTADOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS)) : new URL('../src/data/resultados.json', import.meta.url),
   // Las pruebas usan una carpeta temporal para no tocar los lotes locales de trabajo.
   lotes: process.env.SENTIONE_LOTES ? pathToFileURL(`${resolve(process.env.SENTIONE_LOTES)}/`) : new URL('../entradas/lotes/', import.meta.url),
+  candidatas: process.env.SENTIONE_PUBLICACIONES ? pathToFileURL(`${resolve(process.env.SENTIONE_PUBLICACIONES)}/`) : new URL('../entradas/publicaciones/', import.meta.url),
 };
 
 const leer = (url) => JSON.parse(readFileSync(url, 'utf8'));
@@ -137,11 +141,8 @@ function contrastarReferencia(resumen, referencia) {
   return lineas;
 }
 
-async function importar() {
-  const archivo = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
-  if (!archivo) fallar('Indica el archivo: npm run sentione -- importar entradas/archivo.xlsx');
-  const rows = await leerFilas(archivo);
-  const header = detectHeaderRow(rows);
+/** Mapeo de columnas sugerido, con las correcciones de --columna campo=Encabezado. */
+function mapeo(rows, header) {
   const mapping = suggestMapping(rows[header] ?? []);
   for (const o of opts('columna')) {
     const [campo, ...resto] = o.split('=');
@@ -149,6 +150,15 @@ async function importar() {
     if (col < 0) fallar(`No existe la columna «${resto.join('=')}».`);
     mapping[campo] = col;
   }
+  return mapping;
+}
+
+async function importar() {
+  const archivo = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
+  if (!archivo) fallar('Indica el archivo: npm run sentione -- importar entradas/archivo.xlsx');
+  const rows = await leerFilas(archivo);
+  const header = detectHeaderRow(rows);
+  const mapping = mapeo(rows, header);
   console.log(`Encabezados en la fila ${header + 1}:`);
   for (const c of CAMPOS) console.log(`  ${c.nombre.padEnd(28)} ${mapping[c.id] != null ? `← «${rows[header][mapping[c.id]]}»` : '—'}`);
   const val = validateMapping(mapping);
@@ -342,6 +352,60 @@ function revisar() {
   for (const [k, n] of Object.entries(porCodigo)) console.log(`  ${k.padEnd(26)} ${fmt(n)}  · ${CODIGOS_REVISION[k]}`);
 }
 
-const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar };
+/**
+ * Candidatas para «Ver publicaciones» del capítulo 05.1. Cruza la exportación con la base maestra
+ * y lista las menciones relevantes (A) que nombran explícitamente a un laboratorio. El resultado va
+ * solo a entradas/publicaciones/ (no se versiona) y NUNCA se publica automáticamente: cada contenido
+ * se revisa (acceso público, emisor institucional o de medio, nunca personas particulares), se
+ * describe en tercera persona y se agrega a mano a src/content/publicaciones.js.
+ */
+async function publicaciones() {
+  const archivo = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
+  if (!archivo) fallar('Indica la exportación: npm run sentione -- publicaciones entradas/archivo.xlsx');
+  const rows = await leerFilas(archivo);
+  const header = detectHeaderRow(rows);
+  const mapping = mapeo(rows, header);
+  const val = validateMapping(mapping);
+  if (!val.ok) fallar(`${val.errores.join(' ')} Usa las mismas opciones --columna que al importar.`);
+  const out = processRows(rows, header, mapping);
+  const base = new Map(leerMaestra().registros.map((r) => [r.h, r]));
+  const LABS = new Set(LABORATORIOS.map((l) => l.id));
+  const ya = new Set(PUBLICACIONES.map((x) => x.url.replace(/[?#].*$/, '').replace(/\/$/, '')));
+  const SOCIAL = new Set(['facebook', 'x', 'instagram', 'tiktok']);
+  const porUrl = new Map();
+  for (const r of out.registros) {
+    const c = base.get(r.h)?.c;
+    const labs = (c?.mc ?? []).filter((id) => LABS.has(id) && r.ent?.includes(id));
+    if (c?.rel !== 'si' || !labs.length || !r._local.url) continue;
+    const url = r._local.url.replace(/[?#].*$/, '').replace(/\/$/, '');
+    if (ya.has(url)) continue;
+    const prev = porUrl.get(url);
+    if (prev) {
+      prev.labs = [...new Set([...prev.labs, ...labs])];
+      continue;
+    }
+    porUrl.set(url, {
+      labs,
+      d: r.d,
+      plataforma: r.p,
+      revisar: SOCIAL.has(r.p) ? 'red social: solo si la cuenta es del laboratorio o de una institución o medio' : 'sitio: confirmar que es un medio, una institución o el laboratorio',
+      url: r._local.url,
+      autor: r._local.autor,
+      temas: c.tm,
+      texto: r._local.texto.slice(0, 700),
+    });
+  }
+  const lista = [...porUrl.values()].sort((a, b) => a.labs[0].localeCompare(b.labs[0]) || a.d.localeCompare(b.d));
+  mkdirSync(RUTA.candidatas, { recursive: true });
+  const destino = new URL(`candidatas-${hoy()}.json`, RUTA.candidatas);
+  writeFileSync(destino, JSON.stringify(lista, null, 1));
+  const cuenta = {};
+  for (const x of lista) for (const l of x.labs) cuenta[l] = (cuenta[l] ?? 0) + 1;
+  console.log(`✓ ${fmt(lista.length)} publicaciones candidatas (sin las ya verificadas) en ${relative(process.cwd(), fileURLToPath(destino))}:`);
+  for (const [l, n] of Object.entries(cuenta)) console.log(`  ${l.padEnd(18)} ${fmt(n)}`);
+  console.log('Nada se publica hasta revisarlas y agregarlas a src/content/publicaciones.js.');
+}
+
+const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar, publicaciones };
 if (!COMANDOS[cmd]) fallar(`Comando desconocido. Usa: ${Object.keys(COMANDOS).join(', ')}.`);
 await COMANDOS[cmd]();

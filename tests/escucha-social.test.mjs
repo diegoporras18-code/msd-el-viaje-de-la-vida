@@ -417,7 +417,7 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
   const remoto = join(tmp, 'remoto.git');
   const datos = join(tmp, 'datos');
   const resultados = join(tmp, 'resultados.json');
-  const sh = (cmd, a, cwd) => execFileSync(cmd, a, { cwd, encoding: 'utf8', env: { ...process.env, SENTIONE_DATOS: datos, SENTIONE_RESULTADOS: resultados, SENTIONE_LOTES: join(tmp, 'lotes'), SENTIONE_PRUEBA: '1' } });
+  const sh = (cmd, a, cwd) => execFileSync(cmd, a, { cwd, encoding: 'utf8', env: { ...process.env, SENTIONE_DATOS: datos, SENTIONE_RESULTADOS: resultados, SENTIONE_LOTES: join(tmp, 'lotes'), SENTIONE_PUBLICACIONES: join(tmp, 'publicaciones'), SENTIONE_PRUEBA: '1' } });
   const lotes = new URL(`file://${join(tmp, 'lotes')}/`);
   try {
     sh('git', ['init', '-q', '--bare', remoto]);
@@ -453,6 +453,15 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
     assert.deepEqual(validarMaestra(JSON.parse(maestraRemota)), []);
     for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!maestraRemota.includes(x), `la base privada no guarda «${x}»`);
     assert.ok(!/\.xlsx|lote-/.test(enRemoto), 'ni el Excel ni los lotes llegan al repositorio privado');
+
+    // Candidatas de «Ver publicaciones»: quedan fuera del repositorio y no se publican solas.
+    const contenido = readFileSync(new URL('../src/content/publicaciones.js', import.meta.url), 'utf8');
+    sh('npm', ['run', '-s', 'sentione', '--', 'publicaciones', xlsx]);
+    const [cand] = readdirSync(join(tmp, 'publicaciones'));
+    const candidatas = JSON.parse(readFileSync(join(tmp, 'publicaciones', cand), 'utf8'));
+    assert.deepEqual(candidatas.map((x) => x.labs), [['msd'], ['msd']], 'solo menciones relevantes que nombran al laboratorio');
+    assert.ok(candidatas.every((x) => /red social/.test(x.revisar)), 'las redes sociales se marcan para revisar el emisor');
+    assert.equal(readFileSync(new URL('../src/content/publicaciones.js', import.meta.url), 'utf8'), contenido, 'nada se publica sin revisión');
 
     // Segunda exportación solapada: no duplica y no reclasifica.
     sh('npm', ['run', '-s', 'sentione', '--', 'importar', xlsx]);
@@ -492,4 +501,45 @@ test('las fechas de corte de los textos salen de resultados.cobertura', async ()
     const txt = readFileSync(new URL(`../src/content/${f}`, import.meta.url), 'utf8');
     assert.doesNotMatch(txt, /[Dd]atos (hasta|del 1 al) \d+ de octubre/, f);
   }
+});
+
+test('publicaciones por laboratorio: solo contenidos públicos verificados, sin datos individuales', async () => {
+  const { PUBLICACIONES } = await import('../src/content/publicaciones.js');
+  const { EXTERNAS, publicacionesDe } = await import('../src/lib/publicaciones.js');
+  const { TEMAS } = await import('../src/config/clasificacion.js');
+  const labs = new Set(ENTIDADES.filter((e) => e.tipo === 'laboratorio').map((e) => e.id));
+  const temas = new Set(TEMAS.map((t) => t.id));
+  const CAMPOS = new Set(['id', 'laboratorios', 'emisor', 'formato', 'medio', 'pais', 'fecha', 'tema', 'descripcion', 'url', 'verificacion']);
+  const REDES = /(^|\.)(facebook|instagram|tiktok|twitter|x|threads|youtube|linkedin)\.com$/;
+  const urls = new Set();
+  for (const p of [...PUBLICACIONES, ...EXTERNAS]) {
+    // Nada de huellas, sentimiento, métricas ni autores: no es un registro de la base.
+    if (PUBLICACIONES.includes(p)) for (const c of Object.keys(p)) assert.ok(CAMPOS.has(c), `${p.id}: campo no permitido «${c}»`);
+    assert.ok(p.laboratorios.length && p.laboratorios.every((l) => labs.has(l)), `${p.id}: laboratorio desconocido`);
+    assert.ok(['laboratorio', 'tercero'].includes(p.emisor), `${p.id}: emisor`);
+    assert.ok(temas.has(p.tema), `${p.id}: tema`);
+    assert.ok(p.fecha === null || /^\d{4}-\d{2}-\d{2}$/.test(p.fecha), `${p.id}: fecha`);
+    const u = new URL(p.url);
+    assert.equal(u.protocol, 'https:', `${p.id}: https`);
+    assert.doesNotMatch(u.search, /utm_|fbclid|gclid|igsh|si=/, `${p.id}: sin parámetros de seguimiento`);
+    // Publicaciones en redes solo si son cuentas oficiales del laboratorio, nunca de particulares.
+    if (REDES.test(u.hostname)) assert.equal(p.emisor, 'laboratorio', `${p.id}: red social de un tercero`);
+    assert.ok(!urls.has(p.url), `${p.id}: URL repetida`);
+    urls.add(p.url);
+    // Síntesis en tercera persona, breve y sin citas ni cuentas.
+    assert.ok(p.descripcion.length <= 230, `${p.id}: descripción larga`);
+    assert.doesNotMatch(p.descripcion, /[«»“”"@]|\b(yo|me|mi|mis|nosotros|nuestra|nuestro)\b/i, p.id);
+  }
+  for (const p of PUBLICACIONES) {
+    assert.match(p.verificacion.fecha, /^\d{4}-\d{2}-\d{2}$/, `${p.id}: verificación`);
+    assert.ok(['indice-publico', 'acceso-directo'].includes(p.verificacion.metodo), `${p.id}: método`);
+    assert.ok(p.fecha >= '2026-09-21' && p.fecha <= '2026-10-31', `${p.id}: fuera del periodo de la escucha`);
+  }
+  // Cada laboratorio del capítulo 05.1 responde con publicaciones o con el estado vacío, nunca inventa.
+  const cuenta = Object.fromEntries([...labs].map((l) => [l, publicacionesDe(l)]));
+  assert.equal(cuenta['otro-laboratorio'].total, 0);
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(cuenta).map(([l, x]) => [l, [x.escucha.length, x.externas.length]])),
+    { msd: [1, 0], 'daiichi-sankyo': [3, 2], astrazeneca: [4, 2], roche: [1, 1], novartis: [2, 0], pfizer: [1, 0], lilly: [1, 0], gilead: [1, 0], menarini: [1, 0], bayer: [1, 1], 'otro-laboratorio': [0, 0] },
+  );
 });

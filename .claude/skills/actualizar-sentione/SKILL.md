@@ -78,6 +78,16 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
 
 7. **Evidencias.** Solo agrega a `src/content/evidencias.js` noticias, publicaciones o creadores con URL pública verificada. No agregues cuentas de particulares.
 
+   **Publicaciones por laboratorio (05.1 «Ver publicaciones»).** Nunca se publican automáticamente.
+   ```bash
+   npm run sentione -- publicaciones entradas/ARCHIVO.xlsx [--columna campo=Encabezado]   # las mismas --columna que al importar
+   ```
+   - Deja en `entradas/publicaciones/` (no se versiona) las menciones relevantes (A) que nombran explícitamente a un laboratorio, sin las ya publicadas.
+   - Revisa cada candidata leyendo el texto completo: nombra al laboratorio y trata cáncer de mama; el emisor es el laboratorio (comunicado, cuenta oficial o contenido de marca), un medio o una institución, **nunca una persona particular**; agrupa las réplicas de una misma nota en una sola publicación.
+   - Comprueba que la URL exacta es de acceso público (acceso directo o la URL exacta en un índice público). Si no se puede comprobar, queda pendiente en el informe privado `informes/publicaciones-AAAA-MM-DD.md`, no en el sitio.
+   - Agrega solo las verificadas a `src/content/publicaciones.js`, con una síntesis en tercera persona sin citas, `emisor`, `tema` y `verificacion`. Las pruebas rechazan campos de la base (huellas, sentimiento, autores), redes de terceros y citas.
+   - La lista es una selección curada: no muestra recuentos de menciones ni sustituye las cifras protegidas por el umbral.
+
 8. **Verificar.**
    ```bash
    npm test && npm run build && npm run sentione -- verificar
