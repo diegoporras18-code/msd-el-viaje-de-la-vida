@@ -1,48 +1,65 @@
-// Análisis sobre los resultados públicos agregados (cubo). Funciones puras: las usan
-// la web y las pruebas. Regla central: un día sin cobertura es «sin datos» (null), nunca cero.
-import { EMOCIONES, INTENCIONES, PLATAFORMAS, SENTIMIENTOS, SENTIMIENTOS_ORIGINALES, TEMAS } from '../../config/clasificacion.js';
+// Análisis sobre los resultados públicos agregados. Funciones puras: las usan la web y las pruebas.
+// Reglas centrales:
+//   · un día sin cobertura es «sin datos» (null), nunca cero;
+//   · la serie diaria admite cualquier rango; las distribuciones solo existen por periodo base
+//     completo y por grupo («relevantes» o el universo captado = relevantes + resto);
+//   · lo que no alcanza el umbral de privacidad se muestra agrupado o como muestra insuficiente.
+import { EMOCIONES, PLATAFORMAS, SENTIMIENTOS, TEMAS, INTENCIONES } from '../../config/clasificacion.js';
 import { ENTIDADES, entidad } from '../../config/marcas.js';
-import { addDays, dayRange, daysBetween, isCovered } from './dates.js';
+import { addDays, dayRange, daysBetween, isCovered, rangeLabel } from './dates.js';
 
-export const FILTROS_VACIOS = { plataformas: [], sentimientos: [], tipoSentimiento: 'revisado', temas: [], marcas: [], relevancia: 'todas' };
+export const SEGMENTOS = [
+  { id: 'relevantes', nombre: 'Sobre cáncer de mama' },
+  { id: 'todas', nombre: 'Todo lo captado' },
+];
+export const FILTROS_VACIOS = { segmento: 'relevantes' };
 export const MUESTRA_MINIMA = 30;
 export const SOV_DIAS_MINIMOS = 7;
+export const umbral = (res) => res?.umbral ?? 10;
 
-export const PENDIENTE = { id: 'pendiente', nombre: 'Aún sin clasificar', color: '#4A2A40' };
-export const catalogoSentimiento = (tipo) => (tipo === 'original' ? SENTIMIENTOS_ORIGINALES : [...SENTIMIENTOS, PENDIENTE]);
+export const FRANJAS = [
+  { id: 'madrugada', nombre: 'Madrugada (0–5 h)' },
+  { id: 'manana', nombre: 'Mañana (6–11 h)' },
+  { id: 'tarde', nombre: 'Tarde (12–17 h)' },
+  { id: 'noche', nombre: 'Noche (18–23 h)' },
+  { id: 'sin_hora', nombre: 'Sin hora registrada' },
+];
+export const TIPOS = [
+  { id: 'article', nombre: 'Artículos' },
+  { id: 'tweet', nombre: 'Publicaciones en X' },
+  { id: 'quote tweet', nombre: 'Citas en X' },
+  { id: 'comment', nombre: 'Comentarios' },
+  { id: 'post', nombre: 'Publicaciones' },
+  { id: 'video', nombre: 'Videos' },
+  { id: 'reels', nombre: 'Reels' },
+  { id: 'sin_tipo', nombre: 'Sin tipo' },
+];
+export const ESTADOS_RESTO = [
+  { id: 'no', nombre: 'Coincidencia ajena al tema', color: '#5E4457' },
+  { id: 'dudosa', nombre: 'Relación dudosa', color: '#8A6C80' },
+  { id: 'pendiente', nombre: 'Aún sin clasificar', color: '#4A2A40' },
+];
 
-const hasRecordFilters = (f) => Boolean(f.plataformas?.length || f.sentimientos?.length || f.temas?.length || f.marcas?.length || (f.relevancia && f.relevancia !== 'todas'));
-const inRange = (d, f) => d >= f.desde && d <= f.hasta;
-export const sentOf = (r, tipo) => (tipo === 'original' ? r.so : r.cl ? r.s : 'pendiente');
+const soloRelevantes = (f) => (f.segmento ?? 'relevantes') === 'relevantes';
 
-export function passes(r, f) {
-  if (f.plataformas?.length && !f.plataformas.includes(r.p)) return false;
-  if (f.sentimientos?.length && !f.sentimientos.includes(sentOf(r, f.tipoSentimiento))) return false;
-  if (f.temas?.length && !(r.tm ?? []).some((t) => f.temas.includes(t))) return false;
-  if (f.marcas?.length && !(r.mc ?? []).some((m) => f.marcas.includes(m))) return false;
-  if (f.relevancia === 'relevantes' && r.rel !== 'si') return false;
-  return true;
-}
-
-const filas = (res, f) => res.cubo.filter((r) => inRange(r.d, f) && passes(r, f));
-const sumN = (rows) => rows.reduce((a, r) => a + r.n, 0);
-
-/** Totales diarios: cubo en días cubiertos; referencia preliminar en el resto (si no hay filtros). */
+/** Serie diaria del grupo elegido: base maestra en días cubiertos; referencia preliminar en el resto (solo universo). */
 export function dailyTotals(res, f) {
-  const filtrado = hasRecordFilters(f);
-  const porDia = {};
-  for (const r of filas(res, f)) porDia[r.d] = (porDia[r.d] ?? 0) + r.n;
+  const rel = soloRelevantes(f);
+  const porDia = new Map((res.diario ?? []).map((x) => [x.d, x]));
   const base = res.base;
   return dayRange(f.desde, f.hasta).map((d) => {
-    if (isCovered(res.cobertura, d)) return { d, v: porDia[d] ?? 0, src: 'base-maestra' };
-    if (base?.diario?.[d] != null) return filtrado ? { d, v: null, src: 'referencia-filtrada' } : { d, v: base.diario[d], src: 'referencia' };
+    if (isCovered(res.cobertura, d)) {
+      const x = porDia.get(d) ?? { n: 0, cl: 0, rel: 0 };
+      return { d, v: rel ? x.rel : x.n, n: x.n, cl: x.cl, rel: x.rel, src: 'base-maestra' };
+    }
+    if (base?.diario?.[d] != null) return rel ? { d, v: null, src: 'referencia-filtrada' } : { d, v: base.diario[d], src: 'referencia' };
     if (base?.bloques?.some((b) => b.desde <= d && d <= b.hasta)) return { d, v: null, src: 'bloque' };
     return { d, v: null, src: null };
   });
 }
 
 function usableBlocks(res, f) {
-  if (hasRecordFilters(f)) return [];
+  if (soloRelevantes(f)) return [];
   return (res.base?.bloques ?? []).filter((b) => b.desde >= f.desde && b.hasta <= f.hasta && !dayRange(b.desde, b.hasta).some((d) => isCovered(res.cobertura, d)));
 }
 
@@ -87,110 +104,167 @@ export function peaks(dias, factor = 1.5, max = 5) {
   return vals.filter((x) => x.v >= media * factor && x.v > 0).sort((a, b) => b.v - a.v).slice(0, max);
 }
 
-const tally = (rows, getter) => {
-  const m = new Map();
-  for (const r of rows) for (const k of [].concat(getter(r) ?? [])) m.set(k, (m.get(k) ?? 0) + r.n);
-  return m;
-};
-const fromCatalog = (map, catalog) => catalog.map((c) => ({ id: c.id, nombre: c.nombre, v: map.get(c.id) ?? 0, color: c.color })).filter((x) => x.v > 0).sort((a, b) => b.v - a.v);
+/** Relevancia de un tramo de días: relevantes sobre clasificadas (serie diaria, sin cruces). */
+export function relevanciaRango(res, desde, hasta = desde) {
+  const xs = (res.diario ?? []).filter((y) => desde <= y.d && y.d <= hasta);
+  const s = xs.reduce((a, x) => ({ rel: a.rel + x.rel, cl: a.cl + x.cl, n: a.n + x.n }), { rel: 0, cl: 0, n: 0 });
+  return s.cl ? { ...s, pct: (s.rel / s.cl) * 100 } : null;
+}
+export const relevanciaDia = (res, d) => relevanciaRango(res, d, d);
 
-/** Vista completa con filtros: alimenta el modo Explorar resultados. */
+// ── Distribuciones por periodo base ────────────────────────────────────────────────────────
+
+/** Periodos base con datos que tocan el rango; las distribuciones siempre los incluyen completos. */
+export function periodosDe(res, f) {
+  const ps = (res.periodos ?? []).filter((p) => p.desde <= f.hasta && p.hasta >= f.desde);
+  const dias = (res.diario ?? []).filter((x) => x.n && ps.some((p) => p.desde <= x.d && x.d <= p.hasta)).map((x) => x.d);
+  const fuera = dias.filter((d) => d < f.desde || d > f.hasta);
+  return { periodos: ps, completo: !fuera.length, desde: dias[0], hasta: dias[dias.length - 1] };
+}
+
+/** Suma distribuciones exclusivas: lo agrupado o suprimido en alguna parte queda en «otras». */
+export function sumarExclusivas(partes) {
+  const agrupadas = new Set();
+  let otras = 0;
+  let sinDesglose = 0;
+  for (const { dist, n } of partes) {
+    if (!n) continue;
+    if (dist == null) sinDesglose += n;
+    else for (const id of dist.otras?.ids ?? []) agrupadas.add(id);
+  }
+  const v = new Map();
+  for (const { dist, n } of partes) {
+    if (!n || dist == null) continue;
+    otras += dist.otras?.n ?? 0;
+    for (const [id, x] of Object.entries(dist.v)) {
+      if (agrupadas.has(id)) otras += x;
+      else v.set(id, (v.get(id) ?? 0) + x);
+    }
+  }
+  return { v, otras: otras ? { n: otras, ids: [...agrupadas].sort() } : null, sinDesglose };
+}
+
+/** Suma distribuciones multietiqueta: si una etiqueta está bajo el umbral en alguna parte, no se cifra. */
+export function sumarMultiples(partes) {
+  const menores = new Set(partes.flatMap((p) => p.dist?.menores ?? []));
+  const v = new Map();
+  for (const { dist } of partes) for (const [id, x] of Object.entries(dist?.v ?? {})) if (!menores.has(id)) v.set(id, (v.get(id) ?? 0) + x);
+  return { v, menores: [...menores].filter((id) => !v.has(id)).sort() };
+}
+
+const OTRAS_COLOR = '#5E4457';
+/**
+ * Lista ordenada para los gráficos. `excluir`: categorías que no se muestran (p. ej. «no aplica»);
+ * si alguna quedó agrupada en «otras», el grupo no se puede interpretar y se omite.
+ */
+function lista(sum, catalogo, { excluir = [], nombreDe } = {}) {
+  const nombre = (id) => catalogo.find((c) => c.id === id)?.nombre ?? nombreDe?.(id) ?? id;
+  const items = [...sum.v.entries()]
+    .filter(([id, v]) => v > 0 && !excluir.includes(id))
+    .map(([id, v]) => ({ id, nombre: nombre(id), v, color: catalogo.find((c) => c.id === id)?.color }))
+    .sort((a, b) => b.v - a.v);
+  const grupoOtras = sum.otras && !sum.otras.ids.some((id) => excluir.includes(id));
+  const otrasN = (grupoOtras ? sum.otras.n : 0) + (sum.sinDesglose && !excluir.length ? sum.sinDesglose : 0);
+  if (otrasN)
+    items.push({
+      id: 'otras',
+      nombre: sum.sinDesglose ? 'Otras o sin desglose' : 'Otras (agrupadas)',
+      v: otrasN,
+      color: OTRAS_COLOR,
+      agrupa: grupoOtras ? sum.otras.ids.map(nombre) : [],
+    });
+  return { items, incompleta: Boolean((sum.otras && !grupoOtras) || (sum.sinDesglose && excluir.length)), menores: (sum.menores ?? []).map(nombre) };
+}
+
+const vacia = { items: [], incompleta: false, menores: [] };
+
+/**
+ * Vista para un rango y un grupo. Con «relevantes» alimenta todos los gráficos temáticos; con
+ * «todas» solo publica el contexto del universo captado: volumen, relevancia, plataformas,
+ * franjas horarias y marcas.
+ */
 export function view(res, f) {
-  const rows = filas(res, f);
+  const rel = soloRelevantes(f);
   const dias = dailyTotals(res, f);
   const stats = periodStats(res, f);
-  const filtrado = hasRecordFilters(f);
+  const { periodos, completo, desde, hasta } = periodosDe(res, f);
+  const k = umbral(res);
   const notas = [];
+  if (periodos.length && !completo) notas.push(`Las distribuciones se publican por periodo completo: incluyen del ${rangeLabel(desde, hasta)}.`);
 
-  // La referencia preliminar solo entra en las distribuciones si su periodo cabe entero en el rango.
-  const base = res.base?.distribuciones;
-  let baseIncluida = false;
-  if (base) {
-    const diasBase = dayRange(base.desde, base.hasta);
-    const libre = !diasBase.some((d) => isCovered(res.cobertura, d));
-    if (libre && diasBase.some((d) => inRange(d, f))) {
-      if (filtrado) notas.push('La referencia preliminar de SentiOne no se puede filtrar por plataforma, sentimiento, temática o marca.');
-      else if (base.desde >= f.desde && base.hasta <= f.hasta) baseIncluida = true;
-      else notas.push(`La referencia preliminar solo tiene distribuciones del ${base.etiqueta} completo.`);
-    }
+  const partesDe = (dim, grupos) => periodos.flatMap((p) => grupos.map((g) => ({ dist: p[g][dim], n: p[g].n })));
+  const grupos = rel ? ['relevantes'] : ['relevantes', 'resto'];
+  const ex = (dim, cat, opts) => lista(sumarExclusivas(partesDe(dim, grupos)), cat, opts);
+  const mu = (dim, cat, opts, gs = grupos) => lista({ ...sumarMultiples(partesDe(dim, gs)), otras: null, sinDesglose: 0 }, cat, opts);
+
+  const relevantes = periodos.reduce((a, p) => a + p.relevantes.n, 0);
+  const resto = periodos.reduce((a, p) => a + p.resto.n, 0);
+  const clasificados = periodos.reduce((a, p) => a + p.clasificados, 0);
+  const estado = sumarExclusivas(periodos.map((p) => ({ dist: p.resto.estado, n: p.resto.n })));
+  const est = (id) => (estado.otras?.ids.includes(id) || estado.sinDesglose ? null : estado.v.get(id) ?? 0);
+  const inter = periodos.flatMap((p) => grupos.map((g) => p[g].interacciones));
+  const rev = periodos.map((p) => p.revisar);
+
+  // Referencia preliminar (sin base maestra): plataformas del periodo completo de SentiOne.
+  const ref = res.base?.distribuciones;
+  let plataformas = ex('plataformas', PLATAFORMAS);
+  if (!periodos.length && !rel && ref && ref.desde >= f.desde && ref.hasta <= f.hasta && !dayRange(ref.desde, ref.hasta).some((d) => isCovered(res.cobertura, d))) {
+    plataformas = lista({ v: new Map(Object.entries(ref.plataformas)), otras: null, sinDesglose: 0 }, PLATAFORMAS);
+    notas.push('Plataformas de la referencia preliminar de SentiOne (filas exportadas, sin deduplicar).');
   }
-  const baseTotal = baseIncluida ? Object.values(base.plataformas).reduce((a, b) => a + b, 0) : 0;
-
-  const plat = tally(rows, (r) => r.p);
-  const sent = tally(rows, (r) => sentOf(r, f.tipoSentimiento));
-  if (baseIncluida) {
-    for (const [k, v] of Object.entries(base.plataformas)) plat.set(k, (plat.get(k) ?? 0) + v);
-    if (f.tipoSentimiento === 'original') for (const [k, v] of Object.entries(base.sentimiento)) sent.set(k, (sent.get(k) ?? 0) + v);
-    else sent.set('pendiente', (sent.get('pendiente') ?? 0) + baseTotal);
-  }
-
-  const cls = rows.filter((r) => r.cl);
-  const clasificados = sumN(cls);
-  const total = sumN(rows) + baseTotal;
-  const marcasMap = tally(rows, (r) => r.mc);
-  const tagRows = (res.hashtags ?? []).filter((x) => inRange(x.d, f) && (!f.plataformas?.length || f.plataformas.includes(x.p)));
-  const tags = new Map();
-  for (const x of tagRows) tags.set(x.tag, (tags.get(x.tag) ?? 0) + x.n);
-
-  const conHora = rows.filter((r) => r.t != null);
-  let horario = null;
-  if (conHora.length) {
-    const m = new Map();
-    for (const r of conHora) {
-      if (!m.has(r.d)) m.set(r.d, Array(24).fill(0));
-      m.get(r.d)[r.t] += r.n;
-    }
-    const fl = [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([d, horas]) => ({ d, horas }));
-    horario = { filas: fl, max: Math.max(...fl.flatMap((x) => x.horas)), sinHora: sumN(rows) - sumN(conHora) };
-  }
-  const conMetrica = rows.filter((r) => r.itn);
 
   return {
+    segmento: rel ? 'relevantes' : 'todas',
+    umbral: k,
     dias,
     stats,
     picos: peaks(dias),
-    total,
-    registros: sumN(rows),
+    periodos: periodos.map((p) => p.id),
+    desde,
+    hasta,
+    // Denominadores: el universo captado del periodo y el grupo mostrado.
+    universo: relevantes + resto,
+    registros: rel ? relevantes : relevantes + resto,
     clasificados,
-    revisar: sumN(cls.filter((r) => r.rv)),
-    baseIncluida,
-    plataformas: fromCatalog(plat, PLATAFORMAS),
-    sentimiento: fromCatalog(sent, catalogoSentimiento(f.tipoSentimiento)),
-    temas: fromCatalog(tally(cls, (r) => r.tm), TEMAS),
-    emociones: fromCatalog(tally(cls, (r) => r.e), EMOCIONES),
-    intenciones: fromCatalog(tally(cls, (r) => r.ia), INTENCIONES),
-    relevancia: Object.fromEntries(['si', 'dudosa', 'no'].map((k) => [k, sumN(cls.filter((r) => r.rel === k))])),
-    haciaMarca: fromCatalog(tally(cls.filter((r) => r.sm && r.sm !== 'no_aplica'), (r) => r.sm), SENTIMIENTOS),
-    haciaSistema: fromCatalog(tally(cls.filter((r) => r.ss && r.ss !== 'no_aplica'), (r) => r.ss), SENTIMIENTOS),
-    marcas: ENTIDADES.map((e) => ({ id: e.id, nombre: e.nombre, v: marcasMap.get(e.id) ?? 0, color: e.color })).filter((x) => x.v > 0).sort((a, b) => b.v - a.v),
-    hashtags: [...tags.entries()].map(([id, v]) => ({ id, nombre: id, v })).sort((a, b) => b.v - a.v || a.id.localeCompare(b.id)).slice(0, 12),
-    hashtagsFiltrables: !(f.sentimientos?.length || f.temas?.length || f.marcas?.length || f.relevancia !== 'todas'),
-    horario,
-    interacciones: conMetrica.length ? { total: conMetrica.reduce((a, r) => a + r.it, 0), registros: conMetrica.reduce((a, r) => a + r.itn, 0) } : null,
-    tipos: [...tally(rows.filter((r) => r.tp), (r) => r.tp).entries()].map(([id, v]) => ({ id, nombre: id, v })).sort((a, b) => b.v - a.v),
+    relevancia: { si: relevantes, dudosa: est('dudosa'), no: est('no'), pendiente: est('pendiente'), resto },
+    revisar: rev.some((x) => x == null) ? null : rev.reduce((a, b) => a + b, 0),
+    plataformas,
+    franjas: ex('franjas', FRANJAS),
+    tipos: rel ? ex('tipos', TIPOS) : vacia,
+    sentimiento: rel ? ex('sentimiento', SENTIMIENTOS) : vacia,
+    haciaSistema: rel ? ex('haciaSistema', SENTIMIENTOS, { excluir: ['no_aplica'] }) : vacia,
+    haciaMarca: rel ? ex('haciaMarca', SENTIMIENTOS, { excluir: ['no_aplica'] }) : vacia,
+    emociones: rel ? ex('emociones', EMOCIONES) : vacia,
+    temas: rel ? mu('temas', TEMAS) : vacia,
+    intenciones: rel ? mu('intenciones', INTENCIONES) : vacia,
+    marcas: mu('marcas', ENTIDADES),
+    hashtags: rel ? mu('hashtags', []) : vacia,
+    interacciones: inter.length && inter.every(Boolean) ? { total: inter.reduce((a, x) => a + x.total, 0), registros: inter.reduce((a, x) => a + x.registros, 0) } : null,
     notas,
   };
 }
 
-/** Comparativo de marcas detectadas en la misma base maestra. */
+/** Presencia de cada marca en la consulta: menciones sobre cáncer de mama y en el universo captado. */
 export function marcasView(res, f, ids) {
-  return ids.map((id) => {
-    const fm = { ...f, marcas: [id] };
-    const v = view(res, fm);
-    return { id, info: entidad(id), n: v.registros, v };
-  });
+  const { periodos } = periodosDe(res, f);
+  const sumar = (gs) => sumarMultiples(periodos.flatMap((p) => gs.map((g) => ({ dist: p[g].marcas }))));
+  const r = sumar(['relevantes']);
+  const t = sumar(['relevantes', 'resto']);
+  const valor = (s, id) => (s.menores.includes(id) ? null : s.v.get(id) ?? 0);
+  return ids.map((id) => ({ id, info: entidad(id), relevantes: valor(r, id), todas: valor(t, id) }));
 }
 
 /**
- * Share of Voice: solo si la consulta captura a todas las marcas con criterio equivalente
- * y hay al menos SOV_DIAS_MINIMOS días de base maestra en el rango.
+ * Share of Voice: solo si la consulta captura a todas las marcas con criterio equivalente,
+ * hay al menos SOV_DIAS_MINIMOS días de base maestra y cada marca supera el umbral de publicación.
  */
 export function shareOfVoice(res, f, ids) {
   const sinCobertura = ids.filter((id) => entidad(id)?.cobertura !== 'equivalente');
   if (sinCobertura.length) return { ok: false, motivo: 'cobertura', sinCobertura };
   const dias = dayRange(f.desde, f.hasta).filter((d) => isCovered(res.cobertura, d));
   if (dias.length < SOV_DIAS_MINIMOS) return { ok: false, motivo: 'periodo' };
-  const valores = ids.map((id) => ({ id, v: sumN(filas(res, { ...f, marcas: [id] })) }));
+  const valores = marcasView(res, f, ids).map((x) => ({ id: x.id, v: x.todas }));
+  if (valores.some((x) => x.v == null)) return { ok: false, motivo: 'muestra' };
   const total = valores.reduce((a, x) => a + x.v, 0);
   if (!total) return { ok: false, motivo: 'sin-menciones' };
   return { ok: true, dias: dias.length, total, valores: valores.map((x) => ({ ...x, pct: (x.v / total) * 100 })) };
@@ -198,3 +272,12 @@ export function shareOfVoice(res, f, ids) {
 
 export const tieneBaseMaestra = (res) => res.cobertura.length > 0 && res.totales.unicos > 0;
 export const diasCubiertos = (res, desde, hasta) => dayRange(desde, hasta).filter((d) => isCovered(res.cobertura, d)).length;
+
+/** Notas de privacidad para el pie de un gráfico: grupos, etiquetas sin cifra y muestras insuficientes. */
+export function notasPrivacidad(l, k) {
+  const out = [];
+  if (l.items.some((x) => x.id === 'otras')) out.push(`«Otras» agrupa categorías con menos de ${k} menciones (y, si hace falta, la siguiente más pequeña) para que ninguna se pueda deducir.`);
+  if (l.menores.length) out.push(`Con menos de ${k} menciones, sin cifra: ${l.menores.join(', ').toLowerCase()}.`);
+  if (l.incompleta) out.push(`Parte de las menciones no se desglosa porque no alcanza el umbral de ${k}.`);
+  return out;
+}

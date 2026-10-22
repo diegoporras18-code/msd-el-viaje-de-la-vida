@@ -3,6 +3,7 @@ const ESTADOS = {
   evento: { etiqueta: 'Disponible después del evento', tono: 'text-fucsia border-fucsia/50' },
   analisis: { etiqueta: 'Disponible en la próxima actualización', tono: 'text-rosa border-rosa/40' },
   sin_datos: { etiqueta: 'Sin datos para este filtro', tono: 'text-bruma border-bruma/40' },
+  muestra: { etiqueta: 'Muestra insuficiente', tono: 'text-bruma border-bruma/40' },
 };
 
 // Barras fantasma deterministas: evocan la onda musical sin sugerir valores.

@@ -8,10 +8,10 @@ export const impacto = {
     texto: 'Se comparará el antes, el durante y el después del concierto con promedios diarios, para que periodos de distinta duración sean comparables.',
     medira: [
       'Crecimiento frente al promedio diario previo',
-      'Picos de la noche del concierto, hora a hora',
+      'La noche del concierto por franja horaria',
       'Conversación atribuible a la acción: Fonseca, El Viaje de la Vida y MSD',
       'Medios, creadores y participación del público',
-      'Cambios en temáticas y sentimiento',
+      'Cambios en temáticas y sentimiento de las menciones sobre cáncer de mama',
     ],
   },
   causalidad: 'Un cambio coincidente en el tiempo no prueba por sí solo que lo haya causado el concierto: se analizará junto con su contenido.',

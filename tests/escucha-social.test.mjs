@@ -12,15 +12,16 @@ import { detectHeaderRow, suggestMapping, validateMapping } from '../src/lib/dat
 import { normalizePlatform, normalizeSentiment, normalizeUrl, parseDateTime, parseNumber } from '../src/lib/data/normalize.js';
 import { processRows } from '../src/lib/data/process.js';
 import { aplicarResultados, buildLotes, clasificado, emptyMaestra, mergeExport, pendientes, serializarMaestra, validarMaestra } from '../src/lib/data/maestra.js';
-import { buildResultados, validarResultados } from '../src/lib/data/publicar.js';
-import { FILTROS_VACIOS, dailyTotals, growth, periodStats, shareOfVoice, view } from '../src/lib/data/resultados.js';
+import { UMBRAL, buildResultados, distribucionExclusiva, distribucionMultiple, validarResultados } from '../src/lib/data/publicar.js';
+import { FILTROS_VACIOS, dailyTotals, growth, marcasView, periodStats, shareOfVoice, view } from '../src/lib/data/resultados.js';
 import { hechos } from '../src/lib/data/hechos.js';
 import { ENTIDADES } from '../src/config/marcas.js';
 
 const leer = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
 const referencia = leer('../datos/maestra/referencia.json');
 const publicado = leer('../src/data/resultados.json');
-const OCT = { ...FILTROS_VACIOS, desde: '2026-10-01', hasta: '2026-10-20' };
+const TODAS = { ...FILTROS_VACIOS, segmento: 'todas' };
+const OCT = { ...TODAS, desde: '2026-10-01', hasta: '2026-10-20' };
 
 const HEADERS = ['ID', 'Date', 'Source', 'Url', 'Text', 'Author', 'Sentiment', 'Country', 'Interactions'];
 const fila = (id, date, source, url, text, int = 1, country = 'Colombia') => [id, date, source, url, text, 'autor', '', country, int];
@@ -41,29 +42,65 @@ test('referencia preliminar: 2.837 registros, 2.611 en octubre, distribuciones c
   assert.deepEqual(validarResultados(publicado), []);
 });
 
-test('cifras publicadas: promedio, pico, crecimiento normalizado y días sin datos', () => {
+test('cifras publicadas: la exportación coincide con la referencia y la base deduplica', () => {
+  // Filas brutas de SentiOne (referencia validada) frente a menciones únicas de la base maestra.
+  assert.equal(publicado.actualizacion.filasBrutas, referencia.exportacion.total);
+  assert.equal(publicado.actualizacion.unicasArchivo, 2785);
+  assert.deepEqual(publicado.cobertura, [{ desde: '2026-09-21', hasta: '2026-10-20' }]);
   const s = periodStats(publicado, OCT);
-  assert.equal(s.total, 2611);
-  assert.equal(s.promedioDiario.toFixed(2), '130.55');
+  assert.equal(s.total, 2578);
+  assert.ok(s.total <= 2611, 'las menciones únicas no superan las filas brutas de octubre');
+  assert.equal(s.promedioDiario.toFixed(2), '128.90');
   assert.equal(s.mediana, 54);
-  assert.equal(growth(publicado, { ...FILTROS_VACIOS, desde: '2026-10-01', hasta: '2026-10-23' }).pct.toFixed(2), '477.65');
-  const dias = dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-19', hasta: '2026-10-22' });
+  assert.equal(growth(publicado, { ...TODAS, desde: '2026-10-01', hasta: '2026-10-23' }).pct.toFixed(2), '522.71');
+  const dias = dailyTotals(publicado, { ...TODAS, desde: '2026-10-19', hasta: '2026-10-22' });
   assert.deepEqual(dias.map((x) => x.v), [238, 54, null, null], 'un día sin cobertura es null, nunca cero');
-  assert.ok(dailyTotals(publicado, { ...OCT, temas: ['prevencion'] }).every((x) => x.v === null), 'la referencia no se puede filtrar');
+  for (const d of Object.keys(referencia.diario)) assert.ok(dailyTotals(publicado, { ...TODAS, desde: d, hasta: d })[0].v <= referencia.diario[d], `${d}: únicas ≤ filas brutas`);
+  // Menciones sobre cáncer de mama por día: 1 al 20 de octubre.
+  assert.equal(periodStats(publicado, { ...OCT, segmento: 'relevantes' }).total, 732);
+  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-19', hasta: '2026-10-21' }).map((x) => x.v), [179, null, null].map((x, i) => (i === 1 ? publicado.diario.find((y) => y.d === '2026-10-20').rel : x)));
+  assert.equal(publicado.totales.clasificados + publicado.totales.pendientes, publicado.totales.unicos);
 });
 
-test('hechos medidos coinciden con la referencia validada', () => {
+test('hechos medidos: sentimiento y temáticas solo con menciones sobre cáncer de mama', () => {
   const h = hechos(publicado, '2026-10-21');
-  assert.equal(h.volumen.cifra, '130,55');
-  assert.match(h.volumen.texto, /2\.611 registros/);
-  assert.match(h.volumen.texto, /22,6/);
-  assert.equal(h.picos.cifra, '50,1 %');
+  assert.equal(h.volumen.cifra, '128,90');
+  assert.match(h.volumen.texto, /2\.578 menciones únicas/);
+  assert.match(h.volumen.texto, /20,7/);
+  assert.equal(h.picos.cifra, '50,7 %');
   assert.match(h.picos.texto, /4 de octubre \(875\)/);
-  assert.equal(h.plataformas.cifra, '64,0 %');
-  assert.equal(h.sentimiento.tipo, 'referencia');
-  assert.equal(h.sentimiento.cifra, '57,1 %');
-  assert.equal(h.temas.disponible, false, 'sin clasificación por contenido no hay temáticas');
+  assert.equal(h.relevancia.cifra, '28,8 %');
+  assert.match(h.relevancia.texto, /de 2\.544 menciones clasificadas por contenido, 732 \(28,8 %\)/);
+  assert.match(h.picos.texto, /179 de 236 clasificadas el 19 de octubre \(75,8 %\)/);
+  assert.equal(h.sentimiento.tipo, 'medido');
+  assert.equal(h.sentimiento.cifra, '62,0 %');
+  assert.match(h.sentimiento.texto, /732 menciones que hablan de cáncer de mama/);
+  assert.match(h.sentimiento.texto, /no una medida de favorabilidad hacia MSD/);
+  assert.equal(h.temas.cifra, '52,2 %');
+  assert.equal(h.plataformas.cifra, '62,3 %');
+  assert.match(h.volumen.texto, /no personas alcanzadas/);
+  assert.match(h.volumen.texto, /hasta el 23 de octubre/, 'el corte de datos (20 de octubre) se distingue del periodo previo');
+  assert.match(h.marcas.texto, /no son un Share of Voice/);
+  assert.equal(h.msd.cifra, '< 10', 'las cifras bajo el umbral no se publican');
+  assert.match(h.calidad.texto, /sujetas a revisión/);
+  assert.equal(h.temas.disponible, true);
   assert.equal(h.impacto.estado, 'evento');
+});
+
+test('hechos: las coincidencias ajenas no entran en sentimiento ni temáticas', () => {
+  const regs = Array.from({ length: 80 }, (_, i) => ({
+    h: `r${i}`,
+    k: 'id',
+    d: `2026-10-${String((i % 9) + 1).padStart(2, '0')}`,
+    p: 'web',
+    so: 'neutral',
+    c: { fuente: 'claude', version: 'v1', rel: i < 40 ? 'si' : 'no', s: i < 40 ? 'positivo' : 'negativo', sm: 'no_aplica', ss: 'no_aplica', tm: i < 40 ? ['diagnostico_temprano'] : [], e: 'esperanza', ia: ['ninguna'], mc: [], conf: 0.9, rv: false },
+  }));
+  const m = { ...emptyMaestra(), cobertura: [{ desde: '2026-10-01', hasta: '2026-10-20' }], importaciones: [], registros: regs };
+  const h = hechos(buildResultados(m, null), '2026-10-21');
+  assert.equal(h.relevancia.cifra, '50,0 %');
+  assert.equal(h.sentimiento.cifra, '100,0 %');
+  assert.equal(h.temas.cifra, '100,0 %');
 });
 
 test('detección de columnas y normalización', () => {
@@ -75,6 +112,8 @@ test('detección de columnas y normalización', () => {
   assert.deepEqual(parseDateTime('2026-10-24T02:30:00Z'), { d: '2026-10-23', t: 21 });
   assert.equal(normalizeUrl('https://www.facebook.com/p/1/?utm_source=x#a'), normalizeUrl('http://facebook.com/p/1'));
   assert.equal(normalizePlatform('Twitter'), 'x');
+  assert.equal(normalizePlatform('Websites', 'eltiempo.com'), 'web'); // «Domain group» de SentiOne
+  assert.equal(normalizePlatform('X (Twitter)'), 'x');
   assert.equal(normalizeSentiment(''), 'sin_clasificar');
   assert.equal(parseNumber('1.234'), 1234);
 });
@@ -135,7 +174,7 @@ test('lotes: textos idénticos se clasifican una vez; validación estricta de re
   assert.equal(otra.informe.protegidos, 2, 'una revisión manual nunca se sobrescribe');
 });
 
-test('resultados públicos: solo agregados, multietiqueta sin duplicar y filtros coherentes', () => {
+test('resultados públicos: solo agregados, sin textos y sin grupos pequeños', () => {
   const out = procesar([
     fila('1', '2026-10-24 21:00', 'Instagram', 'https://instagram.com/p/1', 'MSD y Fonseca #ElViajeDeLaVida'),
     fila('2', '2026-10-24 22:00', 'Instagram', 'https://instagram.com/p/2', 'Concierto #ElViajeDeLaVida'),
@@ -151,32 +190,100 @@ test('resultados públicos: solo agregados, multietiqueta sin duplicar y filtros
   const res = buildResultados(maestra, referencia);
   assert.deepEqual(validarResultados(res), []);
   const json = JSON.stringify(res);
-  for (const x of ['instagram.com/p', 'autor', 'MSD y Fonseca', '"h":', '"th":']) assert.ok(!json.includes(x), `no publica ${x}`);
-  assert.deepEqual(res.hashtags.map((x) => [x.tag, x.n]), [['#elviajedelavida', 2]], 'solo hashtags con 2 usos o más, agregados por día y plataforma');
+  for (const x of ['instagram.com/p', 'autor', 'MSD y Fonseca', '"h":', '"th":', 'elviajedelavida', '"cubo"']) assert.ok(!json.includes(x), `no publica ${x}`);
 
+  // Serie diaria completa; distribuciones suprimidas porque ningún grupo llega al umbral.
   const f = { ...FILTROS_VACIOS, desde: '2026-10-24', hasta: '2026-10-25' };
+  assert.equal(view(res, { ...f, segmento: 'todas' }).registros, 3);
   const v = view(res, f);
-  assert.equal(v.registros, 3);
-  assert.equal(v.clasificados, 2);
-  assert.equal(v.temas.find((t) => t.id === 'campanas').v, 2);
-  assert.equal(v.temas.reduce((a, t) => a + t.v, 0), 3, 'multietiqueta: suma de temáticas > menciones');
-  assert.equal(view(res, { ...f, temas: ['prevencion'] }).registros, 1);
-  assert.equal(view(res, { ...f, marcas: ['astrazeneca'] }).registros, 1, 'sin clasificar: mención explícita detectada en el texto');
-  assert.equal(view(res, { ...f, relevancia: 'relevantes' }).registros, 2);
+  assert.equal(v.registros, 2);
+  assert.deepEqual(v.plataformas.items.map((x) => x.id), ['otras'], 'sin desglose: muestra insuficiente');
+  assert.deepEqual(v.temas.items, []);
+  assert.deepEqual(v.temas.menores, ['Campañas', 'Prevención'], 'las etiquetas pequeñas se nombran sin cifra');
+  assert.equal(marcasView(res, f, ['msd'])[0].todas, null);
   assert.equal(shareOfVoice(res, f, ['msd', 'astrazeneca']).motivo, 'cobertura', 'sin cobertura equivalente no hay SoV');
 });
 
-test('Share of Voice solo con cobertura equivalente y periodo suficiente', () => {
+test('granularidad: umbral, agrupación y supresión complementaria', () => {
+  const m = (o) => new Map(Object.entries(o));
+  assert.equal(distribucionExclusiva(m({ a: 3, b: 4 })), null, 'total bajo el umbral: muestra insuficiente');
+  assert.deepEqual(distribucionExclusiva(m({ a: 50, b: 30, c: 5 })), { v: { a: 50 }, otras: { n: 35, ids: ['b', 'c'] } }, 'una sola categoría pequeña se agrupa con la siguiente');
+  assert.deepEqual(distribucionExclusiva(m({ a: 50, b: 4, c: 3, d: 3 })), { v: { a: 50 }, otras: { n: 10, ids: ['b', 'c', 'd'] } });
+  assert.deepEqual(distribucionExclusiva(m({ a: 50, b: 2, c: 3, d: 30 })), { v: { a: 50 }, otras: { n: 35, ids: ['b', 'c', 'd'] } }, 'el grupo debe alcanzar el umbral');
+  assert.deepEqual(distribucionMultiple(m({ x: 12, y: 9 })), { v: { x: 12 }, menores: ['y'] });
+
+  // Un registro raro (plataforma, hashtag y marca únicos) entre 40 registros comunes.
+  const reg = (i, extra = {}) => ({
+    h: `r${i}`, k: 'id', d: '2026-10-05', t: 10, p: 'web', so: 'neutral', tg: ['#cancerdemama'], m: { int: 1 },
+    c: { fuente: 'claude', version: 'v1', rel: 'si', s: 'positivo', sm: 'no_aplica', ss: 'no_aplica', tm: ['prevencion'], e: 'esperanza', ia: ['ninguna'], mc: [], conf: 0.9, rv: false },
+    ...extra,
+  });
+  const regs = Array.from({ length: 40 }, (_, i) => reg(i));
+  regs.push(reg('raro', { p: 'foros', t: 3, tg: ['#nombrepropio'], c: { ...regs[0].c, s: 'negativo', e: 'miedo', mc: ['msd'] } }));
+  const res = buildResultados({ ...emptyMaestra(), cobertura: [{ desde: '2026-10-05', hasta: '2026-10-05' }], importaciones: [], registros: regs }, null);
+  assert.deepEqual(validarResultados(res), []);
+  const json = JSON.stringify(res);
+  assert.ok(!json.includes('#nombrepropio'), 'los hashtags poco frecuentes no se nombran');
+  const g = res.periodos[0].relevantes;
+  for (const dim of ['plataformas', 'sentimiento', 'emociones', 'franjas']) {
+    assert.ok(!Object.values(g[dim].v).some((n) => n < UMBRAL), `${dim}: ninguna celda bajo el umbral`);
+    assert.equal(Object.values(g[dim].v).reduce((a, b) => a + b, 0) + (g[dim].otras?.n ?? 0), g.n, `${dim}: el total menos lo publicado no revela una categoría`);
+    assert.ok(!g[dim].otras || (g[dim].otras.n >= UMBRAL && g[dim].otras.ids.length >= 2), `${dim}: grupo «otras» seguro`);
+  }
+  assert.deepEqual(g.marcas, { v: {}, menores: ['msd'] });
+});
+
+test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin restas reveladoras', () => {
+  const k = publicado.umbral;
+  assert.equal(k, 10);
+  assert.deepEqual(Object.keys(publicado).sort(), ['actualizacion', 'base', 'cobertura', 'diario', 'generado', 'periodos', 'totales', 'umbral', 'version']);
+  assert.ok(!('cubo' in publicado) && !('hashtags' in publicado), 'no hay cubo detallado ni hashtags por día');
+  for (const x of publicado.diario) assert.deepEqual(Object.keys(x), ['d', 'n', 'cl', 'rel'], 'la serie diaria no cruza otras dimensiones');
+  for (const p of publicado.periodos) {
+    assert.equal(p.relevantes.n + p.resto.n, p.n, 'relevantes y resto son una partición');
+    assert.ok(p.revisar == null || p.revisar === 0 || p.revisar >= k);
+    for (const g of [p.relevantes, p.resto])
+      for (const [dim, x] of Object.entries(g)) {
+        if (dim === 'n' || x == null) continue;
+        if (dim === 'interacciones') {
+          assert.ok(x.registros >= k);
+          continue;
+        }
+        for (const n of Object.values(x.v)) assert.ok(n >= k, `${p.id}/${dim}: ${n} < ${k}`);
+        // Cada tabla es de una sola dimensión: valores numéricos planos, nunca objetos anidados.
+        assert.ok(Object.values(x.v).every((n) => typeof n === 'number'), `${p.id}/${dim}: tabla de una dimensión`);
+        if ('otras' in x) {
+          const resto = g.n - Object.values(x.v).reduce((a, b) => a + b, 0);
+          assert.ok(resto === 0 || (resto === x.otras?.n && resto >= k && x.otras.ids.length >= 2), `${p.id}/${dim}: la diferencia con el total revela un grupo pequeño`);
+        }
+      }
+    assert.deepEqual(p.relevantes.hashtags.menores, []);
+    assert.ok(!('hashtags' in p.resto), 'los hashtags del resto (nombres propios, política) no se publican');
+  }
+  // Las sumas siguen cuadrando con los totales privados agregados.
+  assert.equal(publicado.diario.reduce((a, x) => a + x.n, 0), 2785);
+  assert.equal(publicado.diario.reduce((a, x) => a + x.rel, 0), 805);
+  assert.ok(validarResultados({ ...publicado, cubo: [] }).some((e) => /no publicable/.test(e)), 'un cubo detallado se rechaza');
+  const malo = structuredClone(publicado);
+  malo.periodos[1].relevantes.plataformas.v.foros = 1;
+  assert.ok(validarResultados(malo).length > 0, 'una celda pequeña se rechaza');
+});
+
+test('Share of Voice solo con cobertura equivalente, periodo suficiente y muestra publicable', () => {
   const dias = Array.from({ length: 8 }, (_, i) => `2026-10-${String(10 + i).padStart(2, '0')}`);
-  const out = procesar(dias.flatMap((d, i) => [fila(`m${i}`, d, 'X', '', 'MSD informa'), fila(`a${i}`, d, 'X', '', i % 2 ? 'AstraZeneca' : 'otro')]));
+  const out = procesar(dias.flatMap((d, i) => [fila(`m${i}`, d, 'X', '', `MSD informa ${i}`), fila(`n${i}`, d, 'X', '', `MSD responde ${i}`), fila(`a${i}`, d, 'X', '', `AstraZeneca ${i}`), ...(i % 2 ? [fila(`b${i}`, d, 'X', '', `AstraZeneca dos ${i}`)] : [])]));
   const { maestra } = mergeExport(emptyMaestra(), out.registros, { desde: dias[0], hasta: dias[7] });
   const res = buildResultados(maestra, null);
   const prev = ENTIDADES.map((e) => e.cobertura);
   ENTIDADES.forEach((e) => e.tipo === 'laboratorio' && (e.cobertura = 'equivalente'));
   try {
-    const sov = shareOfVoice(res, { ...FILTROS_VACIOS, desde: dias[0], hasta: dias[7] }, ['msd', 'astrazeneca']);
+    const f = { ...FILTROS_VACIOS, desde: dias[0], hasta: dias[7] };
+    const sov = shareOfVoice(res, f, ['msd', 'astrazeneca']);
     assert.equal(sov.ok, true);
-    assert.deepEqual(sov.valores.map((x) => x.v), [8, 4]);
+    assert.deepEqual(sov.valores.map((x) => x.v), [16, 12]);
+    assert.equal(shareOfVoice(res, f, ['msd', 'daiichi-sankyo']).ok, true, 'cero es publicable');
+    const corto = buildResultados({ ...maestra, registros: maestra.registros.filter((r) => !(r.ent ?? []).includes('astrazeneca') || r.d < '2026-10-14') }, null);
+    assert.equal(shareOfVoice(corto, f, ['msd', 'astrazeneca']).motivo, 'muestra', 'bajo el umbral no hay SoV');
   } finally {
     ENTIDADES.forEach((e, i) => (e.cobertura = prev[i]));
   }

@@ -62,6 +62,8 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
    ```
    Genera `src/data/resultados.json` en el repositorio público, que solo contiene agregados, y el informe `informes/actualizacion-AAAA-MM-DD.md` en el repositorio privado.
 
+   Los resultados públicos son proyecciones de una sola dimensión por periodo base, con umbral de 10 menciones por celda (agrupación y supresión complementaria). Si una fecha cae fuera de `PERIODOS_BASE` (`src/config/periodos.js`), `publicar` falla: añade el periodo en lugar de publicar cruces finos. Nunca añadas al archivo público cubos, cruces ni hashtags poco frecuentes.
+
 6. **Actualizar los hallazgos.**
    - Las frases con cifras se calculan solas (`src/lib/data/hechos.js`).
    - Revisa `src/content/conclusiones.js`:

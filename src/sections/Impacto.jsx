@@ -5,7 +5,7 @@ import Scene, { ExploreLink } from '../components/Scene.jsx';
 import PeriodBars from '../components/charts/PeriodBars.jsx';
 import WaveLine from '../components/WaveLine.jsx';
 import { useResultados } from '../state/DataContext.jsx';
-import { FILTROS_VACIOS, periodStats, view } from '../lib/data/resultados.js';
+import { FILTROS_VACIOS, marcasView, periodStats } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { rangeLabel, todayBogota } from '../lib/data/dates.js';
 import { formatDecimal, formatOne } from '../lib/format.js';
@@ -27,9 +27,9 @@ export default function Impacto() {
   const periodos = useMemo(
     () =>
       PERIODOS_IMPACTO.map((p) => {
-        const f = { ...FILTROS_VACIOS, desde: p.desde, hasta: p.hasta };
+        const f = { ...FILTROS_VACIOS, segmento: 'todas', desde: p.desde, hasta: p.hasta };
         const st = periodStats(res, f);
-        return { ...p, st, v: st ? view(res, f) : null };
+        return { ...p, st, marcas: st ? marcasView(res, f, ATRIBUIBLE.map(([id]) => id)) : null };
       }),
     [res],
   );
@@ -73,7 +73,7 @@ export default function Impacto() {
                     </th>
                     {periodos.map((p) => (
                       <td key={p.id} className="num py-3 text-marfil">
-                        {p.v && p.v.registros ? formatDecimal((p.v.marcas.find((m) => m.id === id)?.v ?? 0) / p.st.diasConDatos) : '—'}
+                        {!p.marcas ? '—' : p.marcas.find((m) => m.id === id).todas == null ? `< ${res.umbral} en total` : formatDecimal(p.marcas.find((m) => m.id === id).todas / p.st.diasConDatos)}
                       </td>
                     ))}
                   </tr>

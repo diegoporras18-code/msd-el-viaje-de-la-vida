@@ -4,7 +4,7 @@
 export const benchmark = {
   capitulo: 'Capítulo 05 · Benchmark competitivo',
   titulo: { linea1: 'La conversación también', linea2: 'construye posicionamiento' },
-  texto: 'Menciones explícitas de cada laboratorio dentro de la misma base de escucha social.',
+  texto: 'Presencia explícita de cada laboratorio dentro de la misma consulta de escucha social. No es un Share of Voice.',
   pendiente: 'Las menciones de MSD, Daiichi Sankyo y AstraZeneca se identificarán con el análisis por contenido de la base de escucha social.',
   limitacion:
     'La consulta de escucha social no fue diseñada para capturar a cada laboratorio con el mismo criterio. Las menciones detectadas no equivalen a la conversación pública total de cada marca, y la ausencia de menciones no implica ausencia de conversación. Por eso no se calcula un Share of Voice.',

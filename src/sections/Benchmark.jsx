@@ -5,10 +5,10 @@ import BarList from '../components/charts/BarList.jsx';
 import StackBars from '../components/charts/StackBars.jsx';
 import Pending from '../components/charts/Pending.jsx';
 import { useResultados } from '../state/DataContext.jsx';
-import { FILTROS_VACIOS, shareOfVoice, tieneBaseMaestra, view } from '../lib/data/resultados.js';
+import { FILTROS_VACIOS, marcasView, shareOfVoice, tieneBaseMaestra, view } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
-import { formatPct } from '../lib/format.js';
+import { formatNumber, formatPct } from '../lib/format.js';
 import { benchmark } from '../content/benchmark.js';
 import { BENCHMARK, LABORATORIOS, entidad } from '../config/marcas.js';
 import { PERIODO_PREVIO } from '../config/periodos.js';
@@ -51,9 +51,13 @@ export default function Benchmark() {
   const res = useResultados();
   const h = useMemo(() => hechos(res, todayBogota()), [res]);
   const f = { ...FILTROS_VACIOS, ...PERIODO_PREVIO };
-  const v = useMemo(() => view(res, f), [res]);
+  // La presencia se mide en la conversación sobre cáncer de mama (igual que el hecho).
+  const vr = useMemo(() => view(res, f), [res]);
   const sov = useMemo(() => shareOfVoice(res, f, BENCHMARK), [res]);
-  const labs = LABORATORIOS.map((l) => ({ id: l.id, nombre: l.nombre, v: v.marcas.find((m) => m.id === l.id)?.v ?? 0, color: l.color }));
+  const k = res.umbral;
+  const labs = marcasView(res, f, LABORATORIOS.map((l) => l.id));
+  const conCifra = labs.filter((l) => l.relevantes != null && l.relevantes > 0).map((l) => ({ id: l.id, nombre: l.info.nombre, v: l.relevantes, color: l.info.color }));
+  const menores = labs.filter((l) => l.relevantes == null).map((l) => l.info.nombre);
   const hay = tieneBaseMaestra(res);
 
   return (
@@ -64,7 +68,9 @@ export default function Benchmark() {
           {hay ? (
             <div className="grid gap-12 lg:grid-cols-12">
               <div className="lg:col-span-7">
-                <BarList items={labs} total={v.registros} unidad="menciones" />
+                <p className="eyebrow mb-5 text-bruma">Presencia en {formatNumber(vr.registros)} menciones sobre cáncer de mama</p>
+                <BarList items={conCifra} total={vr.registros} unidad="menciones sobre cáncer de mama" />
+                {menores.length > 0 && <p className="mt-4 text-sm text-bruma">Con menos de {k} menciones (sin cifra para proteger la privacidad): {menores.join(', ')}.</p>}
               </div>
               <div className="lg:col-span-5">
                 {sov.ok ? (
