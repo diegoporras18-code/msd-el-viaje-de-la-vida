@@ -1,17 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import ChartFrame from '../components/charts/ChartFrame.jsx';
 import StackBars from '../components/charts/StackBars.jsx';
 import BarList from '../components/charts/BarList.jsx';
 import Pending from '../components/charts/Pending.jsx';
 import FilterBar from '../components/FilterBar.jsx';
-import Highlights from './Highlights.jsx';
+import { PanelPublicaciones, SelectorLaboratorios } from '../components/PublicacionesLaboratorio.jsx';
 import { References } from '../sections/Benchmark.jsx';
 import { useFilters, useResultados } from '../state/DataContext.jsx';
 import { marcasView, notasPrivacidad, shareOfVoice, tieneBaseMaestra, view } from '../lib/data/resultados.js';
 import { rangeLabel } from '../lib/data/dates.js';
 import { formatNumber, formatPct } from '../lib/format.js';
 import { benchmark } from '../content/benchmark.js';
-import { entidad } from '../config/marcas.js';
+import { LABORATORIOS, entidad } from '../config/marcas.js';
 
 /**
  * Presencia de cada laboratorio en la consulta. Con tan pocas menciones por marca, los
@@ -25,6 +25,7 @@ export default function BenchmarkDashboard() {
   const vr = useMemo(() => view(res, { ...f, segmento: 'relevantes' }), [res, f]);
   const vt = useMemo(() => view(res, { ...f, segmento: 'todas' }), [res, f]);
   const k = res.umbral;
+  const [lab, setLab] = useState(null);
   const rango = vt.desde && vt.hasta ? rangeLabel(vt.desde, vt.hasta) : rangeLabel(f.desde, f.hasta);
 
   if (!tieneBaseMaestra(res))
@@ -36,6 +37,7 @@ export default function BenchmarkDashboard() {
     );
 
   const valor = (n) => (n == null ? `< ${k}` : formatNumber(n));
+  const labsConPresencia = new Set(marcasView(res, { ...f, desde: res.cobertura[0].desde, hasta: res.cobertura[res.cobertura.length - 1].hasta }, LABORATORIOS.map((l) => l.id)).filter((m) => m.relevantes !== 0).map((m) => m.id));
 
   return (
     <div className="space-y-14">
@@ -107,8 +109,9 @@ export default function BenchmarkDashboard() {
           />
         </div>
 
-        <ChartFrame className="lg:col-span-12" index="04" titulo="Noticias y contenidos destacados" subtitulo="Evidencias públicas verificadas de los laboratorios comparados">
-          <Highlights marcas={f.comparar} desde={f.desde} hasta={f.hasta} />
+        <ChartFrame className="lg:col-span-12" index="04" titulo="Publicaciones por laboratorio" subtitulo="Contenidos públicos verificados de medios, instituciones y laboratorios · todo el periodo analizado">
+          <SelectorLaboratorios labs={LABORATORIOS.filter((l) => labsConPresencia.has(l.id)).map((l) => ({ id: l.id, nombre: l.nombre }))} k={k} seleccion={lab} onSelect={setLab} />
+          <PanelPublicaciones id={lab} />
         </ChartFrame>
       </div>
       <References />

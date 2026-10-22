@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import ChapterOpener from '../components/ChapterOpener.jsx';
 import Scene, { ExploreLink } from '../components/Scene.jsx';
 import Pending from '../components/charts/Pending.jsx';
+import { PanelPublicaciones, SelectorLaboratorios } from '../components/PublicacionesLaboratorio.jsx';
 import { useResultados } from '../state/DataContext.jsx';
 import { tieneBaseMaestra } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
@@ -64,6 +65,7 @@ export default function Benchmark() {
   const h = useMemo(() => hechos(res, todayBogota()), [res]);
   const hay = tieneBaseMaestra(res) && h.marcas.disponible;
   const labs = h.marcas.laboratorios ?? [];
+  const [lab, setLab] = useState(null);
   const k = res.umbral;
   const { escena } = benchmark;
   const observacion = {
@@ -88,16 +90,12 @@ export default function Benchmark() {
                     </p>
                   )}
                 </div>
-                <ul className="flex flex-wrap content-start gap-2 lg:col-span-7" aria-label="Laboratorios identificados">
-                  {labs.map((l, i) => (
-                    <motion.li key={l.id} className="inline-flex items-center gap-2 rounded-full border border-rosa/20 px-3 py-1.5 text-sm" {...reveal(0.04 * i)}>
-                      <span className="h-2 w-2 rounded-full" style={{ background: entidad(l.id).color }} aria-hidden="true" />
-                      <span className={l.id === 'msd' ? 'text-fucsia' : 'text-marfil'}>{l.nombre}</span>
-                      <span className="num text-xs text-bruma">{l.n == null ? `< ${k}` : formatNumber(l.n)}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+                <div className="lg:col-span-7">
+                  <SelectorLaboratorios labs={labs} k={k} seleccion={lab} onSelect={setLab} animar />
+                  <p className="mt-3 text-xs text-bruma">Elige un laboratorio para ver sus publicaciones públicas verificadas.</p>
+                </div>
               </div>
+              <PanelPublicaciones id={lab} />
 
               {Object.entries(h.marcas.temas ?? {}).filter(([id]) => benchmark.sintesis[id]).map(([id, l]) => (
                 <motion.div key={id} className="mt-6 max-w-3xl rounded-sm border border-rosa/15 p-5" {...reveal()}>
