@@ -25,6 +25,24 @@ export const rangoTexto = (a, b) => {
   const y = parte(b);
   return x.m === y.m ? `del ${x.d} al ${y.d} de ${y.m}` : `del ${x.d} de ${x.m} al ${y.d} de ${y.m}`;
 };
+/**
+ * Fecha de corte de los datos publicados (último día de `resultados.cobertura`) y su relación con
+ * el periodo previo al concierto. Los textos editoriales la usan para no fijar fechas a mano.
+ */
+export function corteDatos(res) {
+  const hasta = res.cobertura?.length ? res.cobertura[res.cobertura.length - 1].hasta : null;
+  if (!hasta) return null;
+  const fin = hasta < PERIODO_PREVIO.hasta ? hasta : PERIODO_PREVIO.hasta;
+  return {
+    hasta,
+    dia: diaTexto(hasta),
+    anio: hasta.slice(0, 4),
+    rangoPrevio: rangoTexto(PERIODO_PREVIO.desde, fin),
+    parcial: hasta < PERIODO_PREVIO.hasta,
+    finPrevio: diaTexto(PERIODO_PREVIO.hasta),
+    numFinPrevio: Number(PERIODO_PREVIO.hasta.slice(8)),
+  };
+}
 const pct = (a, b) => (b ? (a / b) * 100 : 0);
 // Los nombres de plataforma propios (Facebook, X…) se mantienen; los genéricos van en minúscula.
 const nombreComun = (n) => (/^(Sitios web|Video|Blogs|Foros|Podcast y radio|Otras fuentes)$/.test(n) ? n.toLowerCase() : n);
@@ -277,6 +295,8 @@ export function hechos(res, hoy = '2026-10-21') {
         lista([...conCifra.map((x) => `${entidad(x.id).nombre} ${formatNumber(x.relevantes)}`), ...(menores.length ? [`${lista(menores)}, con menos de ${k} cada uno`] : [])]) +
         '. Solo reflejan presencia en esta consulta, que no está diseñada para capturar a cada laboratorio con el mismo criterio: no son un Share of Voice representativo.',
       laboratorios: labs.map((x) => ({ id: x.id, nombre: entidad(x.id).nombre, n: x.relevantes })),
+      // Temática principal de los laboratorios que alcanzan el umbral (un periodo base).
+      temas: conRelevancia ? Object.fromEntries(Object.entries(vr.laboratorios).filter(([, l]) => l.tema).map(([id, l]) => [id, { ...l, temaNombre: nombreTema(l.tema) }])) : {},
     };
     if (conRelevancia && vr.conLaboratorio !== 0) {
       const t = vr.temasConLaboratorio;

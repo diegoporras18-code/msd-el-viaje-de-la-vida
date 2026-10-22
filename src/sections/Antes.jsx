@@ -10,7 +10,7 @@ import Pending from '../components/charts/Pending.jsx';
 import ExampleCards from '../components/ExampleCards.jsx';
 import { useResultados } from '../state/DataContext.jsx';
 import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, peaks, relevanciaRango, view } from '../lib/data/resultados.js';
-import { hechos } from '../lib/data/hechos.js';
+import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { longDate, todayBogota } from '../lib/data/dates.js';
 import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
 import { antes } from '../content/antes.js';
@@ -112,7 +112,7 @@ export default function Antes() {
           ) : (
             <Pending compacto estado="analisis" titulo={escenas.tono.pendiente} />
           )}
-          <p className="mt-6 max-w-3xl text-xs text-bruma/80">{antes.alcance}</p>
+          <p className="mt-6 max-w-3xl text-xs text-bruma/80">{antes.alcance(corteDatos(res))}</p>
         </Scene>
       </div>
     </section>

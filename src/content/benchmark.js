@@ -10,6 +10,11 @@ export const benchmark = {
     titulo: { linea1: 'Los laboratorios aparecen poco', linea2: 'y casi siempre como innovación' },
     presencia: 'Presencia en las menciones sobre cáncer de mama',
   },
+  // Síntesis por laboratorio: solo para los que alcanzan el umbral de 10 menciones relevantes.
+  // Tercera persona; cada afirmación verificada en el informe privado.
+  sintesis: {
+    'daiichi-sankyo': 'Aparece como aliada, patrocinadora, vocera o fuente de datos en piezas informativas sobre el diagnóstico del cáncer de mama, no en conversaciones de pacientes.',
+  },
   pendiente: 'Las menciones de laboratorios se identificarán con el análisis por contenido de la base de escucha social.',
   limitacion:
     'La consulta no fue diseñada para capturar a cada laboratorio con el mismo criterio. Las menciones detectadas no equivalen a la conversación pública total de cada marca y la ausencia de menciones no implica ausencia de conversación. Por eso no se calcula un Share of Voice.',

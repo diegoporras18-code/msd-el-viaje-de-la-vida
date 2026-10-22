@@ -22,7 +22,7 @@ export const antes = {
   // Lectura editorial de los picos de la conversación relevante (revisada por contenido en la base privada).
   picos: [
     { desde: '2026-10-07', hasta: '2026-10-08', titulo: 'Apoyos y prótesis', tono: 'tema' },
-    { desde: '2026-10-19', hasta: '2026-10-19', titulo: 'Día Mundial', tono: 'tema' },
+    { desde: '2026-10-19', hasta: '2026-10-20', titulo: 'Día Mundial y su eco', tono: 'tema' },
   ],
   // Contexto del universo captado (solo en Explorar): el ruido que se excluye de la medición.
   ruido: [{ desde: '2026-10-03', hasta: '2026-10-05', titulo: 'Ruido político', tono: 'ajeno' }],
@@ -61,6 +61,8 @@ export const antes = {
       },
     ],
   },
-  alcance:
-    'Datos hasta el 20 de octubre; el periodo previo al concierto se extiende hasta el 23. Las menciones no equivalen a personas alcanzadas. Las clasificaciones con confianza baja quedan sujetas a revisión y las categorías con menos de 10 menciones se agrupan para proteger la privacidad.',
+  // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
+  alcance: (corte) =>
+    `${corte ? `Datos hasta el ${corte.dia}${corte.parcial ? `; el periodo previo al concierto se extiende hasta el ${corte.finPrevio}` : ''}. ` : ''}` +
+    'Las menciones no equivalen a personas alcanzadas. Las clasificaciones con confianza baja quedan sujetas a revisión y las categorías con menos de 10 menciones se agrupan para proteger la privacidad.',
 };

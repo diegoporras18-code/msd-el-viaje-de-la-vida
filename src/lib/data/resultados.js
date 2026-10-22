@@ -248,6 +248,8 @@ export function view(res, f) {
     hashtags: rel ? mu('hashtags', []) : vacia,
     // Celdas sumables entre periodos: si alguna parte está suprimida, el total no se cifra.
     patrones: rel ? sumarCeldas(periodos.map((p) => p.relevantes.patrones ?? {})) : {},
+    // Temática principal por laboratorio: solo con un periodo base (sumar periodos no la conserva).
+    laboratorios: rel && periodos.length === 1 ? (periodos[0].relevantes.laboratorios ?? {}) : {},
     temasConLaboratorio: !rel
       ? vacia
       : periodos.some((p) => p.relevantes.conLaboratorio !== 0 && p.relevantes.temasConLaboratorio == null)

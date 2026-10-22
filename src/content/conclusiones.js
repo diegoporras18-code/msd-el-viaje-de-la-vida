@@ -13,7 +13,11 @@
 export const conclusiones = {
   capitulo: 'Capítulo 06 · Conclusiones',
   titulo: { linea1: 'Lo que la conversación', linea2: 'nos está diciendo' },
-  periodo: 'Antes del concierto · datos del 1 al 20 de octubre de 2026 (el periodo previo llega al 23)',
+  // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
+  periodo: (corte) =>
+    corte
+      ? `Antes del concierto · datos ${corte.rangoPrevio} de ${corte.anio}${corte.parcial ? ` (el periodo previo llega al ${corte.numFinPrevio})` : ''}`
+      : 'Antes del concierto',
 
   hallazgos: [
     {
