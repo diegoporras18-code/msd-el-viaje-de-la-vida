@@ -249,7 +249,8 @@ function publicar() {
 ## Base maestra
 - Menciones únicas: ${fmt(res.totales.unicos)} · clasificadas por contenido: ${fmt(res.totales.clasificados)} · pendientes: ${fmt(res.totales.pendientes)} · para revisión: ${fmt(res.totales.revisar)}
 - Relevantes para cáncer de mama: ${fmt(res.totales.relevantes)} · coincidencias ajenas: ${fmt(res.totales.noRelevantes)}
-- Cobertura: ${res.cobertura.map((c) => `${c.desde} → ${c.hasta}`).join(', ') || 'sin registros individuales (solo referencia preliminar)'}
+- Cobertura: ${res.cobertura.map((c) => `${c.desde} → ${c.hasta}`).join(', ') || 'sin registros individuales (solo referencia preliminar)'}${res.totales.fueraDeCobertura ? `
+- Registros guardados fuera de la cobertura publicada (días incompletos): ${fmt(res.totales.fueraDeCobertura)}` : ''}
 
 ## Por qué cambian las cifras
 ${motivos.map((m) => `- ${m}`).join('\n') || '- Sin cambios en la base.'}

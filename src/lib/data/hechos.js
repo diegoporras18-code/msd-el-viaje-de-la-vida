@@ -277,6 +277,8 @@ export function hechos(res, hoy = '2026-10-21') {
         lista([...conCifra.map((x) => `${entidad(x.id).nombre} ${formatNumber(x.relevantes)}`), ...(menores.length ? [`${lista(menores)}, con menos de ${k} cada uno`] : [])]) +
         '. Solo reflejan presencia en esta consulta, que no está diseñada para capturar a cada laboratorio con el mismo criterio: no son un Share of Voice representativo.',
       laboratorios: labs.map((x) => ({ id: x.id, nombre: entidad(x.id).nombre, n: x.relevantes })),
+      // Temática principal de los laboratorios que alcanzan el umbral (un periodo base).
+      temas: conRelevancia ? Object.fromEntries(Object.entries(vr.laboratorios).filter(([, l]) => l.tema).map(([id, l]) => [id, { ...l, temaNombre: nombreTema(l.tema) }])) : {},
     };
     if (conRelevancia && vr.conLaboratorio !== 0) {
       const t = vr.temasConLaboratorio;

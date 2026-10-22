@@ -42,54 +42,53 @@ test('referencia preliminar: 2.837 registros, 2.611 en octubre, distribuciones c
   assert.deepEqual(validarResultados(publicado), []);
 });
 
-test('cifras publicadas: la exportación coincide con la referencia y la base deduplica', () => {
-  // Filas brutas de SentiOne (referencia validada) frente a menciones únicas de la base maestra.
-  assert.equal(publicado.actualizacion.filasBrutas, referencia.exportacion.total);
-  assert.equal(publicado.actualizacion.unicasArchivo, 2785);
-  assert.deepEqual(publicado.cobertura, [{ desde: '2026-09-21', hasta: '2026-10-20' }]);
-  const s = periodStats(publicado, OCT);
-  assert.equal(s.total, 2578);
-  assert.ok(s.total <= 2611, 'las menciones únicas no superan las filas brutas de octubre');
-  assert.equal(s.promedioDiario.toFixed(2), '128.90');
+test('cifras publicadas: la base acumula exportaciones sin duplicar', () => {
+  // La primera exportación (21 sep – 20 oct) coincidió con la referencia validada de 2.837 filas;
+  // la segunda (1 – 22 oct) suma solo lo nuevo y reutiliza lo que ya existía.
+  assert.equal(referencia.exportacion.total, 2837);
+  assert.deepEqual(publicado.actualizacion, { fecha: '2026-10-22', filasBrutas: 2756, unicasArchivo: 2712, nuevos: 134, existentes: 2578 });
+  assert.deepEqual(publicado.cobertura, [{ desde: '2026-09-21', hasta: '2026-10-21' }]);
+  assert.equal(publicado.totales.unicos, 2908);
+  assert.equal(publicado.totales.fueraDeCobertura, 11, 'el 22 de octubre está incompleto: se guarda pero no se publica');
+  const s = periodStats(publicado, { ...TODAS, desde: '2026-10-01', hasta: '2026-10-21' });
+  assert.equal(s.total, 2701);
+  assert.equal(s.promedioDiario.toFixed(2), '128.62');
   assert.equal(s.mediana, 54);
-  assert.equal(growth(publicado, { ...TODAS, desde: '2026-10-01', hasta: '2026-10-23' }).pct.toFixed(2), '522.71');
-  const dias = dailyTotals(publicado, { ...TODAS, desde: '2026-10-19', hasta: '2026-10-22' });
-  assert.deepEqual(dias.map((x) => x.v), [238, 54, null, null], 'un día sin cobertura es null, nunca cero');
-  for (const d of Object.keys(referencia.diario)) assert.ok(dailyTotals(publicado, { ...TODAS, desde: d, hasta: d })[0].v <= referencia.diario[d], `${d}: únicas ≤ filas brutas`);
-  // Menciones sobre cáncer de mama por día: 1 al 20 de octubre.
-  // Universo depurado tras la auditoría semántica: solo menciones que hablan de cáncer de mama.
-  assert.equal(periodStats(publicado, { ...OCT, segmento: 'relevantes' }).total, 614);
-  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-19', hasta: '2026-10-21' }).map((x) => x.v), [167, 36, null], 'un día sin cobertura es null, nunca cero');
-  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-03', hasta: '2026-10-05' }).map((x) => x.v), [6, 21, 30], 'los picos políticos del 3 al 5 de octubre no forman parte de la medición principal');
+  assert.deepEqual(dailyTotals(publicado, { ...TODAS, desde: '2026-10-19', hasta: '2026-10-22' }).map((x) => x.v), [256, 96, 53, null], 'un día sin cobertura es null, nunca cero');
+  // Medida principal: menciones sobre cáncer de mama.
+  assert.equal(periodStats(publicado, { ...FILTROS_VACIOS, desde: '2026-10-01', hasta: '2026-10-21' }).total, 671);
+  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-19', hasta: '2026-10-22' }).map((x) => x.v), [177, 54, 27, null]);
+  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-03', hasta: '2026-10-05' }).map((x) => x.v), [7, 21, 30], 'los picos políticos del 3 al 5 de octubre no forman parte de la medición principal');
   assert.equal(publicado.totales.clasificados + publicado.totales.pendientes, publicado.totales.unicos);
 });
 
 test('hechos medidos: la medida principal son las menciones sobre cáncer de mama', () => {
   const h = hechos(publicado, '2026-10-21');
   // 03.1: volumen, promedio, máximo y variación solo con menciones relevantes.
-  assert.equal(h.volumen.cifra, '614');
-  assert.equal(h.volumen.stats.promedioDiario.toFixed(2), '30.70');
-  assert.equal(h.volumen.stats.mediana, 22);
-  assert.deepEqual([h.volumen.maximo.d, h.volumen.maximo.v], ['2026-10-19', 167]);
+  assert.equal(h.volumen.cifra, '671');
+  assert.equal(h.volumen.stats.promedioDiario.toFixed(2), '31.95');
+  assert.equal(h.volumen.stats.mediana, 23);
+  assert.deepEqual([h.volumen.maximo.d, h.volumen.maximo.v], ['2026-10-19', 177]);
   assert.match(h.volumen.texto, /no personas alcanzadas/);
   assert.match(h.volumen.texto, /hasta el 23 de octubre/, 'el corte de datos (20 de octubre) se distingue del periodo previo');
-  assert.equal(h.picos.cifra, '27,2 %');
-  assert.deepEqual(h.picos.dias.map((x) => x.d), ['2026-10-19', '2026-10-07', '2026-10-08'], 'picos temáticos, no políticos');
+  assert.equal(h.picos.cifra, '26,4 %');
+  assert.deepEqual(h.picos.dias.map((x) => x.d), ['2026-10-19', '2026-10-20', '2026-10-07', '2026-10-08'], 'picos temáticos, no políticos');
   // El universo captado es contexto, con su desglose.
-  assert.match(h.universo.texto, /2\.578 menciones.*614.*1\.686 de ruido, 244 contextuales o dudosas y 34 aún sin clasificar/);
-  assert.equal(h.relevancia.cifra, '24,1 %');
-  assert.equal(h.sentimiento.cifra, '56,7 %');
-  assert.match(h.sentimiento.texto, /614 menciones que hablan de cáncer de mama/);
+  assert.match(h.universo.texto, /2\.701 menciones.*671.*1\.744 de ruido, 252 contextuales o dudosas y 34 aún sin clasificar/);
+  assert.equal(h.relevancia.cifra, '25,2 %');
+  assert.equal(h.sentimiento.cifra, '55,4 %');
+  assert.match(h.sentimiento.texto, /671 menciones que hablan de cáncer de mama/);
   assert.match(h.sentimiento.texto, /no una medida de favorabilidad hacia MSD/);
-  assert.equal(h.temas.cifra, '61,4 %');
-  assert.equal(h.preocupaciones.cifra, '11,7 %');
-  assert.match(h.preocupaciones.texto, /56 de ellas hablan de barreras/);
-  assert.deepEqual(h.ejemplos.patrones, { positivo_apoyo: 58, neutral_informativo: 151, negativo_barreras: 56 });
+  assert.equal(h.temas.cifra, '61,8 %');
+  assert.equal(h.preocupaciones.cifra, '11,5 %');
+  assert.match(h.preocupaciones.texto, /61 de ellas hablan de barreras/);
+  assert.deepEqual(h.ejemplos.patrones, { positivo_apoyo: 61, neutral_informativo: 175, negativo_barreras: 61 });
   assert.match(h.marcas.texto, /no son un Share of Voice/);
   assert.equal(h.msd.cifra, '< 10', 'las cifras bajo el umbral no se publican');
-  assert.equal(h.laboratorios.cifra, '4,4 %');
+  assert.equal(h.laboratorios.cifra, '4,5 %');
   assert.equal(h.marcas.laboratorios.length, 10);
-  assert.ok(h.marcas.laboratorios.every((l) => l.n == null), 'ningún laboratorio alcanza el umbral: no se cifra por marca');
+  assert.deepEqual(h.marcas.laboratorios.filter((l) => l.n != null).map((l) => [l.id, l.n]), [['daiichi-sankyo', 11]], 'solo se cifra el laboratorio que alcanza el umbral');
+  assert.deepEqual(h.marcas.temas['daiichi-sankyo'], { n: 11, tema: 'diagnostico_temprano', temaN: 11, temaNombre: 'Diagnóstico temprano' });
   assert.match(h.calidad.texto, /sujetas a revisión/);
   assert.equal(h.impacto.estado, 'evento');
 });
@@ -211,6 +210,16 @@ test('resultados públicos: solo agregados, sin textos y sin grupos pequeños', 
   assert.equal(shareOfVoice(res, f, ['msd', 'astrazeneca']).motivo, 'cobertura', 'sin cobertura equivalente no hay SoV');
 });
 
+test('días incompletos: se guardan en la base pero no se publican hasta tener cobertura', () => {
+  const reg = (h, d) => ({ h, k: 'id', d, p: 'web', so: 'neutral', c: { fuente: 'claude', version: 'v1', rel: 'si', s: 'neutral', sm: 'no_aplica', ss: 'no_aplica', tm: ['noticias'], e: 'no_identificable', ia: ['ninguna'], mc: [], conf: 0.9, rv: false } });
+  const m = { ...emptyMaestra(), cobertura: [{ desde: '2026-10-20', hasta: '2026-10-21' }], importaciones: [], registros: [reg('a', '2026-10-20'), reg('b', '2026-10-21'), reg('c', '2026-10-22')] };
+  const res = buildResultados(m, null);
+  assert.deepEqual(validarResultados(res), []);
+  assert.equal(res.totales.unicos, 2);
+  assert.equal(res.totales.fueraDeCobertura, 1);
+  assert.ok(!res.diario.some((x) => x.d === '2026-10-22'), 'un día parcial no aparece como un día con pocas menciones');
+});
+
 test('granularidad: umbral, agrupación y supresión complementaria', () => {
   const m = (o) => new Map(Object.entries(o));
   assert.equal(distribucionExclusiva(m({ a: 3, b: 4 })), null, 'total bajo el umbral: muestra insuficiente');
@@ -256,6 +265,13 @@ test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin 
           assert.ok(x.registros >= k);
           continue;
         }
+        if (dim === 'laboratorios') {
+          for (const l of Object.values(x)) {
+            assert.ok(l.n >= k, `${p.id}/laboratorios: ${l.n} < ${k}`);
+            assert.ok(l.temaN == null || (l.temaN >= k && (l.n - l.temaN === 0 || l.n - l.temaN >= k)), `${p.id}/laboratorios: la temática revela un grupo pequeño`);
+          }
+          continue;
+        }
         if (dim === 'conLaboratorio' || dim === 'patrones') {
           for (const n of typeof x === 'number' ? [x] : Object.values(x)) assert.ok(n == null || n === 0 || n >= k, `${p.id}/${dim}: ${n} < ${k}`);
           continue;
@@ -272,8 +288,8 @@ test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin 
     assert.ok(!('hashtags' in p.resto), 'los hashtags del resto (nombres propios, política) no se publican');
   }
   // Las sumas siguen cuadrando con los totales privados agregados.
-  assert.equal(publicado.diario.reduce((a, x) => a + x.n, 0), 2785);
-  assert.equal(publicado.diario.reduce((a, x) => a + x.rel, 0), 684);
+  assert.equal(publicado.diario.reduce((a, x) => a + x.n, 0), 2908);
+  assert.equal(publicado.diario.reduce((a, x) => a + x.rel, 0), 741);
   assert.ok(validarResultados({ ...publicado, cubo: [] }).some((e) => /no publicable/.test(e)), 'un cubo detallado se rechaza');
   const malo = structuredClone(publicado);
   malo.periodos[1].relevantes.plataformas.v.foros = 1;

@@ -99,6 +99,18 @@ export default function Benchmark() {
                 </ul>
               </div>
 
+              {Object.entries(h.marcas.temas ?? {}).filter(([id]) => benchmark.sintesis[id]).map(([id, l]) => (
+                <motion.div key={id} className="mt-6 max-w-3xl rounded-sm border border-rosa/15 p-5" {...reveal()}>
+                  <p className="eyebrow flex flex-wrap items-center gap-x-3" style={{ color: entidad(id).color }}>
+                    {entidad(id).nombre}
+                    <span className="num normal-case tracking-normal text-bruma">
+                      {formatNumber(l.n)} menciones · temática principal: {l.temaNombre.toLowerCase()} ({formatNumber(l.temaN)})
+                    </span>
+                  </p>
+                  <p className="mt-3 font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{benchmark.sintesis[id]}</p>
+                </motion.div>
+              ))}
+
               <ol className="-mx-[var(--gutter)] mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
                 {benchmark.conclusiones.map((c, i) => (
                   <motion.li key={c.id} className="w-[85%] shrink-0 snap-start rounded-sm border border-rosa/15 p-5 md:w-auto" {...reveal(0.08 * i)}>

@@ -8,6 +8,7 @@
 // y, si el grupo no alcanza el umbral, la distribución se publica como muestra insuficiente.
 // Los cubos detallados y los registros individuales solo existen en el repositorio privado.
 import { clasificado } from './maestra.js';
+import { isCovered } from './dates.js';
 import { PERIODOS_BASE } from '../../config/periodos.js';
 import { PATRONES_SENTIMIENTO, cumplePatron } from '../../config/patrones.js';
 import { LABORATORIOS } from '../../config/marcas.js';
@@ -106,6 +107,19 @@ function grupo(rows, dims) {
     // Menciones que nombran al menos a un laboratorio (presencia agregada, nunca por marca pequeña).
     const conLab = rows.filter((r) => r.c.mc.some((m) => IDS_LAB.has(m)));
     out.conLaboratorio = celda(conLab.length);
+    // Laboratorios que alcanzan el umbral: menciones y temática principal (sin «noticias»), solo si
+    // la temática alcanza el umbral y el resto de sus menciones es cero o también lo alcanza.
+    out.laboratorios = Object.fromEntries(
+      LABORATORIOS.filter((l) => l.id !== 'otro-laboratorio')
+        .map((l) => {
+          const rs = rows.filter((r) => r.c.mc.includes(l.id));
+          if (rs.length < UMBRAL) return null;
+          const [tema, n] = [...contar(rs, (r) => r.c.tm).entries()].filter(([t]) => t !== 'noticias').sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] ?? [];
+          const ok = n >= UMBRAL && (rs.length - n === 0 || rs.length - n >= UMBRAL);
+          return [l.id, { n: rs.length, tema: ok ? tema : null, temaN: ok ? n : null }];
+        })
+        .filter(Boolean),
+    );
     // Temáticas de esas menciones en conjunto (nunca por laboratorio): solo etiquetas con n ≥ K.
     out.temasConLaboratorio = conLab.length >= UMBRAL ? distribucionMultiple(contar(conLab, (r) => r.c.tm)) : null;
   }
@@ -119,7 +133,14 @@ export function buildResultados(maestra, referencia, { generado = new Date().toI
   const porDia = new Map();
   const porPeriodo = new Map(PERIODOS_BASE.map((p) => [p.id, []]));
 
+  // Solo se publican días cubiertos por completo: los registros de un día parcial (una exportación
+  // que termina a mitad de día) se conservan en la base y se publican cuando la cobertura lo incluya.
+  let fueraDeCobertura = 0;
   for (const r of maestra.registros) {
+    if (!isCovered(maestra.cobertura, r.d)) {
+      fueraDeCobertura++;
+      continue;
+    }
     const cl = clasificado(r);
     const rel = cl && r.c.rel === 'si';
     totales.unicos++;
@@ -163,7 +184,7 @@ export function buildResultados(maestra, referencia, { generado = new Date().toI
     generado,
     umbral: UMBRAL,
     cobertura: maestra.cobertura,
-    totales,
+    totales: { ...totales, fueraDeCobertura },
     actualizacion: ultima
       ? { fecha: ultima.fecha.slice(0, 10), filasBrutas: ultima.filasBrutas, unicasArchivo: ultima.unicasArchivo, nuevos: ultima.nuevos, existentes: ultima.existentes }
       : null,
@@ -186,6 +207,12 @@ export function revisarGranularidad(res) {
       const gr = p[g];
       for (const [dim, x] of Object.entries(gr)) {
         if (dim === 'n' || x == null) continue;
+        if (dim === 'laboratorios') {
+          for (const [id, l] of Object.entries(x)) {
+            if (l.n < k || (l.temaN != null && (l.temaN < k || (l.n - l.temaN !== 0 && l.n - l.temaN < k)))) err.push(`${p.id}/${g}/laboratorios/${id}: celda menor que ${k}.`);
+          }
+          continue;
+        }
         if (dim === 'conLaboratorio' || dim === 'patrones') {
           for (const n of typeof x === 'number' ? [x] : Object.values(x)) if (n != null && n !== 0 && n < k) err.push(`${p.id}/${g}/${dim}: celda menor que ${k}.`);
           continue;
