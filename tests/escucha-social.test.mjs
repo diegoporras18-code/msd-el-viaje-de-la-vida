@@ -330,7 +330,7 @@ test('revisión focalizada: trazable, manual, sin borrar registros', () => {
   assert.equal(aplicarResultados(maestra, lote, [{ clave: 'x', ...CLS }]).informe.protegidos, 1);
 });
 
-test('ejemplos de sentimiento: patrón con umbral y supresión complementaria', async () => {
+test('patrones de conversación: umbral, supresión complementaria y síntesis en tercera persona', async () => {
   const reg = (i, s, tm, p = 'facebook') => ({ h: `r${i}`, k: 'id', d: '2026-10-05', t: 10, p, so: 'neutral', c: { fuente: 'claude', version: 'v1', rel: 'si', s, sm: 'no_aplica', ss: 'no_aplica', tm, e: 'esperanza', ia: ['ninguna'], mc: [], conf: 0.9, rv: false } });
   const base = (extraNeg) => [
     ...Array.from({ length: 12 }, (_, i) => reg(`a${i}`, 'negativo', ['barreras_atencion'])),
@@ -345,11 +345,15 @@ test('ejemplos de sentimiento: patrón con umbral y supresión complementaria', 
   const { antes } = await import('../src/content/antes.js');
   const { PATRONES_SENTIMIENTO } = await import('../src/config/patrones.js');
   assert.ok(antes.ejemplos.tarjetas.length <= 3);
+  assert.equal(antes.ejemplos.titulo, 'Patrones de conversación identificados');
   for (const t of antes.ejemplos.tarjetas) {
     assert.ok(PATRONES_SENTIMIENTO.some((p) => p.id === t.patron), `patrón desconocido ${t.patron}`);
-    assert.ok(!/https?:|www\.|@\w/.test(`${t.ejemplo} ${t.revela}`), 'los ejemplos no llevan URLs ni usuarios');
+    const texto = `${t.sintesis} ${t.revela}`;
+    assert.ok(!/https?:|www\.|@\w/.test(texto), 'las síntesis no llevan URLs ni usuarios');
+    assert.ok(!/[«»“”"]/.test(texto), 'las síntesis no van entre comillas: no son citas');
+    assert.ok(!/\b(yo|me|mi|mis|conmigo|nosotras?|nos)\b/i.test(texto), 'las síntesis van en tercera persona, sin testimonios ficticios');
   }
-  assert.match(antes.ejemplos.aviso, /paráfrasis/);
+  assert.match(antes.ejemplos.aviso, /no son testimonios ni citas/);
 });
 
 test('benchmark: referencias públicas con fuente y sin Share of Voice', async () => {

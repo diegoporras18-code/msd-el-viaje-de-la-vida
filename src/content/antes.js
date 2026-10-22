@@ -1,6 +1,6 @@
 // Capítulo 03 · Antes del concierto. Dos escenas. Las cifras y frases de conclusión se
 // calculan a partir de los resultados (src/lib/data/hechos.js); aquí van titulares, la lectura
-// editorial de los picos y las paráfrasis de los ejemplos (revisadas en la base privada).
+// editorial de los picos y las síntesis de los patrones de conversación (verificadas en la base privada).
 // Si una actualización cambia el hallazgo, ajusta el titular para que siga siendo cierto.
 
 export const antes = {
@@ -28,35 +28,36 @@ export const antes = {
   ruido: [{ desde: '2026-10-03', hasta: '2026-10-05', titulo: 'Ruido político', tono: 'ajeno' }],
   criterio:
     'Criterio: menciones que, leídas por contenido, hablan de cáncer de mama (diagnóstico, prevención, tratamiento, pacientes, barreras, investigación o iniciativas que abordan la causa). El ruido se concentra en la reacción política a una donación presidencial del 3 al 5 de octubre. Días sin datos aparecen vacíos, nunca como cero.',
-  // Ejemplos representativos: paráfrasis anónimas de patrones respaldados por varias menciones
-  // reales (evidencia solo en el informe privado). Se muestran si su patrón alcanza el umbral.
+  // Patrones de conversación: síntesis anónimas en tercera persona de lo que se repite en varias
+  // menciones reales. No son testimonios ni citas. Cada afirmación concreta está verificada con al
+  // menos 10 menciones en el informe privado; la tarjeta solo se muestra si su patrón alcanza el umbral.
   ejemplos: {
-    titulo: 'Así suena la conversación',
-    aviso: 'Ejemplos representativos redactados como paráfrasis anónimas de varias menciones reales; no son citas. El sentimiento es el tono hacia el tema, no hacia MSD.',
+    titulo: 'Patrones de conversación identificados',
+    aviso: 'Síntesis anónimas de patrones que se repiten en varias menciones reales; no son testimonios ni citas. El sentimiento es el tono hacia el tema, no hacia MSD.',
     tarjetas: [
       {
         patron: 'positivo_apoyo',
         sentimiento: 'Positivo',
         color: '#6FD3C1',
         tema: 'Historias de pacientes · apoyo emocional',
-        ejemplo: '«Lo superé porque lo detectaron a tiempo y mi equipo médico no me soltó. A las que hoy están en tratamiento: no están solas».',
-        revela: 'La esperanza se apoya en testimonios de sobrevivientes y redes de acompañamiento, y va unida a la detección temprana.',
+        sintesis: 'Sobrevivientes y familiares cuentan que superaron la enfermedad, y muchas publicaciones acompañan a quienes están en tratamiento con mensajes de que no están solas.',
+        revela: 'La esperanza se apoya en historias de superación y redes de acompañamiento, a menudo junto a un llamado a detectar a tiempo.',
       },
       {
         patron: 'neutral_informativo',
         sentimiento: 'Neutral',
         color: '#C9B3C0',
         tema: 'Educación · diagnóstico temprano',
-        ejemplo: '«Conocer cómo se ven y se sienten tus mamas ayuda a notar cambios; en Colombia se diagnostican cerca de 17.000 casos al año».',
-        revela: 'Predomina la información práctica: señales de alerta, autoexploración y cifras que invitan a consultar.',
+        sintesis: 'Piezas informativas explican las señales de alerta y la autoexploración, llaman a consultar ante cualquier cambio y citan cerca de 17.000 casos nuevos al año en Colombia.',
+        revela: 'La mayor parte de lo neutral es información práctica para reconocer cambios y consultar a tiempo.',
       },
       {
         patron: 'negativo_barreras',
         sentimiento: 'Negativo',
         color: '#E8916B',
         tema: 'Acceso y barreras de atención',
-        ejemplo: '«Octubre se llena de lazos rosados, pero de poco sirve detectar a tiempo si la mamografía no llega o el tratamiento se suspende».',
-        revela: 'La frustración apunta al sistema: cobertura de mamografía, demoras y falta de medicamentos, no a la causa.',
+        sintesis: 'Las publicaciones señalan que las campañas rosas no bastan: citan una cobertura de mamografía de 38,4 % en Colombia frente a una meta de 70 % y denuncian esperas largas entre la sospecha, el diagnóstico y el tratamiento.',
+        revela: 'La frustración apunta al acceso a la atención, no a la causa.',
       },
     ],
   },

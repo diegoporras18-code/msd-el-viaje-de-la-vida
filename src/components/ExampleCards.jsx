@@ -3,7 +3,8 @@ import { formatNumber } from '../lib/format.js';
 import { duration, ease } from '../lib/motion.js';
 
 /**
- * Tarjetas de ejemplos representativos por sentimiento (máximo tres). Cada una solo se muestra
+ * Tarjetas de patrones de conversación por sentimiento (máximo tres): síntesis anónimas en
+ * tercera persona, nunca testimonios ni citas. Cada una solo se muestra
  * si su patrón alcanza el umbral de privacidad; si no, indica que no hay evidencia suficiente.
  * En móvil se desplazan en horizontal para no alargar la escena.
  */
@@ -28,7 +29,7 @@ export default function ExampleCards({ tarjetas, patrones, umbral }) {
             </p>
             {n != null ? (
               <>
-                <p className="mt-4 font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{t.ejemplo}</p>
+                <p className="mt-4 font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{t.sintesis}</p>
                 <p className="mt-4 text-sm text-bruma">{t.revela}</p>
                 <p className="mt-auto pt-4 text-xs text-rosa">{t.tema}</p>
               </>
