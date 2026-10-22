@@ -14,7 +14,7 @@ import { detectEntities, processRows } from '../src/lib/data/process.js';
 import { aplicarRevision, aplicarResultados, buildLotes, clasificado, emptyMaestra, mergeExport, pendientes, serializarMaestra, validarMaestra } from '../src/lib/data/maestra.js';
 import { UMBRAL, buildResultados, distribucionExclusiva, distribucionMultiple, validarResultados } from '../src/lib/data/publicar.js';
 import { FILTROS_VACIOS, dailyTotals, growth, marcasView, periodStats, shareOfVoice, view } from '../src/lib/data/resultados.js';
-import { hechos } from '../src/lib/data/hechos.js';
+import { corteDatos, hechos } from '../src/lib/data/hechos.js';
 import { ENTIDADES } from '../src/config/marcas.js';
 
 const leer = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
@@ -471,4 +471,25 @@ test('la CLI se niega a guardar la base maestra dentro del repositorio público'
     error = String(e.stderr);
   }
   assert.match(error, /no puede estar dentro del repositorio público/);
+});
+
+test('las fechas de corte de los textos salen de resultados.cobertura', async () => {
+  const { antes } = await import('../src/content/antes.js');
+  const { conclusiones } = await import('../src/content/conclusiones.js');
+  const corte = corteDatos(publicado);
+  assert.equal(corte.hasta, publicado.cobertura[publicado.cobertura.length - 1].hasta);
+  assert.equal(corte.hasta, '2026-10-21');
+  assert.match(antes.alcance(corte), /^Datos hasta el 21 de octubre; el periodo previo al concierto se extiende hasta el 23 de octubre\./);
+  assert.equal(conclusiones.periodo(corte), 'Antes del concierto · datos del 1 al 21 de octubre de 2026 (el periodo previo llega al 23)');
+  // Una importación posterior actualiza los textos sin editarlos.
+  const siguiente = corteDatos({ ...publicado, cobertura: [{ desde: '2026-09-21', hasta: '2026-10-23' }] });
+  assert.equal(antes.alcance(siguiente).split('.')[0], 'Datos hasta el 23 de octubre');
+  assert.equal(conclusiones.periodo(siguiente), 'Antes del concierto · datos del 1 al 23 de octubre de 2026');
+  assert.equal(corteDatos({ ...publicado, cobertura: [] }), null);
+  assert.doesNotMatch(antes.alcance(null), /octubre/);
+  // Ningún texto editorial fija a mano la fecha de corte.
+  for (const f of readdirSync(new URL('../src/content/', import.meta.url))) {
+    const txt = readFileSync(new URL(`../src/content/${f}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(txt, /[Dd]atos (hasta|del 1 al) \d+ de octubre/, f);
+  }
 });

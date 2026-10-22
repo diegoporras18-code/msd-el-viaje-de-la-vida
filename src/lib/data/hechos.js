@@ -25,6 +25,24 @@ export const rangoTexto = (a, b) => {
   const y = parte(b);
   return x.m === y.m ? `del ${x.d} al ${y.d} de ${y.m}` : `del ${x.d} de ${x.m} al ${y.d} de ${y.m}`;
 };
+/**
+ * Fecha de corte de los datos publicados (último día de `resultados.cobertura`) y su relación con
+ * el periodo previo al concierto. Los textos editoriales la usan para no fijar fechas a mano.
+ */
+export function corteDatos(res) {
+  const hasta = res.cobertura?.length ? res.cobertura[res.cobertura.length - 1].hasta : null;
+  if (!hasta) return null;
+  const fin = hasta < PERIODO_PREVIO.hasta ? hasta : PERIODO_PREVIO.hasta;
+  return {
+    hasta,
+    dia: diaTexto(hasta),
+    anio: hasta.slice(0, 4),
+    rangoPrevio: rangoTexto(PERIODO_PREVIO.desde, fin),
+    parcial: hasta < PERIODO_PREVIO.hasta,
+    finPrevio: diaTexto(PERIODO_PREVIO.hasta),
+    numFinPrevio: Number(PERIODO_PREVIO.hasta.slice(8)),
+  };
+}
 const pct = (a, b) => (b ? (a / b) * 100 : 0);
 // Los nombres de plataforma propios (Facebook, X…) se mantienen; los genéricos van en minúscula.
 const nombreComun = (n) => (/^(Sitios web|Video|Blogs|Foros|Podcast y radio|Otras fuentes)$/.test(n) ? n.toLowerCase() : n);

@@ -61,6 +61,8 @@ export const antes = {
       },
     ],
   },
-  alcance:
-    'Datos hasta el 20 de octubre; el periodo previo al concierto se extiende hasta el 23. Las menciones no equivalen a personas alcanzadas. Las clasificaciones con confianza baja quedan sujetas a revisión y las categorías con menos de 10 menciones se agrupan para proteger la privacidad.',
+  // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
+  alcance: (corte) =>
+    `${corte ? `Datos hasta el ${corte.dia}${corte.parcial ? `; el periodo previo al concierto se extiende hasta el ${corte.finPrevio}` : ''}. ` : ''}` +
+    'Las menciones no equivalen a personas alcanzadas. Las clasificaciones con confianza baja quedan sujetas a revisión y las categorías con menos de 10 menciones se agrupan para proteger la privacidad.',
 };

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import ChapterOpener from '../components/ChapterOpener.jsx';
 import { useResultados } from '../state/DataContext.jsx';
-import { hechos } from '../lib/data/hechos.js';
+import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
 import { conclusiones } from '../content/conclusiones.js';
 import { realidad } from '../content/realidad.js';
@@ -29,7 +29,7 @@ export default function Conclusiones() {
 
   return (
     <section id="conclusiones" aria-labelledby="conclusiones-titulo" className="relative scroll-mt-16">
-      <ChapterOpener compacto capitulo={conclusiones.capitulo} titulo={conclusiones.titulo} entradilla={conclusiones.periodo} tituloId="conclusiones-titulo" />
+      <ChapterOpener compacto capitulo={conclusiones.capitulo} titulo={conclusiones.titulo} entradilla={conclusiones.periodo(corteDatos(res))} tituloId="conclusiones-titulo" />
 
       <div className="shell mx-auto max-w-[1440px] pb-14">
         <ol className="grid gap-4 lg:grid-cols-3">
