@@ -25,6 +25,11 @@ Micrositio de storytelling y escucha social sobre la campaña de concientizació
 
 Usa la skill **`actualizar-sentione`** (`.claude/skills/actualizar-sentione/SKILL.md`). Los criterios de clasificación están en `datos/CRITERIOS_CLASIFICACION.md`. Clasifica con Claude solo las menciones nuevas o modificadas, y nunca inventes clasificaciones sin el texto original.
 
+- **Relevancia A/B/C:** A `si` (el contenido principal trata cáncer de mama) es la única medida principal de la presentación; B `dudosa` (contextual) y C `no` (ruido) se conservan en la base y solo aparecen como contexto en «Explorar resultados». Evalúa lo que expresa cada mención, no el texto de la publicación original.
+- **Revisiones focalizadas:** `npm run sentione -- revisar entradas/auditoria/revision.json` aplica cambios por huella con un código de motivo, conserva la clasificación anterior (`c.prev`) y nunca borra registros. La evidencia parafraseada va solo al informe privado (`informes/auditoria-*.md`).
+- **Laboratorios:** se detectan por nombre corporativo (`src/config/marcas.js`, con `excluir` para homónimos), nunca por un medicamento. Por debajo de 10 menciones solo se publica «menos de 10»; los ejemplos por laboratorio se sustituyen por referencias públicas verificadas con fuente.
+- **Ejemplos de sentimiento:** paráfrasis anónimas en `src/content/antes.js`, respaldadas por patrones de `src/config/patrones.js` que deben reunir al menos 10 menciones.
+
 ## Contenido editorial
 
 - Los textos están en `src/content/`.

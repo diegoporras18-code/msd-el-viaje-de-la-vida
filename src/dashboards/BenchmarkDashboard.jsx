@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import ChartFrame from '../components/charts/ChartFrame.jsx';
 import StackBars from '../components/charts/StackBars.jsx';
+import BarList from '../components/charts/BarList.jsx';
 import Pending from '../components/charts/Pending.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import Highlights from './Highlights.jsx';
 import { References } from '../sections/Benchmark.jsx';
 import { useFilters, useResultados } from '../state/DataContext.jsx';
-import { marcasView, shareOfVoice, tieneBaseMaestra, view } from '../lib/data/resultados.js';
+import { marcasView, notasPrivacidad, shareOfVoice, tieneBaseMaestra, view } from '../lib/data/resultados.js';
 import { rangeLabel } from '../lib/data/dates.js';
 import { formatNumber, formatPct } from '../lib/format.js';
 import { benchmark } from '../content/benchmark.js';
@@ -62,7 +63,7 @@ export default function BenchmarkDashboard() {
               </tr>
             </thead>
             <tbody>
-              {marcas.map((m) => (
+              {marcas.filter((m) => m.id === 'msd' || m.relevantes !== 0 || m.todas !== 0).map((m) => (
                 <tr key={m.id} className="border-t border-rosa/10">
                   <th scope="row" className="py-3 font-display text-[length:var(--step-1)] font-normal italic" style={{ color: m.info.color }}>
                     {m.info.nombre}
@@ -87,6 +88,17 @@ export default function BenchmarkDashboard() {
           )}
         </ChartFrame>
 
+        <ChartFrame
+          className="lg:col-span-12"
+          index="03"
+          titulo="De qué hablan las menciones con algún laboratorio"
+          subtitulo={`${vr.conLaboratorio == null ? `Menos de ${k}` : formatNumber(vr.conLaboratorio)} de ${formatNumber(vr.registros)} menciones sobre cáncer de mama nombran a algún laboratorio · en conjunto, nunca por marca`}
+          notas={notasPrivacidad(vr.temasConLaboratorio, k)}
+          pendiente={!vr.temasConLaboratorio.items.length ? { estado: 'muestra', titulo: `Las menciones con laboratorio no alcanzan ${k} por temática en este periodo.` } : null}
+        >
+          <BarList items={vr.temasConLaboratorio.items} total={vr.conLaboratorio ?? undefined} unidad="menciones con algún laboratorio" color="#9FA8F5" />
+        </ChartFrame>
+
         <div className="lg:col-span-12">
           <Pending
             estado="muestra"
@@ -95,7 +107,7 @@ export default function BenchmarkDashboard() {
           />
         </div>
 
-        <ChartFrame className="lg:col-span-12" index="03" titulo="Noticias y contenidos destacados" subtitulo="Evidencias públicas verificadas de los laboratorios comparados">
+        <ChartFrame className="lg:col-span-12" index="04" titulo="Noticias y contenidos destacados" subtitulo="Evidencias públicas verificadas de los laboratorios comparados">
           <Highlights marcas={f.comparar} desde={f.desde} hasta={f.hasta} />
         </ChartFrame>
       </div>

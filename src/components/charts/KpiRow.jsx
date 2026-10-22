@@ -13,7 +13,7 @@ export default function KpiRow({ items }) {
           <dt className="eyebrow text-bruma">{k.etiqueta}</dt>
           <dd className="mt-2">
             {k.valor != null ? (
-              <span className={`display num block text-[length:var(--step-3)] ${k.tono ?? 'text-marfil'}`}>
+              <span className={`display num block whitespace-nowrap text-[length:var(--step-3)] ${k.tono ?? 'text-marfil'}`}>
                 <CountUp value={k.valor} format={k.formato ?? formatNumber} />
               </span>
             ) : (

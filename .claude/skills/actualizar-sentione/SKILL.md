@@ -64,6 +64,8 @@ Procedimiento completo y reproducible. El usuario no tiene que repetir las regla
 
    Los resultados públicos son proyecciones de una sola dimensión por periodo base, con umbral de 10 menciones por celda (agrupación y supresión complementaria). Si una fecha cae fuera de `PERIODOS_BASE` (`src/config/periodos.js`), `publicar` falla: añade el periodo en lugar de publicar cruces finos. Nunca añadas al archivo público cubos, cruces ni hashtags poco frecuentes.
 
+   Antes de publicar, revisa los cambios de relevancia que muevan los picos: si un pico nuevo se explica por comentarios políticos o reacciones sin contenido propio, corrígelo con `npm run sentione -- revisar` (criterios A/B/C, regla 11 de `datos/CRITERIOS_CLASIFICACION.md`). Si cambian los picos temáticos, actualiza su lectura editorial en `src/content/antes.js` (`picos`). Comprueba que los patrones de ejemplos sigan alcanzando el umbral.
+
 6. **Actualizar los hallazgos.**
    - Las frases con cifras se calculan solas (`src/lib/data/hechos.js`).
    - Revisa `src/content/conclusiones.js`:

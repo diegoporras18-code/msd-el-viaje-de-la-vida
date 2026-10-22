@@ -125,7 +125,7 @@ export default function BarrierRoute({ content }) {
   return (
     <div className="relative">
       {/* Introducción: problema en una frase */}
-      <header className="shell mx-auto max-w-[1440px] pb-16 pt-8 sm:pb-24">
+      <header className="shell mx-auto max-w-[1440px] pb-8 pt-4 sm:pb-12">
         <p className="eyebrow text-rosa">{eyebrow}</p>
         <LineReveal
           as="h3"
@@ -146,7 +146,7 @@ export default function BarrierRoute({ content }) {
       </header>
 
       {/* Escena: dos recorridos que avanzan con el scroll */}
-      <section ref={sceneRef} aria-labelledby="ruta-titulo" style={isStatic ? undefined : { height: `${seq.length * 62 + 60}vh` }}>
+      <section ref={sceneRef} aria-labelledby="ruta-titulo" style={isStatic ? undefined : { height: `${seq.length * 34 + 30}vh` }}>
         <div className={isStatic ? 'py-8' : 'sticky top-0 h-[100svh] overflow-hidden'}>
           <div className="shell mx-auto grid h-full max-w-[1440px] grid-rows-[auto_minmax(0,1fr)_auto] gap-y-4 pb-5 pt-[4.5rem] lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:pb-10 lg:pt-24">
             <Legend leyenda={leyenda} className="lg:col-span-5 lg:col-start-1 lg:row-start-1" />
@@ -334,7 +334,7 @@ function Epilogue({ cierre, puente }) {
 
   return (
     <div className="relative">
-      <div className="shell mx-auto max-w-[1440px] pb-10 pt-28 text-center">
+      <div className="shell mx-auto max-w-[1440px] pb-6 pt-14 text-center">
         <LineReveal
           as="p"
           className="display mx-auto max-w-[22ch] text-[length:var(--step-3)] text-marfil"
@@ -352,7 +352,7 @@ function Epilogue({ cierre, puente }) {
       </div>
 
       <div ref={ref} className="relative">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="block h-[38svh] min-h-[220px] w-full" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="block h-[26svh] min-h-[180px] w-full" aria-hidden="true">
           <defs>
             <linearGradient id="puente-grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#F4A6C4" />

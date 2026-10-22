@@ -1,16 +1,16 @@
 import { detectDateOrder, normalizePlatform, normalizeSentiment, normalizeUrl, parseDateTime, parseNumber } from './normalize.js';
-import { compilePatterns, extractHashtags, matches, normalizeText } from './text.js';
+import { compilePatterns, extractHashtags, matches, normalizeText, sinExcluidos } from './text.js';
 import { hashKey } from './hash.js';
 import { ENTIDADES } from '../../config/marcas.js';
 
 const cell = (row, col) => (col == null ? null : row[col] ?? null);
 const str = (v) => (v == null ? '' : v instanceof Date ? v.toISOString() : String(v).trim());
-const RE_ENT = ENTIDADES.map((e) => [e.id, compilePatterns(e.patrones)]);
+const RE_ENT = ENTIDADES.map((e) => [e.id, compilePatterns(e.patrones), e.excluir ?? []]);
 
 /** Menciones explícitas por coincidencia de texto (Claude las valida al clasificar). */
 export function detectEntities(text) {
   const t = normalizeText(text);
-  return RE_ENT.filter(([, re]) => matches(re, t)).map(([id]) => id);
+  return RE_ENT.filter(([, re, excluir]) => matches(re, sinExcluidos(t, excluir))).map(([id]) => id);
 }
 
 /** Huella del texto: detecta ediciones y agrupa textos idénticos para clasificarlos una vez. */

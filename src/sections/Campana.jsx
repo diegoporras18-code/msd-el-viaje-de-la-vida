@@ -16,7 +16,7 @@ export default function Campana() {
   const { capitulo, titulo, texto, estado, flujo, nota } = campana;
   return (
     <section id="campana" aria-labelledby="campana-titulo" className="relative scroll-mt-16">
-      <div className="shell mx-auto max-w-[1440px] pb-20 pt-16 sm:pb-28 sm:pt-24">
+      <div className="shell mx-auto max-w-[1440px] pb-10 pt-12 sm:pb-16 sm:pt-16">
         <motion.div className="flex items-center gap-4" {...reveal()}>
           <span className="eyebrow text-rosa">{capitulo}</span>
           <span className="h-px flex-1 bg-rosa/25" aria-hidden="true" />
@@ -37,10 +37,10 @@ export default function Campana() {
             </motion.p>
           </div>
         </div>
-        <div className="mt-16 sm:mt-24">
+        <div className="mt-10 sm:mt-14">
           <NarrativeFlow pasos={flujo.pasos} etiqueta={flujo.etiqueta} />
         </div>
-        <motion.p className="mt-14 max-w-2xl border-l-2 border-fucsia pl-5 text-sm text-bruma" {...reveal()}>
+        <motion.p className="mt-8 max-w-2xl border-l-2 border-fucsia pl-5 text-sm text-bruma" {...reveal()}>
           {nota}
         </motion.p>
       </div>

@@ -22,7 +22,7 @@ const SRC = {
  * tipo: 'barras' (una serie), 'superpuestas' (la segunda serie, parte de la primera, se dibuja
  * dentro de cada barra) o 'lineas'. anotaciones: [{ d | desde+hasta, titulo, detalle, tono }] sobre días o tramos.
  */
-export default function TimeChart({ series, tipo = 'barras', alto = 260, picos = [], marcadores = [], bloques = [], anotaciones = [], unidad = 'registros', descripcion }) {
+export default function TimeChart({ series, tipo = 'barras', alto = 260, picos = [], etiquetasPico = true, marcadores = [], bloques = [], anotaciones = [], unidad = 'registros', descripcion }) {
   const [wrapRef, w] = useMeasure();
   const inView = useInView(wrapRef, { once: true, amount: 0.25 });
   const reduce = useReducedMotion();
@@ -210,7 +210,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
             );
           })}
 
-        {picos.slice(0, maxPicos).map((p, k) => {
+        {etiquetasPico && picos.slice(0, maxPicos).map((p, k) => {
           const i = fechas.indexOf(p.d);
           if (i < 0) return null;
           const ty = Math.max(14, y(p.v) - 8);
@@ -237,7 +237,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
           return (
             <g key={m.d}>
               <line x1={cx(i)} x2={cx(i)} y1={M.t - 6} y2={M.t + ih} stroke="#E2457F" strokeWidth="1.5" strokeDasharray="3 3" />
-              <text x={cx(i)} y={M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'middle'} className="fill-fucsia text-[12px] font-semibold">
+              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t + 12 : M.t - 12} textAnchor={anotaciones.length ? 'start' : i > n * 0.7 ? 'end' : 'middle'} className="fill-fucsia text-[12px] font-semibold">
                 {m.etiqueta}
               </text>
             </g>

@@ -7,19 +7,19 @@ import { duration, ease } from '../lib/motion.js';
  */
 export default function Scene({ index, kicker, titulo, lead, conclusion, children, cta }) {
   return (
-    <article className="border-t border-rosa/15 py-16 sm:py-24">
+    <article className="border-t border-rosa/15 py-10 sm:py-16">
       <p className="eyebrow flex items-center gap-3 text-rosa">
         {index && <span className="num text-fucsia">{index}</span>}
         {kicker}
       </p>
       <LineReveal
         as="h3"
-        className="display mt-5 max-w-[20ch] text-[length:var(--step-3)] text-marfil"
+        className="display mt-4 max-w-[20ch] text-[length:var(--step-3)] text-marfil"
         lines={[{ text: titulo.linea1 }, ...(titulo.linea2 ? [{ text: titulo.linea2, className: 'italic text-rosa' }] : [])]}
       />
       {lead && (
         <motion.p
-          className="mt-6 max-w-2xl text-bruma sm:text-lg"
+          className="mt-4 max-w-2xl text-bruma sm:text-lg"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
@@ -28,10 +28,10 @@ export default function Scene({ index, kicker, titulo, lead, conclusion, childre
           {lead}
         </motion.p>
       )}
-      <div className="mt-10 sm:mt-14">{children}</div>
+      <div className="mt-6 sm:mt-10">{children}</div>
       {conclusion && (
         <motion.p
-          className="mt-10 max-w-3xl border-l-2 border-fucsia pl-5 font-display text-[length:var(--step-1)] italic leading-snug text-marfil sm:mt-14 sm:text-[length:var(--step-2)]"
+          className="mt-6 max-w-3xl border-l-2 border-fucsia pl-5 font-display text-[length:var(--step-1)] italic leading-snug text-marfil sm:mt-10 sm:text-[length:var(--step-2)]"
           initial={{ opacity: 0, x: -12 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.6 }}
@@ -40,7 +40,7 @@ export default function Scene({ index, kicker, titulo, lead, conclusion, childre
           {conclusion}
         </motion.p>
       )}
-      {cta && <div className="mt-8">{cta}</div>}
+      {cta && <div className="mt-5">{cta}</div>}
     </article>
   );
 }

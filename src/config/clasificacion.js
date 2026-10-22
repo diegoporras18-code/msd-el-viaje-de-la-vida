@@ -40,8 +40,9 @@ export const HACIA = ['positivo', 'neutral', 'negativo', 'mixto', 'no_aplica'];
 
 export const RELEVANCIA = [
   { id: 'si', nombre: 'Habla de cáncer de mama' },
-  { id: 'dudosa', nombre: 'Relación dudosa' },
-  { id: 'no', nombre: 'Coincidencia ajena al tema' },
+  // Contextual: vinculada indirectamente (otro tema principal, figura política, reacción sin contenido).
+  { id: 'dudosa', nombre: 'Contextual o dudosa' },
+  { id: 'no', nombre: 'Ruido: no aporta sobre cáncer de mama' },
 ];
 
 export const TEMAS = [

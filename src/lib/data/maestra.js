@@ -178,6 +178,60 @@ export function aplicarResultados(maestra, lote, resultados, { fuente = 'claude'
   return { maestra: { ...maestra, registros }, informe: { aplicados, protegidos, revisar, errores, faltantes } };
 }
 
+// Códigos de las revisiones de relevancia (auditoría semántica). Nunca texto libre.
+export const CODIGOS_REVISION = {
+  tema_central: 'El contenido principal trata el cáncer de mama',
+  contexto_politico: 'Figura política: el cáncer de mama aparece como causa beneficiaria, no como tema principal',
+  mencion_secundaria: 'Otro tema principal con un pasaje sobre cáncer de mama',
+  comentario_sin_contenido: 'Reacción sin contenido propio bajo una publicación sobre cáncer de mama',
+  ruido_politico: 'Comentario político sin contenido sobre la enfermedad',
+  ajeno: 'No trata cáncer de mama (otros cánceres, oraciones, condolencias genéricas)',
+  marca_verificada: 'Laboratorio nombrado de forma explícita, verificado en el texto',
+};
+
+/**
+ * Aplica una revisión manual focalizada. Nunca borra registros: conserva la clasificación
+ * anterior en `c.prev` y el código de la revisión en `c.aud`, y marca la fuente como 'manual'
+ * para que ninguna clasificación automática posterior la sobrescriba.
+ * cambios: [{ hs: [h], rel?, codigo, s?, sm?, ss?, tm?, e?, ia?, mc?, conf? }]
+ */
+export function aplicarRevision(maestra, cambios, { fecha = new Date().toISOString().slice(0, 10) } = {}) {
+  const porH = new Map(maestra.registros.map((r, i) => [r.h, i]));
+  const registros = [...maestra.registros];
+  const errores = [];
+  let aplicados = 0;
+  for (const x of cambios) {
+    if (!CODIGOS_REVISION[x.codigo]) {
+      errores.push(`código de revisión desconocido «${x.codigo}»`);
+      continue;
+    }
+    for (const h of x.hs ?? []) {
+      const idx = porH.get(h);
+      if (idx == null) {
+        errores.push(`registro desconocido ${h}`);
+        continue;
+      }
+      const old = registros[idx].c;
+      if (!old && !(x.s && x.tm)) {
+        errores.push(`${h}: sin clasificación previa ni completa`);
+        continue;
+      }
+      const { hs, codigo, ...campos } = x;
+      const c = { ...(old ?? {}), ...campos, fuente: 'manual', fecha, rv: false, aud: codigo, prev: old ? { rel: old.rel, fuente: old.fuente, fecha: old.fecha, ...(campos.mc ? { mc: old.mc } : {}) } : null };
+      if (old?.prev) c.prev = { ...c.prev, antes: old.prev };
+      if (!c.version) c.version = CRITERIOS_VERSION;
+      const e = validarResultado({ ...c, temas: c.tm, i: c.ia, marcas: c.mc });
+      if (e.length) {
+        errores.push(`${h}: ${e.join('; ')}`);
+        continue;
+      }
+      registros[idx] = { ...registros[idx], c };
+      aplicados++;
+    }
+  }
+  return { maestra: { ...maestra, registros }, informe: { aplicados, errores } };
+}
+
 const PROHIBIDOS = ['_local', 'texto', 'autor', 'url', 'pais', 'usuario', 'motivo'];
 
 /** Valida la base maestra: estructura, unicidad y ausencia de datos personales o textos. */

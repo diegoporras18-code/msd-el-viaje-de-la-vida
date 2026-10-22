@@ -13,7 +13,7 @@ const reveal = (delay = 0) => ({
 /** Apertura de capítulo a pantalla completa, con la misma gramática que «Una realidad…». */
 export default function ChapterOpener({ capitulo, titulo, entradilla, estado, tituloId, compacto = false }) {
   return (
-    <header className={`relative flex flex-col justify-center ${compacto ? 'pb-10 pt-28' : 'min-h-[100svh] py-24'}`}>
+    <header className={`relative flex flex-col justify-center ${compacto ? 'pb-2 pt-16 sm:pt-20' : 'min-h-[100svh] py-24'}`}>
       <div className="shell mx-auto w-full max-w-[1440px]">
         <motion.div className="flex items-center gap-4" {...reveal()}>
           <span className="eyebrow text-rosa">{capitulo}</span>
@@ -21,11 +21,11 @@ export default function ChapterOpener({ capitulo, titulo, entradilla, estado, ti
         </motion.div>
         <LineReveal
           id={tituloId}
-          className="display mt-8 max-w-[18ch] text-[length:var(--step-4)] text-marfil sm:mt-12"
+          className={`display max-w-[18ch] text-[length:var(--step-4)] text-marfil ${compacto ? 'mt-5 sm:mt-8' : 'mt-8 sm:mt-12'}`}
           lines={[{ text: titulo.linea1 }, ...(titulo.linea2 ? [{ text: titulo.linea2, className: 'italic text-rosa' }] : [])]}
         />
         {entradilla && (
-          <motion.p className="mt-10 max-w-2xl font-display text-[length:var(--step-2)] leading-snug text-marfil/90" {...reveal(0.2)}>
+          <motion.p className={`max-w-2xl font-display leading-snug text-marfil/90 ${compacto ? 'mt-5 text-[length:var(--step-1)]' : 'mt-10 text-[length:var(--step-2)]'}`} {...reveal(0.2)}>
             {entradilla}
           </motion.p>
         )}

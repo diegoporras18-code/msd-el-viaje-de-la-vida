@@ -9,6 +9,10 @@
 // Los cubos detallados y los registros individuales solo existen en el repositorio privado.
 import { clasificado } from './maestra.js';
 import { PERIODOS_BASE } from '../../config/periodos.js';
+import { PATRONES_SENTIMIENTO, cumplePatron } from '../../config/patrones.js';
+import { LABORATORIOS } from '../../config/marcas.js';
+
+const IDS_LAB = new Set(LABORATORIOS.map((l) => l.id));
 
 export const RESULTADOS_VERSION = 3;
 export const UMBRAL = 10;
@@ -90,6 +94,21 @@ function grupo(rows, dims) {
   }
   // Los hashtags poco frecuentes no se nombran: pueden ser nombres propios o etiquetas de una sola cuenta.
   if (out.hashtags) out.hashtags.menores = [];
+  if (dims === DIMENSIONES.relevantes) {
+    // Patrones de ejemplos: una celda por patrón, con supresión complementaria frente a su sentimiento.
+    out.patrones = Object.fromEntries(
+      PATRONES_SENTIMIENTO.map((p) => {
+        const n = rows.filter((r) => cumplePatron(p, r)).length;
+        const resto = rows.filter((r) => r.c.s === p.s).length - n;
+        return [p.id, n >= UMBRAL && (resto === 0 || resto >= UMBRAL) ? n : null];
+      }),
+    );
+    // Menciones que nombran al menos a un laboratorio (presencia agregada, nunca por marca pequeña).
+    const conLab = rows.filter((r) => r.c.mc.some((m) => IDS_LAB.has(m)));
+    out.conLaboratorio = celda(conLab.length);
+    // Temáticas de esas menciones en conjunto (nunca por laboratorio): solo etiquetas con n ≥ K.
+    out.temasConLaboratorio = conLab.length >= UMBRAL ? distribucionMultiple(contar(conLab, (r) => r.c.tm)) : null;
+  }
   const conMetrica = rows.filter((r) => r.m?.int != null);
   out.interacciones = conMetrica.length >= UMBRAL ? { total: conMetrica.reduce((a, r) => a + r.m.int, 0), registros: conMetrica.length } : null;
   return out;
@@ -167,6 +186,10 @@ export function revisarGranularidad(res) {
       const gr = p[g];
       for (const [dim, x] of Object.entries(gr)) {
         if (dim === 'n' || x == null) continue;
+        if (dim === 'conLaboratorio' || dim === 'patrones') {
+          for (const n of typeof x === 'number' ? [x] : Object.values(x)) if (n != null && n !== 0 && n < k) err.push(`${p.id}/${g}/${dim}: celda menor que ${k}.`);
+          continue;
+        }
         if (dim === 'interacciones') {
           if (x.registros < k) err.push(`${p.id}/${g}: interacciones con menos de ${k} registros.`);
           continue;

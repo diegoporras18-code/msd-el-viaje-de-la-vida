@@ -23,7 +23,7 @@ export default function StatFigure({ index, value, label, detail, tone = 'rosa',
   const end = align === 'end';
 
   return (
-    <div ref={ref} className="relative py-10 sm:py-14 lg:py-20">
+    <div ref={ref} className="relative py-6 sm:py-8 lg:py-12">
       <motion.span
         className="absolute inset-x-0 top-0 block h-px origin-left bg-rosa/25"
         initial={{ scaleX: 0 }}
