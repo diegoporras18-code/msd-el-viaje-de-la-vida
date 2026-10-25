@@ -8,7 +8,7 @@ import { tieneBaseMaestra } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
 import { formatNumber } from '../lib/format.js';
-import { benchmark } from '../content/benchmark.js';
+import { benchmark, lecturaPresencia } from '../content/benchmark.js';
 import { entidad, LABORATORIOS } from '../config/marcas.js';
 import { duration, ease } from '../lib/motion.js';
 
@@ -77,7 +77,7 @@ export default function Benchmark() {
   const k = res.umbral;
   const { escena } = benchmark;
   const observacion = {
-    presencia: `${labs.length} laboratorios aparecen en la conversación sobre cáncer de mama${labs.every((l) => l.n == null) ? `, ninguno con ${k} menciones o más` : ''}; MSD, con ${labs.find((l) => l.id === 'msd')?.n == null ? `menos de ${k}` : formatNumber(labs.find((l) => l.id === 'msd').n)}.`,
+    presencia: lecturaPresencia(labs, k),
     temas: h.laboratorios.disponible ? h.laboratorios.texto : null,
   };
 

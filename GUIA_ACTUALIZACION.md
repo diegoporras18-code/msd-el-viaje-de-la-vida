@@ -97,9 +97,59 @@ complementaria; los desgloses pequeños conservan el umbral 10 y la supresión c
 pueden confirmar contenido, fecha, emisor y URL canónica, registra únicamente su
 estado pendiente en el informe privado y no los sumes. Antes de incorporar un externo
 verificado se necesita un origen explícito y una deduplicación compatible con los IDs
-SentiOne: la CLI actual no ofrece ese flujo y no debe simularse con IDs inventados.
+SentiOne: la promoción verificada de `complementarias` descrita a continuación conserva el origen sin inventar IDs SentiOne.
 No cambies el origen de los registros SentiOne ni publiques enlaces de particulares.
 
 Antes de guardar: contrasta todas las huellas históricas, verifica que cada clasificación
 manual sigue idéntica y que las evidencias de cada síntesis anterior aún alcanzan 10.
 Guarda la base privada antes de abrir el PR público; no lo fusiones automáticamente.
+
+## Auditoría independiente de campaña y enlaces pendientes
+
+Ver [CRITERIOS_CAMPANA.md](datos/CRITERIOS_CAMPANA.md). La segunda dimensión amplía
+la base a v2 y los agregados a v4; A/B/C y las métricas temáticas se conservan. Los
+registros sin evaluación de campaña no son negativos. La configuración confirmada
+por el usuario y el informe de cobertura se conservan únicamente en el repositorio
+privado.
+
+La cola `maestra/complementarias.json` del repositorio privado mantiene las candidatas
+entre tareas con localizadores de plataforma sin cuentas ni parámetros de rastreo.
+`enlacePendiente` permite recuperar el enlace aportado para una revisión local. No
+son referencias editoriales ni se incluyen en métricas mientras sigan pendientes.
+
+Alternativa segura cuando una red no abre:
+
+1. Solicitar el permalink original y una captura o metadatos que permitan comprobar
+   fecha/hora/zona, contexto, vínculo con la iniciativa y tipo de emisor. El usuario
+   puede ocultar rostros, cuentas de particulares y detalles personales irrelevantes.
+2. Conservar el material únicamente en `entradas/`, revisar su coherencia y no inferir
+   texto ni contenido visual fuera de lo efectivamente visible. Un login o un hashtag
+   aislado no bastan. Si la fecha o la relación siguen ambiguas, conservar pendiente.
+3. Resolver la URL canónica con ID de publicación. Los short links y share aliases
+   no bastan para deduplicar. El índice privado de identidades se genera desde las
+   URLs originales de SentiOne y guarda solo hashes y referencias internas.
+4. Comparar esa identidad entre fuentes antes de incorporar. Si ya existe, conservar
+   una sola mención, A/B/C y métricas primarias, añadiendo la procedencia complementaria.
+   Si hay varias coincidencias o identidades sin resolver de la plataforma, detener la
+   incorporación hasta resolverlas. No fusionar comentarios con su publicación matriz.
+5. Preparar un archivo local verificado y ejecutar primero en seco:
+
+```bash
+npm run sentione -- complementarias estado
+npm run sentione -- complementarias entradas/externa-verificada.json --seco
+npm run sentione -- complementarias entradas/externa-verificada.json
+```
+
+El archivo local identifica `id` de la cola, `estado: 'verificada'`, `urlCanonica`,
+`verificacion` con método (`acceso_directo`, `metadatos_publicos` o `captura_aportada`)
+y comprobaciones explícitas de contenido, fecha y vínculo, más un `registro`
+seudonimizado con su decisión `cp` completa. No marcar comprobaciones sin realizarlas.
+La URL y los materiales de verificación no se serializan en la base. Para nuevos
+registros temáticos usar los criterios v1 sin inventar clasificaciones; una campaña
+confirmada sin clasificación temática queda pendiente en esa dimensión.
+
+La incorporación no amplía automáticamente días completos, no suma interacciones
+entre capturas, no atribuye alcance y no transforma métricas incomparables. Regenera
+los agregados y verifica las supresiones tras cada promoción. El estado público de
+las complementarias se calcula de la cola y se oculta si permite deducir categorías
+pequeñas. No edites un contador fijo en textos editoriales.

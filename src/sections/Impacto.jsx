@@ -3,6 +3,7 @@ import ChapterOpener from '../components/ChapterOpener.jsx';
 import Scene, { ExploreLink } from '../components/Scene.jsx';
 import PeriodBars from '../components/charts/PeriodBars.jsx';
 import Pending from '../components/charts/Pending.jsx';
+import UniversosConcierto from '../components/UniversosConcierto.jsx';
 import { useResultados } from '../state/DataContext.jsx';
 import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { resumenImpacto } from '../lib/data/impacto.js';
@@ -21,17 +22,19 @@ export default function Impacto() {
     <section id="impacto" aria-labelledby="impacto-titulo" className="relative scroll-mt-16">
       <ChapterOpener compacto capitulo={impacto.capitulo} titulo={impacto.titulo} tituloId="impacto-titulo" />
       <div className="shell mx-auto max-w-[1440px] pb-6">
-        {r.disponible ? (
-          <Scene index="04.1" kicker="Primera lectura · conversación observada" titulo={{ linea1: r.superaPromedio ? 'Un cambio para investigar' : 'Sin un pico observable', linea2: 'con una captura aún limitada' }} conclusion={h.impacto.texto} cta={<ExploreLink tab="impacto">Explorar el impacto y sus límites</ExploreLink>}>
+        {(r.disponible || res.campana) ? (
+          <Scene index="04.1" kicker="La causa, el evento y su intersección" titulo={{ linea1: '¿Qué conversación dejó', linea2: 'la experiencia?' }} cta={<ExploreLink tab="impacto">Explorar el impacto y sus límites</ExploreLink>}>
+            <UniversosConcierto />
+            <details className="mt-6 border-t border-rosa/15 pt-4">
+              <summary className="min-h-[44px] cursor-pointer font-display text-xl italic text-rosa">Ver el comportamiento de la causa antes y durante</summary>
+              <p className="mb-4 mt-3 text-sm text-bruma">{h.impacto.texto}</p>
             <PeriodBars compacto periodos={PERIODOS_IMPACTO.map((p, i) => ({
               ...p, rango: rangeLabel(p.desde, p.hasta), valor: stats[i]?.promedioDiario ?? null,
               detalle: stats[i] ? `${stats[i].diasConDatos} ${stats[i].diasConDatos === 1 ? 'día cubierto' : 'días cubiertos'} · mediana ${formatDecimal(stats[i].mediana)}` : null,
               pendiente: { estado: 'medicion', titulo: 'Aún sin días completos' },
             }))} unidad="menciones sobre cáncer de mama por día" />
             <p className="mt-5 max-w-3xl text-sm text-bruma">Como contraste, los siete días previos registraron {formatDecimal(r.reciente?.promedioDiario)} menciones diarias. La línea base de octubre incluye el Día Mundial; no es un contrafactual del concierto.</p>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {impacto.universos.map((u) => <div key={u.titulo} className="border-l border-rosa/25 pl-4"><h4 className="eyebrow text-rosa">{u.titulo}</h4><p className="mt-2 text-sm text-bruma">{u.texto}</p></div>)}
-            </div>
+            </details>
             <details className="mt-6 border-t border-rosa/15 pt-4">
               <summary className="min-h-[44px] cursor-pointer font-display text-xl italic text-rosa">Cómo amplificar futuras experiencias</summary>
               <p className="mt-2 text-sm text-bruma">Oportunidades de diseño, no acciones que se afirme que ocurrieron.</p>

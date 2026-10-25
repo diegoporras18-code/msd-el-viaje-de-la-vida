@@ -11,6 +11,7 @@ import { PATRONES_SENTIMIENTO } from '../../config/patrones.js';
 import { nombreTema } from '../../config/clasificacion.js';
 import { formatDecimal, formatNumber, formatOne, formatPct } from '../format.js';
 import { resumenImpacto } from './impacto.js';
+import { vistaCampana } from './campana-resultados.js';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const parte = (s) => {
@@ -326,6 +327,8 @@ export function hechos(res, hoy = '2026-10-21') {
     const { antes, durante, despues, cambio } = impacto;
     out.impacto = {
       disponible: true, tipo: 'medido', cifra: formatNumber(durante.total),
+      titulo: cambio == null ? 'La causa: comparación pendiente' : cambio > 0 ? 'La causa: un aumento de volumen observable' : 'La causa: sin un pico frente al promedio previo',
+      significa: (cambio == null ? 'Falta una línea base temática comparable.' : cambio > 0 ? 'El volumen temático supera el promedio previo.' : 'El volumen temático queda por debajo o igual al promedio previo.') + ' Esto no mide la conversación específica del evento ni demuestra un efecto del concierto.',
       unidad: 'menciones sobre cáncer de mama el día del concierto',
       texto: `El 24 de octubre se observaron ${formatNumber(durante.total)} menciones sobre cáncer de mama, frente a ${formatDecimal(antes.promedioDiario)} por día del ${Number(antes.desde.slice(8))} al ${Number(antes.hasta.slice(8))} de octubre${cambio != null ? ` (${formatPct(cambio, true)})` : ''}. ` +
         (cambio != null && cambio <= 0 ? 'No se observa un pico frente a ese promedio en la captura disponible. ' : 'El volumen observado requiere contrastarse con el contenido antes de atribuirlo al evento. ') +
@@ -334,5 +337,14 @@ export function hechos(res, hoy = '2026-10-21') {
     };
   } else out.impacto = no(hoy < EVENTO.fecha ? 'evento' : 'medicion');
 
+  const cp = vistaCampana(res);
+  out.campana = {
+    disponible: cp.disponible, tipo: 'medido',
+    cifra: cp.confirmadas == null ? '< 10' : formatNumber(cp.confirmadas),
+    unidad: 'publicaciones de campaña confirmadas en la captura auditada del 24',
+    texto: cp.disponible
+      ? `${cp.confirmadas == null ? 'La cifra se protege por muestra pequeña' : `Se confirmaron ${formatNumber(cp.confirmadas)} publicaciones de campaña el 24 en los registros auditados`}. La auditoría y la captura son parciales: esta cifra no demuestra ausencia de conversación. ${cp.pico === 'no_comparable' ? 'No hay una línea base completa de la propia campaña para evaluar un pico.' : cp.pico === 'aumento_en_archivo' ? 'El archivo auditado muestra un aumento frente a la propia línea base de campaña; la cobertura sigue siendo parcial.' : 'El archivo auditado no muestra un aumento frente a la propia línea base de campaña; la cobertura sigue siendo parcial.'} ${cp.complementarias}`
+      : 'La relevancia para la campaña requiere una auditoría independiente de A/B/C.',
+  };
   return out;
 }

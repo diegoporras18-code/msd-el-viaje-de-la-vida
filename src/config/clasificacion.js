@@ -12,6 +12,7 @@ export const PLATAFORMAS = [
   { id: 'x', nombre: 'X', patrones: ['x', 'twitter', 'x.com', 'tweet'] },
   { id: 'tiktok', nombre: 'TikTok', patrones: ['tiktok'] },
   { id: 'instagram', nombre: 'Instagram', patrones: ['instagram', 'ig'] },
+  { id: 'linkedin', nombre: 'LinkedIn', patrones: ['linkedin', 'lnkd.in'] },
   { id: 'blogs', nombre: 'Blogs', patrones: ['blog'] },
   { id: 'foros', nombre: 'Foros', patrones: ['forum', 'foro', 'reddit', 'review'] },
   { id: 'podcast', nombre: 'Podcast y radio', patrones: ['podcast', 'radio', 'audio'] },

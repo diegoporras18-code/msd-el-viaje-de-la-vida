@@ -29,9 +29,9 @@ export const conclusiones = {
     },
     {
       id: 'impacto', hecho: 'impacto', estado: 'preliminar',
-      pregunta: '¿Qué se observó el día del concierto?',
-      titulo: 'Sin un pico digital comprobable',
-      significa: 'El volumen sobre la causa quedó por debajo del promedio previo. La captura limitada impide concluir que no hubo actividad o evaluar el valor presencial.',
+      pregunta: '¿Qué ocurrió con la conversación sobre la causa?',
+      titulo: 'La conversación temática y el evento se miden por separado',
+      significa: 'El comportamiento temático se calcula de los datos. No equivale al volumen específico del evento.',
       oportunidad: 'Verificar las publicaciones complementarias y completar los días posteriores antes de atribuir resultados a la campaña.',
     },
     {
@@ -53,6 +53,7 @@ export const conclusiones = {
     { pregunta: '¿Qué presencia tenía MSD antes del concierto?', hecho: 'msd' },
     { pregunta: '¿Qué laboratorios aparecen?', hecho: 'marcas' },
     { pregunta: '¿Qué tan confiable es la clasificación por contenido?', hecho: 'calidad' },
-    { pregunta: '¿La acción del concierto produjo un cambio observable?', hecho: 'impacto' },
+    { pregunta: '¿Cambió la conversación temática el día del concierto?', hecho: 'impacto' },
+    { pregunta: '¿Cuánta conversación confirmada se identificó sobre la campaña?', hecho: 'campana' },
   ],
 };

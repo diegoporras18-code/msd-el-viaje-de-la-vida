@@ -28,6 +28,8 @@ import { buildResultados, validarResultados } from '../src/lib/data/publicar.js'
 import { hechos } from '../src/lib/data/hechos.js';
 import { normalizeText } from '../src/lib/data/text.js';
 import { CRITERIOS_VERSION } from '../src/config/clasificacion.js';
+import { aplicarAuditoriaCampana } from '../src/lib/data/campana.js';
+import { incorporarComplementaria, indexarPublicaciones } from '../src/lib/data/complementarias.js';
 
 const [cmd, ...args] = process.argv.slice(2);
 const opt = (name) => {
@@ -47,6 +49,8 @@ const RUTA = {
   resultados: process.env.SENTIONE_RESULTADOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS)) : new URL('../src/data/resultados.json', import.meta.url),
   // Las pruebas usan una carpeta temporal para no tocar los lotes locales de trabajo.
   lotes: process.env.SENTIONE_LOTES ? pathToFileURL(`${resolve(process.env.SENTIONE_LOTES)}/`) : new URL('../entradas/lotes/', import.meta.url),
+  complementarias: new URL('maestra/complementarias.json', carpeta(DATOS)),
+  indice: new URL('maestra/publicaciones-indice.json', carpeta(DATOS)),
 };
 
 const leer = (url) => JSON.parse(readFileSync(url, 'utf8'));
@@ -173,6 +177,9 @@ Cobertura: ${informe.cobertura.map((c) => `${c.desde} → ${c.hasta}`).join(', '
   if (args.includes('--seco')) return console.log('\nModo --seco: no se guardó nada.');
   guardarMaestra(nueva);
 
+  const indice = indexarPublicaciones(out.registros, existsSync(RUTA.indice) ? leer(RUTA.indice) : undefined, nueva.registros);
+  writeFileSync(RUTA.indice, JSON.stringify(indice, null, 1));
+
   const { lotes, grupos, registros, sinTexto } = buildLotes(nueva, out.registros, { reclasificarVersion: args.includes('--reclasificar') });
   mkdirSync(RUTA.lotes, { recursive: true });
   for (const f of readdirSync(RUTA.lotes)) if (/^lote-\d+\.json$/.test(f)) writeFileSync(new URL(f, RUTA.lotes), ''); // invalida lotes anteriores
@@ -226,7 +233,7 @@ function cifrasClave(res) {
 function publicar() {
   const maestra = leerMaestra();
   const referencia = existsSync(RUTA.referencia) ? leer(RUTA.referencia) : null;
-  const res = buildResultados(maestra, referencia);
+  const res = buildResultados(maestra, referencia, { complementarias: existsSync(RUTA.complementarias) ? leer(RUTA.complementarias) : undefined });
   const errores = validarResultados(res);
   if (errores.length) fallar(`Resultados no válidos:\n  ${errores.join('\n  ')}`);
   const previo = existsSync(RUTA.resultados) ? leer(RUTA.resultados) : null;
@@ -342,6 +349,40 @@ function revisar() {
   for (const [k, n] of Object.entries(porCodigo)) console.log(`  ${k.padEnd(26)} ${fmt(n)}  · ${CODIGOS_REVISION[k]}`);
 }
 
-const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar };
+function auditarCampana() {
+  const maestra = leerMaestra();
+  const decisiones = leer(pathToFileURL(resolve(args[0])));
+  const nueva = aplicarAuditoriaCampana(maestra, decisiones);
+  const antes = JSON.stringify(maestra.registros.map(r => [r.h, r.c]));
+  if (antes !== JSON.stringify(nueva.registros.map(r => [r.h, r.c]))) fallar('La auditoría de campaña alteró A/B/C.');
+  console.log(`Conciliación: ${maestra.registros.length} registros conservados; ${decisiones.length} decisiones de campaña; A/B/C intacta.`);
+  if (args.includes('--seco')) return;
+  comprobarPrivado();
+  guardarMaestra(nueva);
+}
+
+function complementarias() {
+  const cola = existsSync(RUTA.complementarias) ? leer(RUTA.complementarias) : { version: 1, items: [] };
+  if (!args[0] || args[0] === 'estado') {
+    console.log(`Complementarias: ${cola.items.length} candidatas; ${cola.items.filter(x => x.estado === 'pendiente').length} pendientes.`);
+    return;
+  }
+  const entrada = leer(pathToFileURL(resolve(args[0])));
+  const item = cola.items.find(x => x.id === entrada.id);
+  if (!item) fallar('Candidata no registrada en la cola privada.');
+  if (!existsSync(RUTA.indice)) fallar('Falta el índice de publicaciones SentiOne: reconstruir antes de deduplicar.');
+  const maestra = leerMaestra();
+  const out = incorporarComplementaria(maestra, leer(RUTA.indice), entrada);
+  const errores = validarMaestra(out.maestra);
+  if (errores.length) fallar(errores.join('; '));
+  console.log(out.nuevo ? 'Publicación verificada nueva.' : 'Misma publicación ya captada: se conserva un registro único y ambas procedencias.');
+  if (args.includes('--seco')) return;
+  comprobarPrivado();
+  guardarMaestra(out.maestra);
+  writeFileSync(RUTA.indice, JSON.stringify(out.indice, null, 1));
+  writeFileSync(RUTA.complementarias, JSON.stringify({ ...cola, items: cola.items.map(x => x.id === entrada.id ? { ...x, estado: 'incorporada', registro: out.h, metodo: entrada.verificacion.metodo } : x) }, null, 1));
+}
+
+const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar, 'auditar-campana': auditarCampana, complementarias };
 if (!COMANDOS[cmd]) fallar(`Comando desconocido. Usa: ${Object.keys(COMANDOS).join(', ')}.`);
 await COMANDOS[cmd]();

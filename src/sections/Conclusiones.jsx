@@ -39,7 +39,7 @@ export default function Conclusiones() {
               <motion.li key={x.id} className="flex flex-col rounded-sm border border-rosa/15 p-5 sm:p-6" {...reveal(0.08 * i)}>
                 <p className="eyebrow num text-fucsia">0{i + 1}</p>
                 <p className="mt-2 text-sm text-bruma">{x.pregunta}</p>
-                <h3 className="mt-3 font-display text-[length:var(--step-2)] italic leading-tight text-marfil">{x.titulo}</h3>
+                <h3 className="mt-3 font-display text-[length:var(--step-2)] italic leading-tight text-marfil">{x.id === 'impacto' ? h.impacto.titulo : x.titulo}</h3>
                 <Etiqueta tono="text-rosa">Qué observamos</Etiqueta>
                 <p className="mt-2 flex items-baseline gap-3">
                   <span className="display num text-[length:var(--step-3)] leading-none text-rosa">{hecho.cifra}</span>
@@ -47,7 +47,7 @@ export default function Conclusiones() {
                 </p>
                 <p className="mt-4 text-sm text-bruma">
                   <Etiqueta>Qué significa</Etiqueta>
-                  {x.significa}
+                  {x.id === 'impacto' ? h.impacto.significa : x.significa}
                 </p>
                 <p className="mt-4 border-l-2 border-fucsia pl-3 text-sm text-marfil">
                   <Etiqueta tono="text-rosa">Qué recomendamos</Etiqueta>

@@ -240,7 +240,7 @@ test('granularidad: umbral, agrupación y supresión complementaria', () => {
 test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin restas reveladoras', () => {
   const k = publicado.umbral;
   assert.equal(k, 10);
-  assert.deepEqual(Object.keys(publicado).sort(), ['actualizacion', 'base', 'cobertura', 'diario', 'generado', 'periodos', 'totales', 'umbral', 'version']);
+  assert.deepEqual(Object.keys(publicado).sort(), ['actualizacion', 'base', 'campana', 'cobertura', 'diario', 'generado', 'periodos', 'totales', 'umbral', 'version']);
   assert.ok(!('cubo' in publicado) && !('hashtags' in publicado), 'no hay cubo detallado ni hashtags por día');
   for (const x of publicado.diario) assert.deepEqual(Object.keys(x), ['d', 'n', 'cl', 'rel'], 'la serie diaria no cruza otras dimensiones');
   for (const p of publicado.periodos) {
@@ -366,7 +366,7 @@ test('benchmark: referencias públicas con fuente y sin Share of Voice', async (
     assert.equal(r.estado, 'verificado');
     assert.match(r.fuente.url, /^https:\/\//);
   }
-  assert.ok(!/lidera/i.test(JSON.stringify(benchmark.conclusiones).replace(/no se puede afirmar que uno lidere/, '')), 'no afirma liderazgos sin consulta equivalente');
+  assert.ok(!/lidera/i.test(JSON.stringify(benchmark.conclusiones).replace(/no se puede afirmar que uno lidere|no establecen liderazgo/, '')), 'no afirma liderazgos sin consulta equivalente');
   assert.match(benchmark.limitacion, /no se calcula un Share of Voice/);
 });
 

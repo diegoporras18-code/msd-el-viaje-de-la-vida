@@ -12,10 +12,11 @@ import { isCovered } from './dates.js';
 import { PERIODOS_BASE } from '../../config/periodos.js';
 import { PATRONES_SENTIMIENTO, cumplePatron } from '../../config/patrones.js';
 import { LABORATORIOS } from '../../config/marcas.js';
+import { validarCampana } from './campana.js';
 
 const IDS_LAB = new Set(LABORATORIOS.map((l) => l.id));
 
-export const RESULTADOS_VERSION = 3;
+export const RESULTADOS_VERSION = 4;
 export const UMBRAL = 10;
 
 // Franjas horarias (hora de Bogotá). La noche coincide con la franja del concierto.
@@ -87,6 +88,52 @@ export function distribucionMultiple(mapa, k = UMBRAL) {
 
 const celda = (n, k = UMBRAL) => (n === 0 || n >= k ? n : null);
 
+const cpVigente = (r) => r.cp?.version === 1 && !r.cp.obsoleta && validarCampana(r.cp, r.h).length === 0;
+const cpConfirmada = (r) => cpVigente(r) && r.cp.estado === 'confirmada' && r.cp.revision === 'verificada';
+const esCausa = (r) => clasificado(r) && r.c.rel === 'si';
+
+function resumenComplementarias(cola) {
+  const items = cola?.items ?? [];
+  const counts = {
+    verificadas: items.filter(x => ['verificada', 'incorporada'].includes(x.estado)).length,
+    pendientes: items.filter(x => x.estado === 'pendiente').length,
+    descartadas: items.filter(x => x.estado === 'descartada').length,
+  };
+  // Si una categoría pequeña se pudiera restar de total, se oculta el desglose completo.
+  const ocultar = Object.values(counts).some(n => n > 0 && n < UMBRAL);
+  return { total: celda(items.length), ...Object.fromEntries(Object.entries(counts).map(([k, n]) => [k, ocultar && n ? null : celda(n)])) };
+}
+
+export function buildCampana(maestra, cola) {
+  const rows = maestra.registros.filter(r => isCovered(maestra.cobertura, r.d));
+  const evaluadas = rows.filter(cpVigente);
+  const confirmadas = rows.filter(cpConfirmada);
+  const particion = rs => distribucionExclusiva(contar(rs, r => esCausa(r) ? 'ambos' : 'sin_causa'));
+  const periodos = PERIODOS_BASE.map(p => {
+    const rs = confirmadas.filter(r => r.d >= p.desde && r.d <= p.hasta);
+    return { id: p.id, confirmadas: celda(rs.length), interseccion: particion(rs),
+      detalle: rs.length >= UMBRAL ? {
+        plataformas: distribucionExclusiva(contar(rs, r => r.p)),
+        formatos: distribucionExclusiva(contar(rs, r => r.tp ?? 'sin_tipo')),
+        vinculos: distribucionExclusiva(contar(rs, r => r.cp.vinculo)),
+        fuentes: distribucionExclusiva(contar(rs, r => {
+          const fuentes = r.capturas ?? [r.cp.origen];
+          return fuentes.includes('sentione') && fuentes.includes('complementaria') ? 'ambas_capturas' : fuentes[0];
+        })),
+        temas: distribucionMultiple(contar(rs, r => r.cp.temas)),
+      } : null };
+  });
+  const dias = [...new Set(rows.map(r => r.d))].sort();
+  return { version: 1, cobertura: 'parcial', evaluadas: celda(evaluadas.length), sinEvaluar: celda(rows.length - evaluadas.length),
+    estados: distribucionExclusiva(contar(evaluadas, r => r.cp.estado)),
+    confirmadas: celda(confirmadas.length), interseccion: particion(confirmadas),
+    diario: dias.map(d => {
+      const rs = rows.filter(r => r.d === d);
+      const completa = rs.every(cpVigente);
+      return { d, archivoEvaluadoCompleto: completa, confirmadas: completa ? celda(rs.filter(cpConfirmada).length) : null };
+    }), periodos, complementarias: resumenComplementarias(cola) };
+}
+
 function grupo(rows, dims) {
   const out = { n: rows.length };
   for (const [nombre, [tipo, get]] of Object.entries(dims)) {
@@ -128,7 +175,7 @@ function grupo(rows, dims) {
   return out;
 }
 
-export function buildResultados(maestra, referencia, { generado = new Date().toISOString() } = {}) {
+export function buildResultados(maestra, referencia, { generado = new Date().toISOString(), complementarias } = {}) {
   const totales = { unicos: 0, clasificados: 0, pendientes: 0, revisar: 0, relevantes: 0, dudosas: 0, noRelevantes: 0 };
   const porDia = new Map();
   const porPeriodo = new Map(PERIODOS_BASE.map((p) => [p.id, []]));
@@ -191,11 +238,12 @@ export function buildResultados(maestra, referencia, { generado = new Date().toI
     base: referencia ?? null,
     diario: [...porDia.values()].sort((a, b) => a.d.localeCompare(b.d)),
     periodos,
+    campana: buildCampana(maestra, complementarias),
   };
 }
 
 const PROHIBIDOS = ['h', 'th', 'k', 'texto', 'url', 'autor', 'pais', 'usuario', '_local', 'motivo', 'archivo', 'cubo', 'hashtags_detalle'];
-const CLAVES = ['version', 'generado', 'umbral', 'cobertura', 'totales', 'actualizacion', 'base', 'diario', 'periodos'];
+const CLAVES = ['version', 'generado', 'umbral', 'cobertura', 'totales', 'actualizacion', 'base', 'diario', 'periodos', 'campana'];
 
 /** Recorre las distribuciones de un grupo y devuelve los problemas de granularidad. */
 export function revisarGranularidad(res) {
@@ -238,7 +286,7 @@ export function revisarGranularidad(res) {
 /** Comprueba que los resultados públicos son agregados coherentes, sin datos privados ni cruces finos. */
 export function validarResultados(res) {
   const errores = [];
-  if (res?.version !== RESULTADOS_VERSION) return ['Versión de resultados no compatible.'];
+  if (![3, RESULTADOS_VERSION].includes(res?.version)) return ['Versión de resultados no compatible.'];
   for (const c of Object.keys(res)) if (!CLAVES.includes(c)) errores.push(`Sección no publicable «${c}».`);
   const t = res.totales;
   const sum = (xs, f) => xs.reduce((a, x) => a + f(x), 0);
@@ -263,6 +311,35 @@ export function validarResultados(res) {
     }
   };
   visitar({ diario: res.diario, periodos: res.periodos });
+  if (res.version >= 4) {
+    const c = res.campana;
+    const keys = ['version', 'cobertura', 'evaluadas', 'sinEvaluar', 'estados', 'confirmadas', 'interseccion', 'diario', 'periodos', 'complementarias'];
+    if (!c || c.version !== 1 || c.cobertura !== 'parcial' || Object.keys(c).some(k => !keys.includes(k))) errores.push('Esquema público de campaña inválido.');
+    if (c) {
+      visitar(c);
+      const granularidad = (o, path = '') => {
+        if (Array.isArray(o)) return o.forEach(x => granularidad(x, path));
+        if (o && typeof o === 'object') for (const [key, v] of Object.entries(o)) {
+          if (typeof v === 'number' && key !== 'version' && (v < 0 || (v > 0 && v < UMBRAL))) errores.push('Campaña: celda por debajo del umbral.');
+          granularidad(v, `${path}/${key}`);
+        }
+      };
+      granularidad(c);
+      const exclusiva = (x, n) => {
+        if (x == null) return;
+        if (x.otras && (x.otras.n < UMBRAL || x.otras.ids.length < 2)) errores.push('Campaña: supresión complementaria inválida.');
+        if (n != null && Object.values(x.v).reduce((a,b) => a+b, 0) + (x.otras?.n ?? 0) !== n) errores.push('Campaña: distribución no suma el total.');
+      };
+      exclusiva(c.estados, c.evaluadas);
+      exclusiva(c.interseccion, c.confirmadas);
+      for (const p of c.periodos ?? []) {
+        exclusiva(p.interseccion, p.confirmadas);
+        if (p.detalle && p.confirmadas == null) errores.push('Campaña: detalle de grupo suprimido.');
+        for (const dim of ['plataformas', 'formatos', 'vinculos', 'fuentes']) exclusiva(p.detalle?.[dim], p.confirmadas);
+      }
+      for (const d of c.diario ?? []) if (!d.archivoEvaluadoCompleto && d.confirmadas != null) errores.push('Campaña: día sin auditoría completa presentado con cifra.');
+    }
+  }
   errores.push(...revisarGranularidad(res));
   const b = res.base;
   if (b) {

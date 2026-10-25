@@ -14,11 +14,11 @@ import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { longDate, todayBogota } from '../lib/data/dates.js';
 import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
 import { antes } from '../content/antes.js';
-import { EVENTO, PERIODO_PREVIO, RANGO_DEFECTO } from '../config/periodos.js';
+import { PERIODO_PREVIO } from '../config/periodos.js';
 
-export const fuenteTexto = (res) =>
+export const fuenteTexto = (res, corte) =>
   res.cobertura.length
-    ? `Fuente: escucha social SentiOne, menciones únicas sin filtro geográfico, datos hasta el ${longDate(res.cobertura[res.cobertura.length - 1].hasta)}.`
+    ? `Fuente: escucha social SentiOne, menciones únicas sin filtro geográfico, datos hasta el ${longDate(corte ?? res.cobertura[res.cobertura.length - 1].hasta)}.`
     : 'Fuente: escucha social SentiOne, referencia preliminar de la exportación del 21 de septiembre al 20 de octubre de 2026, sin filtro geográfico.';
 
 /** Anotaciones editoriales sobre la serie: picos temáticos y, opcionalmente, el ruido del universo. */
@@ -34,12 +34,13 @@ export default function Antes() {
   const h = useMemo(() => hechos(res, todayBogota()), [res]);
   const relevantes = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO }), [res]);
   const todas = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO, segmento: 'todas' }), [res]);
-  const octubre = useMemo(() => dailyTotals(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }), [res]);
+  const octubre = useMemo(() => dailyTotals(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO }), [res]);
   const { escenas } = antes;
   const clasificado = todas.clasificados >= MUESTRA_MINIMA && relevantes.registros > 0;
-  const fuente = fuenteTexto(res);
+  const cortePrevio = corteDatos({ ...res, cobertura: res.cobertura.filter(c => c.desde <= PERIODO_PREVIO.hasta).map(c => ({ ...c, hasta: c.hasta > PERIODO_PREVIO.hasta ? PERIODO_PREVIO.hasta : c.hasta })) });
+  const fuente = fuenteTexto(res, cortePrevio?.hasta);
   const vol = h.volumen;
-  const serie = clasificado ? octubre : dailyTotals(res, { ...RANGO_DEFECTO, segmento: 'todas' });
+  const serie = clasificado ? octubre : dailyTotals(res, { ...PERIODO_PREVIO, segmento: 'todas' });
 
   return (
     <section id="antes" aria-labelledby="antes-titulo" className="relative scroll-mt-16">
@@ -70,10 +71,9 @@ export default function Antes() {
               picos={peaks(serie).slice(0, 1)}
               etiquetasPico={!clasificado}
               anotaciones={clasificado ? anotacionesPicos(res) : []}
-              marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto' }]}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}
               alto={240}
-              descripcion={`${escenas.volumen.serie} en octubre de 2026.`}
+              descripcion={`${escenas.volumen.serie} del 1 al 23 de octubre de 2026, antes del concierto.`}
             />
             <p className="mt-4 max-w-3xl text-xs leading-relaxed text-bruma/80">
               {antes.criterio} {h.universo.disponible && h.universo.texto} {fuente}
@@ -112,7 +112,7 @@ export default function Antes() {
           ) : (
             <Pending compacto estado="analisis" titulo={escenas.tono.pendiente} />
           )}
-          <p className="mt-6 max-w-3xl text-xs text-bruma/80">{antes.alcance(corteDatos(res))}</p>
+          <p className="mt-6 max-w-3xl text-xs text-bruma/80">{antes.alcance(cortePrevio)}</p>
         </Scene>
       </div>
     </section>
