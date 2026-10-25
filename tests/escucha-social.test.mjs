@@ -410,6 +410,8 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
   try {
     sh('git', ['init', '-q', '--bare', remoto]);
     sh('git', ['clone', '-q', remoto, datos]);
+    sh('git', ['-C', datos, 'config', 'user.name', 'Prueba de integración']);
+    sh('git', ['-C', datos, 'config', 'user.email', 'prueba@example.test']);
     sh('git', ['-C', datos, 'checkout', '-q', '-b', 'main']);
     sh('npm', ['run', '-s', 'sentione', '--', 'inicializar']);
     const xlsx = join(tmp, 'export.xlsx');
