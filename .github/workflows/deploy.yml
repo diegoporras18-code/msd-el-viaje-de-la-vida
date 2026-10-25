@@ -27,6 +27,8 @@ jobs:
       # Valida el procesamiento y el dataset publicado antes de desplegar.
       - run: npm test
       - run: npm run build
+      - name: Stamp deployed commit
+        run: node -e 'require("fs").writeFileSync("dist/version.json", JSON.stringify({commit:process.env.GITHUB_SHA}))'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -40,3 +42,29 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify published site and commit
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PYVERIFY'
+          import os, json, urllib.request, urllib.parse, re, time
+          base = os.environ['PAGE_URL'].rstrip('/') + '/'
+          for attempt in range(12):
+              try:
+                  def fetch(path):
+                      return urllib.request.urlopen(base + path, timeout=30).read()
+                  version = json.loads(fetch('version.json?commit=' + os.environ['EXPECTED_SHA']))
+                  assert version['commit'] == os.environ['EXPECTED_SHA'], version
+                  html = fetch('').decode()
+                  assets = re.findall(r'(?:src|href)="([^" ]+\.(?:js|css))"', html)
+                  assert assets, 'No application assets'
+                  for asset in assets:
+                      urllib.request.urlopen(urllib.parse.urljoin(base, asset), timeout=30).read()
+                  print('Verified public HTML, application assets and deployed commit:', version['commit'])
+                  break
+              except Exception:
+                  if attempt == 11: raise
+                  time.sleep(10)
+          PYVERIFY

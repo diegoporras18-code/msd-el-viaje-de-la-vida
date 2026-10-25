@@ -62,3 +62,97 @@ Claude Code no puede cambiar la configuración del repositorio ni borrar ramas. 
 1. En GitHub, abre `msd-el-viaje-de-la-vida-datos` y ve a **Settings → General → Default branch**. Pulsa el icono de flechas, elige **main** y confirma con **Update**.
 2. En **Branches**, borra la rama vacía `prueba-acceso` con el icono de papelera.
 
+
+## Procesamiento con Codex y exportación de 45 columnas
+
+La actualización del 25 de octubre de 2026 mantiene los criterios semánticos v1 y las
+revisiones manuales. Codex registra `fuente: 'codex'`; las clasificaciones anteriores
+conservan su procedencia. No debe etiquetarse una decisión automática como manual.
+Las menciones sin texto permanecen pendientes. Al sustituir una clasificación cuyo
+texto cambió, se conserva la clasificación anterior en `c.prev`.
+
+Para el formato de 45 columnas, importa exclusivamente `Mentions` con los mapeos
+explícitos que faltan en la detección automática:
+
+```bash
+npm run sentione -- importar entradas/ARCHIVO.xlsx --hoja 1 \
+  --columna fecha=Created --columna 'fuente=Domain group' \
+  --desde AAAA-MM-DD --hasta AAAA-MM-DD
+```
+
+El rango declara días completos de la exportación; no recorta ni elimina registros.
+Comprueba los metadatos antes de elegirlo. `Created` sin zona se interpreta como hora
+de pared de Bogotá, pero el archivo por sí solo no certifica la zona del proyecto.
+La exportación del 25 a las 06:19 permite una primera lectura hasta el 24; no asegura
+que todas las publicaciones de esos días ya estén indexadas. El 25 queda privado.
+La base anterior de septiembre se conserva aunque el nuevo archivo comience en octubre.
+
+El capítulo 04 compara solo menciones A, con el promedio y la mediana de los días
+cubiertos del 1–23, y ofrece el promedio del 17–23 como contraste. La coincidencia
+temporal no atribuye menciones al evento ni constituye una prueba estadística de efecto.
+Los días sin cobertura siguen siendo `null`. Mantén separados causa, campaña y captura
+complementaria; los desgloses pequeños conservan el umbral 10 y la supresión complementaria.
+
+`ENLACES EXTERNOS` es una lista para verificación, no una hoja importable. Si no se
+pueden confirmar contenido, fecha, emisor y URL canónica, registra únicamente su
+estado pendiente en el informe privado y no los sumes. Antes de incorporar un externo
+verificado se necesita un origen explícito y una deduplicación compatible con los IDs
+SentiOne: la promoción verificada de `complementarias` descrita a continuación conserva el origen sin inventar IDs SentiOne.
+No cambies el origen de los registros SentiOne ni publiques enlaces de particulares.
+
+Antes de guardar: contrasta todas las huellas históricas, verifica que cada clasificación
+manual sigue idéntica y que las evidencias de cada síntesis anterior aún alcanzan 10.
+Guarda la base privada antes de abrir el PR público; no lo fusiones automáticamente.
+
+## Auditoría independiente de campaña y enlaces pendientes
+
+Ver [CRITERIOS_CAMPANA.md](datos/CRITERIOS_CAMPANA.md). La segunda dimensión amplía
+la base a v2 y los agregados a v4; A/B/C y las métricas temáticas se conservan. Los
+registros sin evaluación de campaña no son negativos. La configuración confirmada
+por el usuario y el informe de cobertura se conservan únicamente en el repositorio
+privado.
+
+La cola `maestra/complementarias.json` del repositorio privado mantiene las candidatas
+entre tareas con localizadores de plataforma sin cuentas ni parámetros de rastreo.
+`enlacePendiente` permite recuperar el enlace aportado para una revisión local. No
+son referencias editoriales ni se incluyen en métricas mientras sigan pendientes.
+
+Alternativa segura cuando una red no abre:
+
+1. Solicitar el permalink original y una captura o metadatos que permitan comprobar
+   fecha/hora/zona, contexto, vínculo con la iniciativa y tipo de emisor. El usuario
+   puede ocultar rostros, cuentas de particulares y detalles personales irrelevantes.
+2. Conservar el material únicamente en `entradas/`, revisar su coherencia y no inferir
+   texto ni contenido visual fuera de lo efectivamente visible. Un login o un hashtag
+   aislado no bastan. Si la fecha o la relación siguen ambiguas, conservar pendiente.
+3. Resolver la URL canónica con ID de publicación. Los short links y share aliases
+   no bastan para deduplicar. El índice privado de identidades se genera desde las
+   URLs originales de SentiOne y guarda solo hashes y referencias internas.
+4. Comparar esa identidad entre fuentes antes de incorporar. Si ya existe, conservar
+   una sola mención, A/B/C y métricas primarias, añadiendo la procedencia complementaria.
+   Si hay varias coincidencias o identidades sin resolver de la plataforma, detener la
+   incorporación hasta resolverlas. No fusionar comentarios con su publicación matriz.
+5. Preparar un archivo local verificado y ejecutar primero en seco:
+
+```bash
+npm run sentione -- complementarias estado
+npm run sentione -- complementarias entradas/externa-verificada.json --seco
+npm run sentione -- complementarias entradas/externa-verificada.json
+```
+
+El archivo local identifica `id` de la cola, `estado: 'verificada'`, `urlCanonica`,
+`verificacion` con método (`acceso_directo`, `metadatos_publicos` o `captura_aportada`)
+y comprobaciones explícitas de contenido, fecha y vínculo, más un `registro`
+seudonimizado con su decisión `cp` completa. No marcar comprobaciones sin realizarlas.
+La URL y los materiales de verificación no se serializan en la base. Para nuevos
+registros temáticos usar los criterios v1 sin inventar clasificaciones; una campaña
+confirmada sin clasificación temática queda pendiente en esa dimensión.
+
+La incorporación no amplía automáticamente días completos, no suma interacciones
+entre capturas, no atribuye alcance y no transforma métricas incomparables. Regenera
+los agregados y verifica las supresiones tras cada promoción. El estado público de
+las complementarias se calcula de la cola y se oculta si permite deducir categorías
+pequeñas. No edites un contador fijo en textos editoriales.
+
+
+Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` confirman pertenencia editorial; fecha, identidad y métricas se verifican aparte. Aplicar [criterios de campaña v2](datos/CRITERIOS_CAMPANA.md). No asignar fechas ni clasificación A por pertenencia.

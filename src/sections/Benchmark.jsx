@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import ChapterOpener from '../components/ChapterOpener.jsx';
 import Scene, { ExploreLink } from '../components/Scene.jsx';
@@ -8,8 +8,8 @@ import { tieneBaseMaestra } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
 import { formatNumber } from '../lib/format.js';
-import { benchmark } from '../content/benchmark.js';
-import { entidad } from '../config/marcas.js';
+import { benchmark, lecturaPresencia } from '../content/benchmark.js';
+import { entidad, LABORATORIOS } from '../config/marcas.js';
 import { duration, ease } from '../lib/motion.js';
 
 const reveal = (delay = 0) => ({
@@ -21,23 +21,33 @@ const reveal = (delay = 0) => ({
 
 export function References({ plegado = false }) {
   const R = benchmark.referencias;
+  const [laboratorio, setLaboratorio] = useState('todas');
+  const items = R.items.filter((r) => r.estado === 'verificado' && (laboratorio === 'todas' || r.marcasIds?.includes(laboratorio)));
   const Cont = plegado ? 'details' : 'div';
   return (
     <Cont className={`group ${plegado ? 'mt-8 border-t border-rosa/20 pt-4' : 'mt-12'}`}>
       {plegado ? (
         <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-4">
           <span className="eyebrow text-rosa">
-            {R.titulo} ({R.items.length})
+            {R.titulo} ({items.length})
           </span>
-          <span className="text-sm text-rosa underline underline-offset-4 group-open:hidden">Ver</span>
+          <span className="text-sm text-rosa underline underline-offset-4 group-open:hidden">Ver publicaciones</span>
           <span className="hidden text-sm text-rosa underline underline-offset-4 group-open:inline">Ocultar</span>
         </summary>
       ) : (
         <p className="eyebrow text-rosa">{R.titulo}</p>
       )}
       <p className="mt-2 max-w-2xl text-xs text-bruma">{R.aviso}</p>
+      <label className="mt-4 block text-sm text-bruma">
+        Laboratorio de la referencia
+        <select className="ml-3 max-w-full rounded-sm border border-rosa/25 bg-ciruela px-3 py-2 text-marfil" value={laboratorio} onChange={(e) => setLaboratorio(e.target.value)}>
+          <option value="todas">Todos</option>
+          {LABORATORIOS.filter((l) => l.id !== 'otro-laboratorio').map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
+        </select>
+      </label>
+      {!items.length && <p className="mt-4 text-sm text-bruma">Sin referencias públicas verificadas disponibles para este laboratorio. No implica ausencia de publicaciones.</p>}
       <ul className="mt-4 grid gap-x-8 border-t border-rosa/10 sm:grid-cols-2">
-        {R.items.map((r) => (
+        {items.map((r) => (
           <li key={r.id} className="border-b border-rosa/10 py-4">
             <p className="font-display text-[length:var(--step-1)] italic leading-tight text-marfil">
               {r.nombre}
@@ -67,7 +77,7 @@ export default function Benchmark() {
   const k = res.umbral;
   const { escena } = benchmark;
   const observacion = {
-    presencia: `${labs.length} laboratorios aparecen en la conversación sobre cáncer de mama${labs.every((l) => l.n == null) ? `, ninguno con ${k} menciones o más` : ''}; MSD, con ${labs.find((l) => l.id === 'msd')?.n == null ? `menos de ${k}` : formatNumber(labs.find((l) => l.id === 'msd').n)}.`,
+    presencia: lecturaPresencia(labs, k),
     temas: h.laboratorios.disponible ? h.laboratorios.texto : null,
   };
 

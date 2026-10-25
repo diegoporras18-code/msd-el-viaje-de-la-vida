@@ -22,8 +22,8 @@ export const benchmark = {
   conclusiones: [
     {
       id: 'presencia',
-      observamos: 'Diez laboratorios aparecen en la conversación sobre cáncer de mama, ninguno con 10 menciones o más; MSD, con menos de 10.',
-      significa: 'Ningún laboratorio es una voz habitual en esta conversación. Con esta consulta no se puede afirmar que uno lidere.',
+      observamos: 'La presencia publicada depende del umbral de cada periodo.',
+      significa: 'La cobertura es desigual. Estas cifras no establecen liderazgo ni posición de mercado.',
       oportunidad: 'Hay espacio para que MSD sea identificable por un aporte concreto, no por volumen.',
     },
     {
@@ -45,6 +45,7 @@ export const benchmark = {
     items: [
       {
         id: 'innpacto-rosa',
+        marcasIds: ["astrazeneca", "daiichi-sankyo"],
         nombre: 'Innpacto Rosa',
         pais: 'Colombia',
         marcas: 'AstraZeneca y Daiichi Sankyo, con la Pontificia Universidad Javeriana',
@@ -54,6 +55,7 @@ export const benchmark = {
       },
       {
         id: 'rutas-saludables',
+        marcasIds: ["roche"],
         nombre: 'Rutas Saludables, Mujeres en Territorios',
         pais: 'Colombia',
         marcas: 'Roche',
@@ -63,6 +65,7 @@ export const benchmark = {
       },
       {
         id: 'legado',
+        marcasIds: ["bayer"],
         nombre: 'LEGADO 2026',
         pais: 'América Latina',
         marcas: 'Bayer Foundation, impulsado por Endeavor',
@@ -72,6 +75,7 @@ export const benchmark = {
       },
       {
         id: 'la-m-que-falta',
+        marcasIds: ["daiichi-sankyo", "astrazeneca"],
         nombre: 'La M que Falta',
         pais: 'España',
         marcas: 'Asociación Española Cáncer de Mama Metastásico, con la Alianza Daiichi Sankyo | AstraZeneca',
@@ -82,3 +86,12 @@ export const benchmark = {
     ],
   },
 };
+
+/** Lectura de umbrales actual, sin fijar cifras de una importación anterior. */
+export function lecturaPresencia(labs, k) {
+  const visibles = labs.filter(l => l.n != null && l.n >= k);
+  const parte = visibles.length
+    ? `${visibles.map(l => `${l.nombre} (${l.n})`).join(' y ')} ${visibles.length === 1 ? 'alcanza' : 'alcanzan'} el umbral de ${k}`
+    : `Ningún laboratorio alcanza el umbral de ${k}`;
+  return `${parte} en el periodo previo. Las cifras pequeñas siguen protegidas; no es una comparación de cuota de conversación.`;
+}

@@ -22,7 +22,7 @@ export const antes = {
   // Lectura editorial de los picos de la conversación relevante (revisada por contenido en la base privada).
   picos: [
     { desde: '2026-10-07', hasta: '2026-10-08', titulo: 'Apoyos y prótesis', tono: 'tema' },
-    { desde: '2026-10-19', hasta: '2026-10-20', titulo: 'Día Mundial y su eco', tono: 'tema' },
+    { desde: '2026-10-18', hasta: '2026-10-20', titulo: 'Día Mundial y su eco', tono: 'tema' },
   ],
   // Contexto del universo captado (solo en Explorar): el ruido que se excluye de la medición.
   ruido: [{ desde: '2026-10-03', hasta: '2026-10-05', titulo: 'Ruido político', tono: 'ajeno' }],

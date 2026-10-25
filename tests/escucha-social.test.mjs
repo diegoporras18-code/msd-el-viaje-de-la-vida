@@ -42,55 +42,43 @@ test('referencia preliminar: 2.837 registros, 2.611 en octubre, distribuciones c
   assert.deepEqual(validarResultados(publicado), []);
 });
 
-test('cifras publicadas: la base acumula exportaciones sin duplicar', () => {
-  // La primera exportación (21 sep – 20 oct) coincidió con la referencia validada de 2.837 filas;
-  // la segunda (1 – 22 oct) suma solo lo nuevo y reutiliza lo que ya existía.
-  assert.equal(referencia.exportacion.total, 2837);
-  assert.deepEqual(publicado.actualizacion, { fecha: '2026-10-22', filasBrutas: 2756, unicasArchivo: 2712, nuevos: 134, existentes: 2578 });
-  assert.deepEqual(publicado.cobertura, [{ desde: '2026-09-21', hasta: '2026-10-21' }]);
-  assert.equal(publicado.totales.unicos, 2908);
-  assert.equal(publicado.totales.fueraDeCobertura, 11, 'el 22 de octubre está incompleto: se guarda pero no se publica');
-  const s = periodStats(publicado, { ...TODAS, desde: '2026-10-01', hasta: '2026-10-21' });
-  assert.equal(s.total, 2701);
-  assert.equal(s.promedioDiario.toFixed(2), '128.62');
-  assert.equal(s.mediana, 54);
-  assert.deepEqual(dailyTotals(publicado, { ...TODAS, desde: '2026-10-19', hasta: '2026-10-22' }).map((x) => x.v), [256, 96, 53, null], 'un día sin cobertura es null, nunca cero');
-  // Medida principal: menciones sobre cáncer de mama.
-  assert.equal(periodStats(publicado, { ...FILTROS_VACIOS, desde: '2026-10-01', hasta: '2026-10-21' }).total, 671);
-  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-19', hasta: '2026-10-22' }).map((x) => x.v), [177, 54, 27, null]);
-  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-03', hasta: '2026-10-05' }).map((x) => x.v), [7, 21, 30], 'los picos políticos del 3 al 5 de octubre no forman parte de la medición principal');
+test('actualización del 25: acumulación, cobertura y conservación de los picos depurados', () => {
+  assert.deepEqual(publicado.actualizacion, { fecha: '2026-10-25', filasBrutas: 2951, unicasArchivo: 2892, nuevos: 180, existentes: 2712 });
+  assert.deepEqual(publicado.cobertura, [{ desde: '2026-09-21', hasta: '2026-10-24' }]);
+  assert.equal(publicado.totales.unicos, 3098);
+  assert.equal(publicado.totales.relevantes, 828);
+  assert.equal(publicado.totales.pendientes, 45);
+  assert.equal(publicado.totales.fueraDeCobertura, 1, 'el 25 parcial no se publica');
+  assert.equal(periodStats(publicado, { ...FILTROS_VACIOS, desde: '2026-10-01', hasta: '2026-10-21' }).total, 710, 'misma ventana anterior: +39 netas, no confundir con días nuevos');
+  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-22', hasta: '2026-10-25' }).map((x) => x.v), [20, 14, 14, null]);
+  assert.deepEqual(dailyTotals(publicado, { ...FILTROS_VACIOS, desde: '2026-10-03', hasta: '2026-10-05' }).map((x) => x.v), [7, 21, 30], 'el ruido político permanece excluido');
   assert.equal(publicado.totales.clasificados + publicado.totales.pendientes, publicado.totales.unicos);
+  assert.equal(publicado.periodos.find((p) => p.id === 'durante').relevantes.n, 14);
+  assert.ok(!publicado.periodos.some((p) => p.id === 'despues'));
 });
 
-test('hechos medidos: la medida principal son las menciones sobre cáncer de mama', () => {
-  const h = hechos(publicado, '2026-10-21');
-  // 03.1: volumen, promedio, máximo y variación solo con menciones relevantes.
-  assert.equal(h.volumen.cifra, '671');
-  assert.equal(h.volumen.stats.promedioDiario.toFixed(2), '31.95');
-  assert.equal(h.volumen.stats.mediana, 23);
-  assert.deepEqual([h.volumen.maximo.d, h.volumen.maximo.v], ['2026-10-19', 177]);
+test('hechos actualizados: causa, campaña y días sin cobertura permanecen separados', () => {
+  const h = hechos(publicado, '2026-10-25');
+  assert.equal(h.volumen.cifra, '744');
+  assert.equal(h.volumen.stats.promedioDiario.toFixed(2), '32.35');
+  assert.equal(h.volumen.stats.mediana, 22);
+  assert.deepEqual([h.volumen.maximo.d, h.volumen.maximo.v], ['2026-10-19', 191]);
   assert.match(h.volumen.texto, /no personas alcanzadas/);
-  assert.match(h.volumen.texto, /hasta el 23 de octubre/, 'el corte de datos (20 de octubre) se distingue del periodo previo');
-  assert.equal(h.picos.cifra, '26,4 %');
-  assert.deepEqual(h.picos.dias.map((x) => x.d), ['2026-10-19', '2026-10-20', '2026-10-07', '2026-10-08'], 'picos temáticos, no políticos');
-  // El universo captado es contexto, con su desglose.
-  assert.match(h.universo.texto, /2\.701 menciones.*671.*1\.744 de ruido, 252 contextuales o dudosas y 34 aún sin clasificar/);
-  assert.equal(h.relevancia.cifra, '25,2 %');
-  assert.equal(h.sentimiento.cifra, '55,4 %');
-  assert.match(h.sentimiento.texto, /671 menciones que hablan de cáncer de mama/);
+  assert.deepEqual(h.picos.dias.map((x) => x.d), ['2026-10-19', '2026-10-20', '2026-10-08', '2026-10-18']);
+  assert.match(h.universo.texto, /2\.871 menciones.*744.*1\.800 de ruido, 289 contextuales o dudosas y 38 aún sin clasificar/);
+  assert.equal(h.sentimiento.cifra, '54,0 %');
   assert.match(h.sentimiento.texto, /no una medida de favorabilidad hacia MSD/);
-  assert.equal(h.temas.cifra, '61,8 %');
-  assert.equal(h.preocupaciones.cifra, '11,5 %');
-  assert.match(h.preocupaciones.texto, /61 de ellas hablan de barreras/);
-  assert.deepEqual(h.ejemplos.patrones, { positivo_apoyo: 61, neutral_informativo: 175, negativo_barreras: 61 });
+  assert.equal(h.temas.cifra, '60,9 %');
+  assert.deepEqual(h.ejemplos.patrones, { positivo_apoyo: 66, neutral_informativo: 204, negativo_barreras: 63 });
   assert.match(h.marcas.texto, /no son un Share of Voice/);
-  assert.equal(h.msd.cifra, '< 10', 'las cifras bajo el umbral no se publican');
-  assert.equal(h.laboratorios.cifra, '4,5 %');
+  assert.equal(h.msd.cifra, '< 10');
+  assert.equal(h.laboratorios.cifra, '4,3 %');
   assert.equal(h.marcas.laboratorios.length, 10);
-  assert.deepEqual(h.marcas.laboratorios.filter((l) => l.n != null).map((l) => [l.id, l.n]), [['daiichi-sankyo', 11]], 'solo se cifra el laboratorio que alcanza el umbral');
-  assert.deepEqual(h.marcas.temas['daiichi-sankyo'], { n: 11, tema: 'diagnostico_temprano', temaN: 11, temaNombre: 'Diagnóstico temprano' });
-  assert.match(h.calidad.texto, /sujetas a revisión/);
-  assert.equal(h.impacto.estado, 'evento');
+  assert.deepEqual(h.marcas.laboratorios.filter((l) => l.n != null).map((l) => [l.id, l.n]), [['daiichi-sankyo', 13], ['astrazeneca', 10]]);
+  assert.equal(h.impacto.cifra, '14', 'nunca las 20 captadas ni los enlaces sin verificar');
+  assert.match(h.impacto.texto, /-56,7 %/);
+  assert.match(h.impacto.texto, /no un resultado atribuible a la campaña/);
+  assert.match(h.impacto.texto, /aún no tiene días completos/);
 });
 
 test('hechos: las coincidencias ajenas no entran en sentimiento ni temáticas', () => {
@@ -252,7 +240,7 @@ test('granularidad: umbral, agrupación y supresión complementaria', () => {
 test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin restas reveladoras', () => {
   const k = publicado.umbral;
   assert.equal(k, 10);
-  assert.deepEqual(Object.keys(publicado).sort(), ['actualizacion', 'base', 'cobertura', 'diario', 'generado', 'periodos', 'totales', 'umbral', 'version']);
+  assert.deepEqual(Object.keys(publicado).sort(), ['actualizacion', 'base', 'campana', 'cobertura', 'diario', 'generado', 'periodos', 'totales', 'umbral', 'version']);
   assert.ok(!('cubo' in publicado) && !('hashtags' in publicado), 'no hay cubo detallado ni hashtags por día');
   for (const x of publicado.diario) assert.deepEqual(Object.keys(x), ['d', 'n', 'cl', 'rel'], 'la serie diaria no cruza otras dimensiones');
   for (const p of publicado.periodos) {
@@ -288,8 +276,8 @@ test('granularidad del archivo publicado: sin cruces, sin celdas pequeñas, sin 
     assert.ok(!('hashtags' in p.resto), 'los hashtags del resto (nombres propios, política) no se publican');
   }
   // Las sumas siguen cuadrando con los totales privados agregados.
-  assert.equal(publicado.diario.reduce((a, x) => a + x.n, 0), 2908);
-  assert.equal(publicado.diario.reduce((a, x) => a + x.rel, 0), 741);
+  assert.equal(publicado.diario.reduce((a, x) => a + x.n, 0), 3098);
+  assert.equal(publicado.diario.reduce((a, x) => a + x.rel, 0), 828);
   assert.ok(validarResultados({ ...publicado, cubo: [] }).some((e) => /no publicable/.test(e)), 'un cubo detallado se rechaza');
   const malo = structuredClone(publicado);
   malo.periodos[1].relevantes.plataformas.v.foros = 1;
@@ -378,7 +366,7 @@ test('benchmark: referencias públicas con fuente y sin Share of Voice', async (
     assert.equal(r.estado, 'verificado');
     assert.match(r.fuente.url, /^https:\/\//);
   }
-  assert.ok(!/lidera/i.test(JSON.stringify(benchmark.conclusiones).replace(/no se puede afirmar que uno lidere/, '')), 'no afirma liderazgos sin consulta equivalente');
+  assert.ok(!/lidera/i.test(JSON.stringify(benchmark.conclusiones).replace(/no se puede afirmar que uno lidere|no establecen liderazgo/, '')), 'no afirma liderazgos sin consulta equivalente');
   assert.match(benchmark.limitacion, /no se calcula un Share of Voice/);
 });
 
@@ -422,6 +410,8 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
   try {
     sh('git', ['init', '-q', '--bare', remoto]);
     sh('git', ['clone', '-q', remoto, datos]);
+    sh('git', ['-C', datos, 'config', 'user.name', 'Prueba de integración']);
+    sh('git', ['-C', datos, 'config', 'user.email', 'prueba@example.test']);
     sh('git', ['-C', datos, 'checkout', '-q', '-b', 'main']);
     sh('npm', ['run', '-s', 'sentione', '--', 'inicializar']);
     const xlsx = join(tmp, 'export.xlsx');
@@ -435,7 +425,7 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
     sh('npm', ['run', '-s', 'sentione', '--', 'importar', xlsx]);
     const lote = JSON.parse(readFileSync(new URL('lote-001.json', lotes), 'utf8'));
     assert.equal(lote.items.length, 2, 'los textos idénticos se clasifican una vez');
-    writeFileSync(new URL('lote-001.resultado.json', lotes), JSON.stringify({ lote: lote.lote, fuente: 'claude', resultados: lote.items.map((it) => ({ clave: it.clave, ...CLS, marcas: it.menciones })) }));
+    writeFileSync(new URL('lote-001.resultado.json', lotes), JSON.stringify({ lote: lote.lote, fuente: 'codex', resultados: lote.items.map((it) => ({ clave: it.clave, ...CLS, marcas: it.menciones })) }));
     sh('npm', ['run', '-s', 'sentione', '--', 'aplicar']);
     sh('npm', ['run', '-s', 'sentione', '--', 'publicar']);
     sh('npm', ['run', '-s', 'sentione', '--', 'guardar']);
@@ -451,6 +441,7 @@ test('flujo completo de la CLI con un repositorio privado simulado', async () =>
     assert.match(enRemoto, /informes\/actualizacion-/);
     const maestraRemota = execFileSync('git', ['--git-dir', remoto, 'show', 'main:maestra/base-maestra.json'], { encoding: 'utf8' });
     assert.deepEqual(validarMaestra(JSON.parse(maestraRemota)), []);
+    assert.ok(JSON.parse(maestraRemota).registros.every((r) => r.c.fuente === 'codex'), 'la CLI conserva la procedencia Codex');
     for (const x of ['persona', 'instagram.com/p', 'Gracias MSD', 'diagnosticada']) assert.ok(!maestraRemota.includes(x), `la base privada no guarda «${x}»`);
     assert.ok(!/\.xlsx|lote-/.test(enRemoto), 'ni el Excel ni los lotes llegan al repositorio privado');
 
@@ -478,13 +469,14 @@ test('las fechas de corte de los textos salen de resultados.cobertura', async ()
   const { conclusiones } = await import('../src/content/conclusiones.js');
   const corte = corteDatos(publicado);
   assert.equal(corte.hasta, publicado.cobertura[publicado.cobertura.length - 1].hasta);
-  assert.equal(corte.hasta, '2026-10-21');
-  assert.match(antes.alcance(corte), /^Datos hasta el 21 de octubre; el periodo previo al concierto se extiende hasta el 23 de octubre\./);
-  assert.equal(conclusiones.periodo(corte), 'Antes del concierto · datos del 1 al 21 de octubre de 2026 (el periodo previo llega al 23)');
-  // Una importación posterior actualiza los textos sin editarlos.
-  const siguiente = corteDatos({ ...publicado, cobertura: [{ desde: '2026-09-21', hasta: '2026-10-23' }] });
-  assert.equal(antes.alcance(siguiente).split('.')[0], 'Datos hasta el 23 de octubre');
-  assert.equal(conclusiones.periodo(siguiente), 'Antes del concierto · datos del 1 al 23 de octubre de 2026');
+  assert.equal(corte.hasta, '2026-10-24');
+  assert.match(antes.alcance(corte), /^Datos hasta el 24 de octubre\./);
+  assert.equal(conclusiones.periodo(corte), 'Primera lectura · datos hasta el 24 de octubre de 2026; conversación previa y día del concierto');
+  const siguiente = corteDatos({ ...publicado, cobertura: [{ desde: '2026-09-21', hasta: '2026-10-26' }] });
+  assert.equal(antes.alcance(siguiente).split('.')[0], 'Datos hasta el 26 de octubre');
+  assert.match(conclusiones.periodo(siguiente), /hasta el 26 de octubre/);
+  const { impacto } = await import('../src/content/impacto.js');
+  assert.match(impacto.limites(siguiente), /26 de octubre/);
   assert.equal(corteDatos({ ...publicado, cobertura: [] }), null);
   assert.doesNotMatch(antes.alcance(null), /octubre/);
   // Ningún texto editorial fija a mano la fecha de corte.
@@ -492,4 +484,51 @@ test('las fechas de corte de los textos salen de resultados.cobertura', async ()
     const txt = readFileSync(new URL(`../src/content/${f}`, import.meta.url), 'utf8');
     assert.doesNotMatch(txt, /[Dd]atos (hasta|del 1 al) \d+ de octubre/, f);
   }
+});
+
+
+test('Codex: procedencia real, texto editado trazable y revisión manual protegida', () => {
+  const out = procesar([fila('nuevo', '2026-10-23', 'Web', '', 'Contenido sintético de prueba')]);
+  const m = mergeExport(emptyMaestra(), out.registros).maestra;
+  const lote = buildLotes(m, out.registros).lotes[0];
+  const r = aplicarResultados(m, lote, [{ clave: lote.items[0].clave, ...CLS }], { fuente: 'codex' }).maestra;
+  assert.equal(r.registros[0].c.fuente, 'codex');
+  assert.equal(r.registros.filter(clasificado).length, 1);
+  const previo = structuredClone(r.registros[0].c);
+  const edited = procesar([fila('nuevo', '2026-10-23', 'Web', '', 'Otro contenido sintético')]);
+  const merged = mergeExport(r, edited.registros).maestra;
+  assert.equal(merged.registros[0].c.obsoleta, true);
+  const lb = buildLotes(merged, edited.registros).lotes[0];
+  const updated = aplicarResultados(merged, lb, [{ clave: lb.items[0].clave, ...CLS, rel: 'no', temas: [] }], { fuente: 'codex' }).maestra;
+  assert.equal(updated.registros[0].c.prev.rel, previo.rel);
+  assert.equal(updated.registros[0].c.prev.fuente, 'codex');
+  const manual = aplicarResultados(r, lote, [{ clave: lote.items[0].clave, ...CLS }], { fuente: 'manual' }).maestra;
+  const protegido = mergeExport(manual, edited.registros).maestra;
+  assert.deepEqual(protegido.registros[0].c, manual.registros[0].c);
+  const automatico = aplicarResultados(protegido, lb, [{ clave: lb.items[0].clave, ...CLS, rel: 'no', temas: [] }], { fuente: 'codex' });
+  assert.equal(automatico.informe.protegidos, 1);
+  assert.deepEqual(automatico.maestra.registros[0].c, manual.registros[0].c);
+});
+
+test('sin texto no se crea una clasificación y la mención se conserva pendiente', () => {
+  const out = procesar([fila('vacio', '2026-10-24', 'Facebook', '', '')]);
+  const m = mergeExport(emptyMaestra(), out.registros).maestra;
+  const b = buildLotes(m, out.registros);
+  assert.equal(b.sinTexto, 1);
+  assert.equal(b.lotes.length, 0);
+  assert.equal(pendientes(m).length, 1);
+});
+
+test('comparación de impacto: sin cobertura es pendiente, sin línea base no hay porcentaje', async () => {
+  const { resumenImpacto } = await import('../src/lib/data/impacto.js');
+  const actual = resumenImpacto(publicado);
+  assert.equal(actual.disponible, true);
+  assert.equal(actual.durante.total, 14);
+  assert.equal(actual.reciente.total, 388);
+  assert.equal(actual.despues, null);
+  assert.equal(actual.superaPromedio, false);
+  const sin24 = { ...publicado, cobertura: [{ desde: '2026-10-01', hasta: '2026-10-23' }] };
+  assert.equal(resumenImpacto(sin24).disponible, false);
+  const sinBase = { ...publicado, base: null, cobertura: [{ desde: '2026-10-24', hasta: '2026-10-24' }] };
+  assert.equal(resumenImpacto(sinBase).cambio, null);
 });

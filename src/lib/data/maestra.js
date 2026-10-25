@@ -4,8 +4,9 @@
 import { CONFIANZA_MINIMA, CRITERIOS_VERSION, EMOCIONES, HACIA, INTENCIONES, RELEVANCIA, SENTIMIENTOS, TEMAS } from '../../config/clasificacion.js';
 import { IDS_ENTIDADES } from '../../config/marcas.js';
 import { mergeIntervals } from './dates.js';
+import { validarCampana } from './campana.js';
 
-export const MAESTRA_VERSION = 1;
+export const MAESTRA_VERSION = 2;
 
 export const emptyMaestra = () => ({ version: MAESTRA_VERSION, actualizado: null, cobertura: [], importaciones: [], registros: [] });
 
@@ -13,8 +14,8 @@ const strip = ({ _local, ...rest }) => rest;
 const sortRegs = (a, b) => a.d.localeCompare(b.d) || (a.t ?? -1) - (b.t ?? -1) || a.h.localeCompare(b.h);
 const countByDay = (regs) => regs.reduce((acc, r) => ((acc[r.d] = (acc[r.d] ?? 0) + 1), acc), {});
 
-/** Clasificación válida y vigente (Claude o revisión manual). Las reglas no cuentan. */
-export const clasificado = (r) => Boolean(r.c && (r.c.fuente === 'claude' || r.c.fuente === 'manual') && !r.c.obsoleta);
+/** Clasificación válida y vigente (Claude, Codex o revisión manual). Las reglas no cuentan. */
+export const clasificado = (r) => Boolean(r.c && ['claude', 'codex', 'manual'].includes(r.c.fuente) && !r.c.obsoleta);
 
 /**
  * Incorpora una exportación a la base maestra.
@@ -44,7 +45,7 @@ export function mergeExport(maestra, procesados, meta = {}) {
     if (metricas) actualizados++;
     if (editado) modificados++;
     const c = old.c ? (editado && old.c.fuente !== 'manual' ? { ...old.c, obsoleta: true } : old.c) : undefined;
-    byHash.set(r.h, { ...old, ...r, d: old.d, t: old.t ?? r.t, ...(c ? { c } : {}) });
+    byHash.set(r.h, { ...old, ...r, d: old.d, t: old.t ?? r.t, ...(c ? { c } : {}), ...(editado && old.cp ? { cp: { ...old.cp, obsoleta: true } } : {}) });
   }
 
   const registros = [...byHash.values()].sort(sortRegs);
@@ -93,6 +94,10 @@ export function buildLotes(maestra, procesados, { tam = 60, reclasificarVersion 
   let sinTexto = 0;
   for (const r of pendientes(maestra, { reclasificarVersion })) {
     if (!textos.has(r.h)) {
+      sinTexto++;
+      continue;
+    }
+    if (!textos.get(r.h).trim()) {
       sinTexto++;
       continue;
     }
@@ -170,7 +175,8 @@ export function aplicarResultados(maestra, lote, resultados, { fuente = 'claude'
         protegidos++;
         continue;
       }
-      registros[idx] = { ...registros[idx], c };
+      const anterior = registros[idx].c;
+      registros[idx] = { ...registros[idx], c: anterior?.obsoleta ? { ...c, prev: anterior } : c };
       aplicados++;
     }
   }
@@ -237,12 +243,17 @@ const PROHIBIDOS = ['_local', 'texto', 'autor', 'url', 'pais', 'usuario', 'motiv
 /** Valida la base maestra: estructura, unicidad y ausencia de datos personales o textos. */
 export function validarMaestra(m) {
   const errores = [];
-  if (m?.version !== MAESTRA_VERSION) errores.push('Versión de base maestra no compatible.');
+  if (![1, MAESTRA_VERSION].includes(m?.version)) errores.push('Versión de base maestra no compatible.');
   const vistos = new Set();
   for (const [i, r] of (m?.registros ?? []).entries()) {
     if (!r.h || !/^\d{4}-\d{2}-\d{2}$/.test(r.d)) errores.push(`registro ${i}: falta hash o fecha`);
     if (vistos.has(r.h)) errores.push(`registro duplicado ${r.h}`);
     vistos.add(r.h);
+    if (r.cp) {
+      if (m.version < 2) errores.push('La campaña requiere migración a versión 2.');
+      errores.push(...validarCampana(r.cp, r.h));
+    }
+    if (r.capturas && (!Array.isArray(r.capturas) || r.capturas.some(x => !['sentione', 'complementaria'].includes(x)))) errores.push('Origen de captura inválido.');
     for (const k of PROHIBIDOS) if (k in r || (r.c && k in r.c)) errores.push(`registro ${i}: contiene el campo no permitido «${k}»`);
     if (r.c && r.c.fuente !== 'reglas') {
       const e = validarResultado({ ...r.c, temas: r.c.tm, i: r.c.ia, marcas: r.c.mc });

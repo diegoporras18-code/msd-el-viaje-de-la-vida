@@ -25,7 +25,7 @@ Micrositio de storytelling y escucha social sobre la campaña de concientizació
 
 Usa la skill **`actualizar-sentione`** (`.claude/skills/actualizar-sentione/SKILL.md`). Los criterios de clasificación están en `datos/CRITERIOS_CLASIFICACION.md`. Clasifica con Claude solo las menciones nuevas o modificadas, y nunca inventes clasificaciones sin el texto original.
 
-- **Relevancia A/B/C:** A `si` (el contenido principal trata cáncer de mama) es la única medida principal de la presentación; B `dudosa` (contextual) y C `no` (ruido) se conservan en la base y solo aparecen como contexto en «Explorar resultados». Evalúa lo que expresa cada mención, no el texto de la publicación original.
+- **Relevancia A/B/C:** A `si` (el contenido principal trata cáncer de mama) es la medida temática sobre la enfermedad; B `dudosa` (contextual) y C `no` (ruido) se conservan en la base y solo aparecen como contexto en «Explorar resultados». Evalúa lo que expresa cada mención, no el texto de la publicación original.
 - **Revisiones focalizadas:** `npm run sentione -- revisar entradas/auditoria/revision.json` aplica cambios por huella con un código de motivo, conserva la clasificación anterior (`c.prev`) y nunca borra registros. La evidencia parafraseada va solo al informe privado (`informes/auditoria-*.md`).
 - **Laboratorios:** se detectan por nombre corporativo (`src/config/marcas.js`, con `excluir` para homónimos), nunca por un medicamento. Por debajo de 10 menciones solo se publica «menos de 10»; los ejemplos por laboratorio se sustituyen por referencias públicas verificadas con fuente.
 - **Patrones de conversación (tarjetas de sentimiento):** síntesis anónimas en tercera persona en `src/content/antes.js`, nunca citas ni testimonios en primera persona. El patrón (`src/config/patrones.js`) debe reunir al menos 10 menciones y, además, cada afirmación concreta de la síntesis debe estar respaldada por al menos 10 menciones verificadas en el informe privado.
@@ -39,3 +39,10 @@ Usa la skill **`actualizar-sentione`** (`.claude/skills/actualizar-sentione/SKIL
 ## Comprobaciones
 
 `npm test` (procesamiento, privacidad y cifras) y `npm run build` deben pasar antes de cualquier Pull Request.
+
+## Dimensión independiente de campaña
+
+La base v2 y los resultados v4 añaden `cp` sin alterar A/B/C. Sigue `datos/CRITERIOS_CAMPANA.md`. Una C puede estar confirmada para campaña. No uses entidades ni keywords como sustituto de esa verificación y no sumes causa, campaña e intersección. Conserva la cola privada de complementarias entre tareas; ni pendientes ni referencias editoriales se suman a campaña. Las revisiones temáticas manuales requieren aprobación específica antes de cambiarlas.
+
+
+Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` confirman pertenencia editorial; fecha, identidad y métricas se verifican aparte. Aplicar [criterios de campaña v2](datos/CRITERIOS_CAMPANA.md). No asignar fechas ni clasificación A por pertenencia.
