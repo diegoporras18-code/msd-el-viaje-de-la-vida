@@ -28,11 +28,11 @@ export const conclusiones = {
       oportunidad: 'Ofrecer información clara sobre señales de alerta, consulta y rutas de atención; acompañar sin prometer resultados clínicos.',
     },
     {
-      id: 'impacto', hecho: 'impacto', estado: 'preliminar',
-      pregunta: '¿Qué ocurrió con la conversación sobre la causa?',
-      titulo: 'La conversación temática y el evento se miden por separado',
+      id: 'impacto', hecho: 'campana', estado: 'preliminar',
+      pregunta: '¿Qué base deja la activación para medir la campaña?',
+      titulo: 'Convertir las referencias de campaña en evidencia medible',
       significa: 'El comportamiento temático se calcula de los datos. No equivale al volumen específico del evento.',
-      oportunidad: 'Verificar las publicaciones complementarias y completar los días posteriores antes de atribuir resultados a la campaña.',
+      oportunidad: 'Completar fechas, deduplicación y métricas de las referencias validadas; incorporar los días posteriores para medir la continuidad del mensaje.',
     },
     {
       id: 'oportunidad', hecho: 'laboratorios', estado: 'preliminar',

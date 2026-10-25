@@ -340,11 +340,9 @@ export function hechos(res, hoy = '2026-10-21') {
   const cp = vistaCampana(res);
   out.campana = {
     disponible: cp.disponible, tipo: 'medido',
-    cifra: cp.confirmadas == null ? '< 10' : formatNumber(cp.confirmadas),
-    unidad: 'publicaciones de campaña confirmadas en la captura auditada del 24',
-    texto: cp.disponible
-      ? `${cp.confirmadas == null ? 'La cifra se protege por muestra pequeña' : `Se confirmaron ${formatNumber(cp.confirmadas)} publicaciones de campaña el 24 en los registros auditados`}. La auditoría y la captura son parciales: esta cifra no demuestra ausencia de conversación. ${cp.pico === 'no_comparable' ? 'No hay una línea base completa de la propia campaña para evaluar un pico.' : cp.pico === 'aumento_en_archivo' ? 'El archivo auditado muestra un aumento frente a la propia línea base de campaña; la cobertura sigue siendo parcial.' : 'El archivo auditado no muestra un aumento frente a la propia línea base de campaña; la cobertura sigue siendo parcial.'} ${cp.complementarias}`
-      : 'La relevancia para la campaña requiere una auditoría independiente de A/B/C.',
+    cifra: res.campana?.complementarias?.editoriales ? formatNumber(res.campana.complementarias.editoriales) : cp.confirmadas == null ? '< 10' : formatNumber(cp.confirmadas),
+    unidad: 'referencias de campaña validadas por el responsable; no son un total del 24',
+    texto: `${cp.complementarias} La medición fechada se protege por muestra pequeña. Completar fechas, contenidos y métricas permitirá evaluar la transmisión del mensaje; no hay una línea base completa para atribuir un pico a la campaña.`,
   };
   return out;
 }

@@ -153,3 +153,6 @@ entre capturas, no atribuye alcance y no transforma métricas incomparables. Reg
 los agregados y verifica las supresiones tras cada promoción. El estado público de
 las complementarias se calcula de la cola y se oculta si permite deducir categorías
 pequeñas. No edites un contador fijo en textos editoriales.
+
+
+Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` confirman pertenencia editorial; fecha, identidad y métricas se verifican aparte. Aplicar [criterios de campaña v2](datos/CRITERIOS_CAMPANA.md). No asignar fechas ni clasificación A por pertenencia.

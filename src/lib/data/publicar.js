@@ -88,7 +88,7 @@ export function distribucionMultiple(mapa, k = UMBRAL) {
 
 const celda = (n, k = UMBRAL) => (n === 0 || n >= k ? n : null);
 
-const cpVigente = (r) => r.cp?.version === 1 && !r.cp.obsoleta && validarCampana(r.cp, r.h).length === 0;
+const cpVigente = (r) => [1, 2].includes(r.cp?.version) && !r.cp.obsoleta && validarCampana(r.cp, r.h).length === 0;
 const cpConfirmada = (r) => cpVigente(r) && r.cp.estado === 'confirmada' && r.cp.revision === 'verificada';
 const esCausa = (r) => clasificado(r) && r.c.rel === 'si';
 
@@ -101,14 +101,14 @@ function resumenComplementarias(cola) {
   };
   // Si una categoría pequeña se pudiera restar de total, se oculta el desglose completo.
   const ocultar = Object.values(counts).some(n => n > 0 && n < UMBRAL);
-  return { total: celda(items.length), ...Object.fromEntries(Object.entries(counts).map(([k, n]) => [k, ocultar && n ? null : celda(n)])) };
+  return { editoriales: celda(items.filter(x => x.validacionEditorial?.fuente === 'validacion_usuario' && x.validacionEditorial.estado === 'confirmada').length), total: celda(items.length), ...Object.fromEntries(Object.entries(counts).map(([k, n]) => [k, ocultar && n ? null : celda(n)])) };
 }
 
 export function buildCampana(maestra, cola) {
   const rows = maestra.registros.filter(r => isCovered(maestra.cobertura, r.d));
   const evaluadas = rows.filter(cpVigente);
   const confirmadas = rows.filter(cpConfirmada);
-  const particion = rs => distribucionExclusiva(contar(rs, r => esCausa(r) ? 'ambos' : 'sin_causa'));
+  const particion = rs => distribucionExclusiva(contar(rs, r => esCausa(r) ? 'ambos' : clasificado(r) ? 'sin_causa' : 'causa_pendiente'));
   const periodos = PERIODOS_BASE.map(p => {
     const rs = confirmadas.filter(r => r.d >= p.desde && r.d <= p.hasta);
     return { id: p.id, confirmadas: celda(rs.length), interseccion: particion(rs),
@@ -184,6 +184,8 @@ export function buildResultados(maestra, referencia, { generado = new Date().toI
   // que termina a mitad de día) se conservan en la base y se publican cuando la cobertura lo incluya.
   let fueraDeCobertura = 0;
   for (const r of maestra.registros) {
+    // La captura complementaria alimenta su universo; no altera el denominador temático SentiOne.
+    if (r.k === 'externo' && !r.c) continue;
     if (!isCovered(maestra.cobertura, r.d)) {
       fueraDeCobertura++;
       continue;

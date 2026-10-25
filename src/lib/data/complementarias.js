@@ -1,6 +1,7 @@
 // Identidad privada de publicaciones: sin autores, URLs ni textos en los índices persistidos.
 import { createHash } from 'node:crypto';
 import { validarCampana } from './campana.js';
+import { fechaDesdeIdX } from './fecha-x.js';
 const hash = s => createHash('sha256').update(s).digest('hex');
 
 /** Recupera el enlace aportado sin conservar cuentas ni parámetros de rastreo. Uso privado. */
@@ -50,13 +51,29 @@ export function indexarPublicaciones(procesados, anterior = { version: 1, public
 
 /** Incorpora solo registros ya verificados; no deduplica comentarios por la URL del hilo. */
 export function incorporarComplementaria(m, indice, entrada) {
-  if (entrada.estado !== 'verificada' || !entrada.verificacion?.contenidoRevisado || !entrada.verificacion?.fechaConfirmada || !entrada.verificacion?.vinculoConfirmado) throw new Error('Publicación externa sin verificación completa');
+  const editorial = entrada.validacionEditorial?.fuente === 'validacion_usuario' && entrada.validacionEditorial?.estado === 'confirmada';
+  if (entrada.estado !== 'verificada' || (!editorial && !entrada.verificacion?.contenidoRevisado) || !entrada.verificacion?.fechaConfirmada || (!editorial && !entrada.verificacion?.vinculoConfirmado)) throw new Error('Publicación externa sin verificación completa');
   if (!['post', 'tweet', 'quote tweet', 'video', 'reels', 'article'].includes(entrada.registro?.tp)) throw new Error('Un comentario externo requiere resolver su ID propio; no se incorpora mediante la URL de su publicación matriz');
-  if (!['acceso_directo', 'metadatos_publicos', 'captura_aportada'].includes(entrada.verificacion.metodo)) throw new Error('Método de verificación inválido');
+  if (!['acceso_directo', 'metadatos_publicos', 'captura_aportada', 'validacion_usuario'].includes(entrada.verificacion.metodo)) throw new Error('Método de verificación inválido');
+  if (entrada.verificacion.metodo === 'validacion_usuario' && !editorial) throw new Error('Falta validación editorial del responsable');
   const key = identidadPublicacion(entrada.urlCanonica);
   if (!key) throw new Error('Falta URL canónica con ID estable');
   const matches = indice.publicaciones[key] ?? [];
-  if (!matches.length && Object.values(indice.sinResolver ?? {}).some(p => p === entrada.registro?.p || p === 'otros')) throw new Error('Hay publicaciones SentiOne sin identidad canónica en esa plataforma: resolver antes de añadir');
+  let fechaId = null;
+  if (editorial && entrada.verificacion.fuenteFecha === 'fecha_codificada_id_x') {
+    const u = new URL(entrada.urlCanonica);
+    if (!['x.com', 'twitter.com'].includes(u.hostname.replace(/^www\./,''))) throw new Error('Fuente de fecha incompatible');
+    fechaId = fechaDesdeIdX(u.pathname.match(/status\/(\d+)/)?.[1]);
+    if (fechaId.fecha !== entrada.registro?.d) throw new Error('Fecha no coincide con el identificador X');
+  }
+  const sinResolver = Object.entries(indice.sinResolver ?? {}).filter(([, p]) => p === entrada.registro?.p || p === 'otros');
+  const riesgo = sinResolver.some(([h]) => {
+    const r = m.registros.find(r => r.h === h);
+    if (!fechaId || !r) return true;
+    // Solo permite descartar otro mes acreditado; no resuelve diferencias de zona o de pocos días.
+    return r.d.slice(0,7) === fechaId.fecha.slice(0,7);
+  });
+  if (!matches.length && riesgo) throw new Error('Hay publicaciones SentiOne sin identidad canónica en esa plataforma: resolver antes de añadir');
   if (matches.length > 1) throw new Error('Identidad ambigua: resolver duplicados antes de incorporar');
   const h = matches[0] ?? hash(`externo:${key}`).slice(0, 26);
   const existe = m.registros.find(r => r.h === h);
@@ -68,7 +85,7 @@ export function incorporarComplementaria(m, indice, entrada) {
   if (existe) {
     const comparable = ({ prev, ...rest }) => rest;
     const igual = existe.cp && JSON.stringify(comparable(cp)) === JSON.stringify(comparable(existe.cp));
-    if (existe.cp?.fuente === 'manual' && !igual) throw new Error('Decisión manual de campaña protegida');
+    if (['manual', 'validacion_usuario'].includes(existe.cp?.fuente) && !igual && cp.fuente !== 'validacion_usuario') throw new Error('Decisión manual de campaña protegida');
     // No duplicar ni sumar métricas de dos capturas de la misma publicación.
     return { maestra: { ...m, version: 2, registros: m.registros.map(r => r.h === h ? { ...r, cp: igual ? r.cp : { ...cp, ...(r.cp ? { prev: r.cp } : {}) }, capturas: [...new Set([...(r.capturas ?? ['sentione']), 'complementaria'])] } : r) }, indice, nuevo: false, h };
   }

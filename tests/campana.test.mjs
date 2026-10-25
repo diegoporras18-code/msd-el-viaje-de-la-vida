@@ -10,7 +10,7 @@ import { hechos } from '../src/lib/data/hechos.js';
 import { lecturaPresencia } from '../src/content/benchmark.js';
 
 const c = rel => ({ fuente: 'manual', version: 'v1', fecha: '2026-10-21', rel, s: 'neutral', sm: 'no_aplica', ss: 'no_aplica', tm: rel === 'si' ? ['educacion'] : [], e: 'no_identificable', ia: ['ninguna'], mc: [], conf: 0.9, rv: false, aud: 'tema_central' });
-const cp = (h, estado = 'confirmada') => ({ version: 1, registro: h, fuente: 'codex', origen: 'sentione', estado, evidencias: [estado === 'confirmada' ? 'evento_identificado' : 'evento_sin_vinculo_msd'], vinculo: 'indeterminado', temas: ['experiencia'], confianza: estado === 'confirmada' ? 0.9 : 0.5, revision: estado === 'confirmada' ? 'verificada' : 'pendiente', fecha: '2026-10-25' });
+const cp = (h, estado = 'confirmada') => ({ version: 2, registro: h, fuente: 'codex', origen: 'sentione', estado, evidencias: [estado === 'confirmada' ? 'texto_identifica_iniciativa' : 'contenido_insuficiente'], vinculo: 'indeterminado', temas: ['experiencia'], confianza: estado === 'confirmada' ? 0.9 : 0.5, revision: estado === 'confirmada' ? 'verificada' : 'pendiente', fecha: '2026-10-25' });
 const reg = (h, rel = 'no') => ({ h, k: 'id', d: '2026-10-24', t: 20, p: 'x', so: 'neutral', tp: 'tweet', c: c(rel) });
 const maestra = registros => ({ ...emptyMaestra(), cobertura: [{ desde: '2026-10-01', hasta: '2026-10-24' }], registros });
 
@@ -162,4 +162,34 @@ test('diagnóstico literal de keywords conserva orden, OR/AND y no inventa coinc
   assert.equal(coincideRegla(['Colombia'], ['Colombia', '#MSD']), false);
   assert.equal(coincideRegla(['#ElViajeDeLaVida'], ['El viaje de la Vida', 'MSD']), false);
   assert.throws(() => coincideRegla(['dato'], []), /inválida/);
+});
+
+test('validación editorial conserva pertenencia sin inventar fecha, causa o métricas', async () => {
+  const { fechaDesdeIdX } = await import('../src/lib/data/fecha-x.js');
+  const f = fechaDesdeIdX('2114180578564067426');
+  assert.equal(f.fecha, '2026-10-24');assert.equal(f.verificadaEnPlataforma, false);
+  const input = entrada();delete input.registro.c;
+  input.validacionEditorial={fuente:'validacion_usuario',estado:'confirmada'};
+  input.verificacion={metodo:'validacion_usuario',fechaConfirmada:true,fuenteFecha:f.fuente};
+  input.urlCanonica='https://x.com/i/status/2114180578564067426';
+  input.registro.cp={...cp('externo'),fuente:'validacion_usuario',evidencias:['vinculo_validado_usuario']};
+  const out=incorporarComplementaria(maestra([]),{publicaciones:{}},input);
+  assert.equal(out.maestra.registros[0].c,undefined);assert.equal(out.maestra.registros[0].m,undefined);
+  const res=buildResultados(out.maestra,null,{complementarias:{items:Array.from({length:14},()=>({estado:'pendiente',validacionEditorial:input.validacionEditorial}))}});
+  assert.equal(res.totales.unicos,0);assert.equal(res.campana.complementarias.editoriales,14);
+  assert.equal(res.campana.confirmadas,null);assert.match(estadoComplementarias(res),/14 referencias.*validadas/);
+  assert.deepEqual(validarResultados(res),[]);
+  const unresolved={publicaciones:{},sinResolver:{historica:'x'}};
+  const old={...reg('historica'),d:'2026-09-24'};
+  assert.equal(incorporarComplementaria(maestra([old]),unresolved,input).nuevo,true);
+  assert.throws(()=>incorporarComplementaria(maestra([{...old,d:'2026-10-23'}]),unresolved,input),/sin identidad/);
+  input.registro.d='2026-10-23';assert.throws(()=>incorporarComplementaria(maestra([]),{publicaciones:{}},input),/Fecha no coincide/);
+});
+
+test('noticias genéricas del concierto quedan fuera; causa desconocida no equivale a ausencia',()=>{
+  assert.ok(validarCampana({...cp('h','posible'),evidencias:['evento_sin_vinculo_msd']},'h').length);
+  const regs=Array.from({length:12},(_,i)=>{const r={...reg(`u${i}`),cp:cp(`u${i}`)};delete r.c;return r;});
+  const res=buildResultados(maestra(regs),null);
+  assert.equal(res.campana.interseccion.v.causa_pendiente,12);
+  assert.equal(vistaCampana(res).porcentajeCausa,null);
 });

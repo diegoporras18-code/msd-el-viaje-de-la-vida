@@ -1,4 +1,4 @@
-# Relevancia independiente para campaña · versión 1
+# Relevancia independiente para campaña · versión 2
 
 La clasificación A/B/C del cáncer de mama conserva sus criterios v1. La dimensión
 `cp` responde a otra pregunta: si hay evidencia de relación con la iniciativa de MSD,
@@ -12,7 +12,7 @@ La base maestra pasa de versión 1 a 2 mediante migración aditiva. Se aceptan b
 legadas v1 sin `cp`. No se cambian huellas, fechas, métricas, clasificaciones `c`,
 revisiones manuales ni sus cadenas `prev`. Una decisión nueva lleva:
 
-- `version: 1`, `registro` (la huella interna), `fuente`, `origen` y `fecha`.
+- `version: 2`, `registro` (la huella interna), `fuente`, `origen` y `fecha`.
 - `estado`: `confirmada`, `posible` o `no_relacionada`.
 - `evidencias`: códigos cerrados; nunca textos, cuentas ni enlaces.
 - `vinculo`: asistente, organizador, aliado, artista, medio, tercero o indeterminado.
@@ -24,8 +24,7 @@ No asignar un rol sin evidencia. La ausencia de `cp` significa **sin evaluar**, 
 y revisión verificada. Lo posible no se suma. Si el texto cambia, `cp` queda obsoleta
 hasta nueva revisión; las decisiones temáticas manuales permanecen protegidas.
 
-Una noticia sobre Fonseca y una fecha coincidente puede ser posible. No debe
-confirmarse sin identificar el evento o su vínculo con la iniciativa. Los contenidos
+Una noticia genérica del concierto sin vínculo con la campaña o la causa queda fuera, aunque coincidan artista y fecha. La identificación del concierto por sí sola no confirma campaña. Los contenidos
 multimedia no vistos y los comentarios sin contexto verificable no se reconstruyen.
 
 Primero prepara las decisiones en `entradas/`, ejecuta una conciliación en seco y
@@ -75,3 +74,20 @@ Para promover una complementaria, confirma además si es publicación original o
 La promoción automática acepta publicaciones con ID canónico, no comentarios mediante
 el enlace del hilo. Un comentario externo requiere un cotejo de su propio ID antes de
 sumarlo; los comentarios SentiOne existentes se auditan sin fusionarlos con la publicación.
+
+
+## Validación del responsable · cierre del 25 de octubre
+
+La pertenencia editorial puede confirmarse con `fuente: validacion_usuario` y
+`vinculo_validado_usuario`, sin afirmar verificación por la plataforma. Esta decisión
+se protege frente a sobrescrituras automáticas. Las 14 referencias están validadas;
+su número no equivale a publicaciones únicas fechadas ni a un total del día 24.
+La cola conserva por separado validación editorial, identidad, fecha y métricas.
+Solo una identidad canónica deduplicada y una fecha acreditada permiten incorporar
+un registro a la serie. Sin fecha permanece validado editorialmente, fuera de las barras.
+La fecha codificada de un ID X se documenta como derivada, en Bogotá, sin atribuirla
+a una consulta de plataforma. Los posibles duplicados sin identidad en el mismo mes
+bloquean una nueva incorporación; no se confunden comentarios con publicaciones.
+La causa sin clasificar es desconocida, nunca ausencia de causa. No se inventan
+interacciones ni clasificaciones A. Los externos sin clasificación temática alimentan
+solo el universo de campaña, preservando el denominador histórico de SentiOne.

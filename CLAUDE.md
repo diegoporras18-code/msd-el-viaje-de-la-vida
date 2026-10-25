@@ -43,3 +43,6 @@ Usa la skill **`actualizar-sentione`** (`.claude/skills/actualizar-sentione/SKIL
 ## Dimensión independiente de campaña
 
 La base v2 y los resultados v4 añaden `cp` sin alterar A/B/C. Sigue `datos/CRITERIOS_CAMPANA.md`. Una C puede estar confirmada para campaña. No uses entidades ni keywords como sustituto de esa verificación y no sumes causa, campaña e intersección. Conserva la cola privada de complementarias entre tareas; ni pendientes ni referencias editoriales se suman a campaña. Las revisiones temáticas manuales requieren aprobación específica antes de cambiarlas.
+
+
+Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` confirman pertenencia editorial; fecha, identidad y métricas se verifican aparte. Aplicar [criterios de campaña v2](datos/CRITERIOS_CAMPANA.md). No asignar fechas ni clasificación A por pertenencia.

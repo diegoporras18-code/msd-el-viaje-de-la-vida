@@ -2,6 +2,7 @@
 export function estadoComplementarias(res) {
   const e = res.campana?.complementarias;
   if (!e) return 'La captura complementaria aún no tiene un estado de verificación publicado.';
+  if (e.editoriales) return `${e.editoriales} referencias de campaña validadas por el responsable. La pertenencia editorial está confirmada; identidad, fecha y métricas se comprueban por separado. Las referencias sin fecha no se asignan al 24. El desglose técnico pequeño se protege.`;
   if (e.total === 0) return 'No hay publicaciones complementarias registradas.';
   if (e.verificadas == null || e.pendientes == null) return 'Hay publicaciones complementarias en revisión; el desglose se protege por muestra pequeña. Solo las verificadas e incorporadas pueden sumar a la campaña.';
   return `${e.total ?? 'Las'} publicaciones complementarias registradas: ${e.verificadas} verificadas y ${e.pendientes} pendientes${e.descartadas ? `; ${e.descartadas} descartadas` : ''}. Las pendientes no se suman a las métricas.`;
@@ -19,7 +20,7 @@ export function vistaCampana(res, periodo = 'durante') {
   const comparable = previos.length === 23 && previos.every(x => x.archivoEvaluadoCompleto && x.confirmadas != null) && dia?.archivoEvaluadoCompleto && dia.confirmadas != null;
   const promedioPrevio = comparable ? previos.reduce((n,x) => n + x.confirmadas, 0) / 23 : null;
   return { disponible: true, confirmadas, ambos,
-    porcentajeCausa: confirmadas >= res.umbral && ambos != null ? ambos / confirmadas * 100 : null,
+    porcentajeCausa: confirmadas >= res.umbral && ambos != null && !inter?.v?.causa_pendiente && !inter?.otras?.ids.includes('causa_pendiente') ? ambos / confirmadas * 100 : null,
     evaluadas: c.evaluadas, cobertura: c.cobertura,
     // La cobertura de captura está reconocida como parcial: ni un archivo auditado entero prueba exhaustividad.
     pico: comparable && promedioPrevio > 0 ? (dia.confirmadas > promedioPrevio ? 'aumento_en_archivo' : 'sin_aumento_en_archivo') : 'no_comparable',
