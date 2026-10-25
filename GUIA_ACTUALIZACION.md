@@ -62,3 +62,44 @@ Claude Code no puede cambiar la configuración del repositorio ni borrar ramas. 
 1. En GitHub, abre `msd-el-viaje-de-la-vida-datos` y ve a **Settings → General → Default branch**. Pulsa el icono de flechas, elige **main** y confirma con **Update**.
 2. En **Branches**, borra la rama vacía `prueba-acceso` con el icono de papelera.
 
+
+## Procesamiento con Codex y exportación de 45 columnas
+
+La actualización del 25 de octubre de 2026 mantiene los criterios semánticos v1 y las
+revisiones manuales. Codex registra `fuente: 'codex'`; las clasificaciones anteriores
+conservan su procedencia. No debe etiquetarse una decisión automática como manual.
+Las menciones sin texto permanecen pendientes. Al sustituir una clasificación cuyo
+texto cambió, se conserva la clasificación anterior en `c.prev`.
+
+Para el formato de 45 columnas, importa exclusivamente `Mentions` con los mapeos
+explícitos que faltan en la detección automática:
+
+```bash
+npm run sentione -- importar entradas/ARCHIVO.xlsx --hoja 1 \
+  --columna fecha=Created --columna 'fuente=Domain group' \
+  --desde AAAA-MM-DD --hasta AAAA-MM-DD
+```
+
+El rango declara días completos de la exportación; no recorta ni elimina registros.
+Comprueba los metadatos antes de elegirlo. `Created` sin zona se interpreta como hora
+de pared de Bogotá, pero el archivo por sí solo no certifica la zona del proyecto.
+La exportación del 25 a las 06:19 permite una primera lectura hasta el 24; no asegura
+que todas las publicaciones de esos días ya estén indexadas. El 25 queda privado.
+La base anterior de septiembre se conserva aunque el nuevo archivo comience en octubre.
+
+El capítulo 04 compara solo menciones A, con el promedio y la mediana de los días
+cubiertos del 1–23, y ofrece el promedio del 17–23 como contraste. La coincidencia
+temporal no atribuye menciones al evento ni constituye una prueba estadística de efecto.
+Los días sin cobertura siguen siendo `null`. Mantén separados causa, campaña y captura
+complementaria; los desgloses pequeños conservan el umbral 10 y la supresión complementaria.
+
+`ENLACES EXTERNOS` es una lista para verificación, no una hoja importable. Si no se
+pueden confirmar contenido, fecha, emisor y URL canónica, registra únicamente su
+estado pendiente en el informe privado y no los sumes. Antes de incorporar un externo
+verificado se necesita un origen explícito y una deduplicación compatible con los IDs
+SentiOne: la CLI actual no ofrece ese flujo y no debe simularse con IDs inventados.
+No cambies el origen de los registros SentiOne ni publiques enlaces de particulares.
+
+Antes de guardar: contrasta todas las huellas históricas, verifica que cada clasificación
+manual sigue idéntica y que las evidencias de cada síntesis anterior aún alcanzan 10.
+Guarda la base privada antes de abrir el PR público; no lo fusiones automáticamente.

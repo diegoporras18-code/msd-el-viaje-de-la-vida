@@ -16,37 +16,30 @@ export const conclusiones = {
   // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
   periodo: (corte) =>
     corte
-      ? `Antes del concierto · datos ${corte.rangoPrevio} de ${corte.anio}${corte.parcial ? ` (el periodo previo llega al ${corte.numFinPrevio})` : ''}`
+      ? `Primera lectura · datos hasta el ${corte.dia} de ${corte.anio}; conversación previa y día del concierto`
       : 'Antes del concierto',
 
   hallazgos: [
     {
-      id: 'temas',
-      hecho: 'temas',
-      estado: 'preliminar',
-      pregunta: '¿De qué se habla realmente cuando se habla de cáncer de mama?',
-      titulo: 'De llegar a tiempo',
-      significa: 'La conversación real gira en torno a detectar a tiempo, crear conciencia y conseguir atención; el resto de lo captado es ruido.',
-      oportunidad: 'Hablar de pasos concretos —consultar, hacerse la mamografía cuando esté indicada, saber cómo acceder— más que del símbolo.',
+      id: 'temas', hecho: 'temas', estado: 'preliminar',
+      pregunta: '¿Qué necesita la conversación antes del concierto?',
+      titulo: 'Llegar a tiempo, con acompañamiento',
+      significa: 'La detección temprana lidera el interés. La esperanza convive con barreras para acceder a la atención.',
+      oportunidad: 'Ofrecer información clara sobre señales de alerta, consulta y rutas de atención; acompañar sin prometer resultados clínicos.',
     },
     {
-      id: 'preocupaciones',
-      hecho: 'preocupaciones',
-      estado: 'preliminar',
-      pregunta: '¿Qué preocupaciones, emociones y barreras aparecen?',
-      titulo: 'Esperanza y solidaridad, con una queja clara: el acceso',
-      significa: 'El tono es mayoritariamente positivo; lo negativo apunta al sistema —cobertura de mamografía, demoras, medicamentos—, no a la causa.',
-      oportunidad: 'Reconocer esas barreras en lugar de ignorarlas da credibilidad a un mensaje de concientización.',
+      id: 'impacto', hecho: 'impacto', estado: 'preliminar',
+      pregunta: '¿Qué se observó el día del concierto?',
+      titulo: 'Sin un pico digital comprobable',
+      significa: 'El volumen sobre la causa quedó por debajo del promedio previo. La captura limitada impide concluir que no hubo actividad o evaluar el valor presencial.',
+      oportunidad: 'Verificar las publicaciones complementarias y completar los días posteriores antes de atribuir resultados a la campaña.',
     },
     {
-      id: 'oportunidad',
-      hecho: 'laboratorios',
-      estado: 'preliminar',
-      pregunta: '¿Qué oportunidad tiene MSD de conectar su iniciativa con esas necesidades?',
-      titulo: 'Ser útil donde la industria no está',
-      significa: 'Los laboratorios casi no aparecen y, cuando lo hacen, hablan de innovación; MSD apenas aparece.',
-      oportunidad:
-        'El propósito de MSD y Lotengo en el concierto de Fonseca encaja con la necesidad identificada: acompañar la emoción de la noche con información útil sobre detección y acceso. Si eso cambia la conversación solo se sabrá con datos posteriores al 24 de octubre.',
+      id: 'oportunidad', hecho: 'laboratorios', estado: 'preliminar',
+      pregunta: '¿Cómo convertir la iniciativa en participación medible?',
+      titulo: 'Diseñar la amplificación desde el inicio',
+      significa: 'La presencia de laboratorios es acotada en esta consulta y no mide su posición competitiva. Hay una oportunidad de comunicación útil y sostenida.',
+      oportunidad: 'Coordinar artista y aliados antes, facilitar contenidos y un QR durante, y sostener la educación después. Medir publicaciones verificadas y acciones, sin asumir impacto.',
     },
   ],
 
@@ -57,7 +50,7 @@ export const conclusiones = {
     { pregunta: '¿Qué sentimientos predominan realmente?', hecho: 'sentimiento' },
     { pregunta: '¿Qué barreras aparecen en las conversaciones?', hecho: 'barreras' },
     { pregunta: '¿Dónde se publica la conversación sobre cáncer de mama?', hecho: 'plataformas' },
-    { pregunta: '¿MSD logró generar conversación identificable?', hecho: 'msd' },
+    { pregunta: '¿Qué presencia tenía MSD antes del concierto?', hecho: 'msd' },
     { pregunta: '¿Qué laboratorios aparecen?', hecho: 'marcas' },
     { pregunta: '¿Qué tan confiable es la clasificación por contenido?', hecho: 'calidad' },
     { pregunta: '¿La acción del concierto produjo un cambio observable?', hecho: 'impacto' },

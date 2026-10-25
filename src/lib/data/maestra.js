@@ -13,8 +13,8 @@ const strip = ({ _local, ...rest }) => rest;
 const sortRegs = (a, b) => a.d.localeCompare(b.d) || (a.t ?? -1) - (b.t ?? -1) || a.h.localeCompare(b.h);
 const countByDay = (regs) => regs.reduce((acc, r) => ((acc[r.d] = (acc[r.d] ?? 0) + 1), acc), {});
 
-/** Clasificación válida y vigente (Claude o revisión manual). Las reglas no cuentan. */
-export const clasificado = (r) => Boolean(r.c && (r.c.fuente === 'claude' || r.c.fuente === 'manual') && !r.c.obsoleta);
+/** Clasificación válida y vigente (Claude, Codex o revisión manual). Las reglas no cuentan. */
+export const clasificado = (r) => Boolean(r.c && ['claude', 'codex', 'manual'].includes(r.c.fuente) && !r.c.obsoleta);
 
 /**
  * Incorpora una exportación a la base maestra.
@@ -96,6 +96,10 @@ export function buildLotes(maestra, procesados, { tam = 60, reclasificarVersion 
       sinTexto++;
       continue;
     }
+    if (!textos.get(r.h).trim()) {
+      sinTexto++;
+      continue;
+    }
     const clave = r.th ?? r.h;
     if (!grupos.has(clave)) {
       grupos.set(clave, { clave, hs: [], fecha: r.d, plataforma: r.p, sentimientoSentiOne: r.so, menciones: r.ent ?? [], hashtags: r.tg ?? [], texto: textos.get(r.h).slice(0, 1500) });
@@ -170,7 +174,8 @@ export function aplicarResultados(maestra, lote, resultados, { fuente = 'claude'
         protegidos++;
         continue;
       }
-      registros[idx] = { ...registros[idx], c };
+      const anterior = registros[idx].c;
+      registros[idx] = { ...registros[idx], c: anterior?.obsoleta ? { ...c, prev: anterior } : c };
       aplicados++;
     }
   }

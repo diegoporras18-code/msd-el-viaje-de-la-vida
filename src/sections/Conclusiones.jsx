@@ -40,7 +40,8 @@ export default function Conclusiones() {
                 <p className="eyebrow num text-fucsia">0{i + 1}</p>
                 <p className="mt-2 text-sm text-bruma">{x.pregunta}</p>
                 <h3 className="mt-3 font-display text-[length:var(--step-2)] italic leading-tight text-marfil">{x.titulo}</h3>
-                <p className="mt-4 flex items-baseline gap-3">
+                <Etiqueta tono="text-rosa">Qué observamos</Etiqueta>
+                <p className="mt-2 flex items-baseline gap-3">
                   <span className="display num text-[length:var(--step-3)] leading-none text-rosa">{hecho.cifra}</span>
                   <span className="text-xs text-bruma">{hecho.unidad}</span>
                 </p>
@@ -49,7 +50,7 @@ export default function Conclusiones() {
                   {x.significa}
                 </p>
                 <p className="mt-4 border-l-2 border-fucsia pl-3 text-sm text-marfil">
-                  <Etiqueta tono="text-rosa">Oportunidad</Etiqueta>
+                  <Etiqueta tono="text-rosa">Qué recomendamos</Etiqueta>
                   {x.oportunidad}
                 </p>
                 {x.estado === 'preliminar' && <span className="eyebrow mt-auto pt-5 text-rosa/80">Preliminar</span>}

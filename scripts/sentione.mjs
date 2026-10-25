@@ -198,7 +198,7 @@ function aplicar() {
     }
     const resultado = JSON.parse(readFileSync(fr, 'utf8'));
     if (resultado.lote !== lote.lote) fallar(`${fr.pathname}: el resultado no corresponde a ${lote.lote}.`);
-    const r = aplicarResultados(maestra, lote, resultado.resultados ?? [], { fuente: resultado.fuente === 'manual' ? 'manual' : 'claude', fecha: hoy() });
+    const r = aplicarResultados(maestra, lote, resultado.resultados ?? [], { fuente: ['manual', 'codex'].includes(resultado.fuente) ? resultado.fuente : 'claude', fecha: hoy() });
     maestra = r.maestra;
     for (const k of ['aplicados', 'protegidos', 'revisar']) total[k] += r.informe[k];
     total.errores.push(...r.informe.errores.map((e) => `${lote.lote} · ${e}`));
@@ -317,7 +317,7 @@ function guardar() {
   const m = leerMaestra();
   const ult = m.importaciones[m.importaciones.length - 1];
   const msg = opt('mensaje') ?? `Actualización ${hoy()}: ${m.registros.length} menciones únicas${ult ? `, ${ult.nuevos} nuevas` : ''}, ${m.registros.filter(clasificado).length} clasificadas`;
-  git('-c', 'user.name=Claude Code', '-c', 'user.email=noreply@anthropic.com', 'commit', '-q', '-m', msg);
+  git('commit', '-q', '-m', msg);
   if (!args.includes('--sin-push')) git('push', '-q', 'origin', 'HEAD:main');
   console.log(`✓ Base maestra guardada en ${repo}: ${msg}`);
 }

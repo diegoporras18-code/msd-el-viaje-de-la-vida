@@ -45,6 +45,7 @@ export const benchmark = {
     items: [
       {
         id: 'innpacto-rosa',
+        marcasIds: ["astrazeneca", "daiichi-sankyo"],
         nombre: 'Innpacto Rosa',
         pais: 'Colombia',
         marcas: 'AstraZeneca y Daiichi Sankyo, con la Pontificia Universidad Javeriana',
@@ -54,6 +55,7 @@ export const benchmark = {
       },
       {
         id: 'rutas-saludables',
+        marcasIds: ["roche"],
         nombre: 'Rutas Saludables, Mujeres en Territorios',
         pais: 'Colombia',
         marcas: 'Roche',
@@ -63,6 +65,7 @@ export const benchmark = {
       },
       {
         id: 'legado',
+        marcasIds: ["bayer"],
         nombre: 'LEGADO 2026',
         pais: 'América Latina',
         marcas: 'Bayer Foundation, impulsado por Endeavor',
@@ -72,6 +75,7 @@ export const benchmark = {
       },
       {
         id: 'la-m-que-falta',
+        marcasIds: ["daiichi-sankyo", "astrazeneca"],
         nombre: 'La M que Falta',
         pais: 'España',
         marcas: 'Asociación Española Cáncer de Mama Metastásico, con la Alianza Daiichi Sankyo | AstraZeneca',

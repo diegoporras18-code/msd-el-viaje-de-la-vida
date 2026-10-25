@@ -5,11 +5,12 @@
 // alcanzadas; el sentimiento es el tono hacia el tema, no favorabilidad hacia una marca; las
 // cifras bajo el umbral de publicación se expresan como «menos de N».
 import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, diasCubiertos, growth, marcasView, peaks, periodStats, tieneBaseMaestra, umbral, view } from './resultados.js';
-import { EVENTO, PERIODO_PREVIO, PERIODOS_IMPACTO } from '../../config/periodos.js';
+import { EVENTO, PERIODO_PREVIO } from '../../config/periodos.js';
 import { LABORATORIOS, entidad } from '../../config/marcas.js';
 import { PATRONES_SENTIMIENTO } from '../../config/patrones.js';
 import { nombreTema } from '../../config/clasificacion.js';
 import { formatDecimal, formatNumber, formatOne, formatPct } from '../format.js';
+import { resumenImpacto } from './impacto.js';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const parte = (s) => {
@@ -320,13 +321,17 @@ export function hechos(res, hoy = '2026-10-21') {
   }
 
   // Impacto del concierto: solo con datos del 24 de octubre en adelante.
-  const [antes, durante, despues] = PERIODOS_IMPACTO.map((p) => periodStats(res, { ...FT, desde: p.desde, hasta: p.hasta }));
-  const post = diasCubiertos(res, PERIODOS_IMPACTO[1].desde, PERIODOS_IMPACTO[2].hasta);
-  if (antes && post && (durante || despues)) {
-    const partes = [];
-    if (durante) partes.push(`el día del concierto se captaron ${formatNumber(durante.total)} menciones (${formatPct(pct(durante.promedioDiario - antes.promedioDiario, antes.promedioDiario), true)} frente al promedio diario previo)`);
-    if (despues) partes.push(`en los días posteriores, ${formatDecimal(despues.promedioDiario)} por día (${formatPct(pct(despues.promedioDiario - antes.promedioDiario, antes.promedioDiario), true)})`);
-    out.impacto = { disponible: true, tipo: 'medido', texto: `${partes.join('; ').replace(/^el/, 'El')}. Un cambio coincidente en el tiempo no demuestra por sí solo que lo haya causado el concierto.` };
+  const impacto = resumenImpacto(res);
+  if (impacto.disponible) {
+    const { antes, durante, despues, cambio } = impacto;
+    out.impacto = {
+      disponible: true, tipo: 'medido', cifra: formatNumber(durante.total),
+      unidad: 'menciones sobre cáncer de mama el día del concierto',
+      texto: `El 24 de octubre se observaron ${formatNumber(durante.total)} menciones sobre cáncer de mama, frente a ${formatDecimal(antes.promedioDiario)} por día del ${Number(antes.desde.slice(8))} al ${Number(antes.hasta.slice(8))} de octubre${cambio != null ? ` (${formatPct(cambio, true)})` : ''}. ` +
+        (cambio != null && cambio <= 0 ? 'No se observa un pico frente a ese promedio en la captura disponible. ' : 'El volumen observado requiere contrastarse con el contenido antes de atribuirlo al evento. ') +
+        (despues ? `Después se observan ${formatDecimal(despues.promedioDiario)} menciones por día. ` : 'El periodo posterior aún no tiene días completos medidos. ') +
+        'Esta es conversación sobre la causa, no un resultado atribuible a la campaña; la captura incompleta impide concluir que no hubo actividad digital.',
+    };
   } else out.impacto = no(hoy < EVENTO.fecha ? 'evento' : 'medicion');
 
   return out;

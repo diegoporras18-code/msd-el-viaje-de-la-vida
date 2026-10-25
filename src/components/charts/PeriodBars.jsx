@@ -9,7 +9,7 @@ import { ease } from '../../lib/motion.js';
  * Comparación antes / durante / después normalizada (promedio diario u otra tasa).
  * periodos: [{ id, nombre, rango, valor|null, detalle, pendiente: { estado, titulo } }]
  */
-export default function PeriodBars({ periodos, formato = formatOne, unidad = 'registros por día', referencia = 'antes' }) {
+export default function PeriodBars({ periodos, formato = formatOne, unidad = 'registros por día', referencia = 'antes', compacto = false }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.3 });
   const reduce = useReducedMotion();
@@ -17,7 +17,7 @@ export default function PeriodBars({ periodos, formato = formatOne, unidad = 're
   const base = periodos.find((p) => p.id === referencia)?.valor;
 
   return (
-    <div ref={ref} className="grid gap-8 sm:grid-cols-3 sm:gap-6">
+    <div ref={ref} className={compacto ? 'grid grid-cols-3 gap-3 sm:gap-6' : 'grid gap-8 sm:grid-cols-3 sm:gap-6'}>
       {periodos.map((p, i) => {
         const cambio = p.valor != null && base && p.id !== referencia ? ((p.valor - base) / base) * 100 : null;
         return (
@@ -26,7 +26,7 @@ export default function PeriodBars({ periodos, formato = formatOne, unidad = 're
             <p className="mt-1 text-xs text-bruma">{p.rango}</p>
             {p.valor != null ? (
               <>
-                <div className="mt-4 flex h-40 items-end border-b border-rosa/25" aria-hidden="true">
+                <div className={`mt-4 flex items-end border-b border-rosa/25 ${compacto ? 'h-24' : 'h-40'}`} aria-hidden="true">
                   <motion.div
                     className="w-full max-w-[7rem] rounded-t-sm"
                     style={{ background: p.id === 'durante' ? '#E2457F' : '#F4A6C4', originY: 1 }}
@@ -35,7 +35,7 @@ export default function PeriodBars({ periodos, formato = formatOne, unidad = 're
                     transition={{ duration: reduce ? 0 : 1, ease: ease.out, delay: reduce ? 0 : i * 0.15 }}
                   />
                 </div>
-                <p className="display num mt-3 text-[length:var(--step-3)] text-marfil">
+                <p className={`display num mt-3 text-marfil ${compacto ? 'text-[length:var(--step-2)] sm:text-[length:var(--step-3)]' : 'text-[length:var(--step-3)]'}`}>
                   <CountUp value={p.valor} format={formato} />
                 </p>
                 <p className="text-xs text-bruma">{unidad}</p>
@@ -44,7 +44,7 @@ export default function PeriodBars({ periodos, formato = formatOne, unidad = 're
               </>
             ) : (
               <div className="mt-4">
-                <Pending compacto {...p.pendiente} />
+                {compacto ? <p role="status" className="flex min-h-24 items-center rounded-sm border border-dashed border-rosa/25 p-2 text-xs text-bruma">{p.pendiente?.titulo ?? 'Pendiente de medición'}</p> : <Pending compacto {...p.pendiente} />}
               </div>
             )}
           </div>
