@@ -41,13 +41,13 @@ export default function Conclusiones() {
                 <p className="mt-2 text-sm text-bruma">{x.pregunta}</p>
                 <h3 className="mt-3 font-display text-[length:var(--step-2)] italic leading-tight text-marfil">{x.titulo}</h3>
                 <Etiqueta tono="text-rosa">Qué observamos</Etiqueta>
-                <p className="mt-2 flex items-baseline gap-3">
+                {x.sinCifra ? <p className="mt-2 text-sm text-marfil">{x.observacion}</p> : <p className="mt-2 flex items-baseline gap-3">
                   <span className="display num text-[length:var(--step-3)] leading-none text-rosa">{hecho.cifra}</span>
                   <span className="text-xs text-bruma">{hecho.unidad}</span>
-                </p>
+                </p>}
                 <p className="mt-4 text-sm text-bruma">
                   <Etiqueta>Qué significa</Etiqueta>
-                  {x.hecho === 'campana' ? hecho.texto : x.significa}
+                  {x.significa}
                 </p>
                 <p className="mt-4 border-l-2 border-fucsia pl-3 text-sm text-marfil">
                   <Etiqueta tono="text-rosa">Qué recomendamos</Etiqueta>

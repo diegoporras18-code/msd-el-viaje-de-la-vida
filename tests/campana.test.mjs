@@ -177,7 +177,7 @@ test('validación editorial conserva pertenencia sin inventar fecha, causa o mé
   assert.equal(out.maestra.registros[0].c,undefined);assert.equal(out.maestra.registros[0].m,undefined);
   const res=buildResultados(out.maestra,null,{complementarias:{items:Array.from({length:14},()=>({estado:'pendiente',validacionEditorial:input.validacionEditorial}))}});
   assert.equal(res.totales.unicos,0);assert.equal(res.campana.complementarias.editoriales,14);
-  assert.equal(res.campana.confirmadas,null);assert.match(estadoComplementarias(res),/14 publicaciones identificadas de la campaña/);
+  assert.equal(res.campana.confirmadas,null);assert.match(estadoComplementarias(res),/conversación identificada/);
   assert.deepEqual(validarResultados(res),[]);
   const unresolved={publicaciones:{},sinResolver:{historica:'x'}};
   const old={...reg('historica'),d:'2026-09-24'};
@@ -251,7 +251,7 @@ test('referencias aportadas conservan atribución a SentiOne al incorporar captu
   assert.deepEqual(validarResultados(resultado),[]);
 });
 
-test('la barra editorial del 24 apila 14 + 14 = 28 sin alterar la serie temática ni KPIs',async()=>{
+test('el indicador consolidado conserva su composición interna 14 + 14 sin alterar la serie ni KPIs',async()=>{
   const {serieConAporteEditorial,dailyTotals,periodStats}=await import('../src/lib/data/resultados.js');
   const {RANGO_DEFECTO}=await import('../src/config/periodos.js');
   const r=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
@@ -268,7 +268,7 @@ test('la barra editorial del 24 apila 14 + 14 = 28 sin alterar la serie temátic
   assert.deepEqual(serieConAporteEditorial(r,{...RANGO_DEFECTO,segmento:'todas'}).apilados,[]);
 });
 
-test('la gráfica principal renderiza dos aportes de 14 en el 24 y la etiqueta visual 28',async()=>{
+test('la gráfica principal renderiza una única barra 28, etiqueta completa e indicador ejecutivo unificado',async()=>{
   const {createServer}=await import('vite');
   const {createElement}=await import('react');
   const {renderToStaticMarkup}=await import('react-dom/server');
@@ -276,10 +276,19 @@ test('la gráfica principal renderiza dos aportes de 14 en el 24 y la etiqueta v
   try {
     const {default:Antes}=await server.ssrLoadModule('/src/sections/Antes.jsx');
     const html=renderToStaticMarkup(createElement(Antes));
-    assert.equal((html.match(/<rect[^>]*data-fecha="2026-10-24"[^>]*data-valor="14"/g)??[]).length,2);
-    assert.match(html,/data-apilado="2026-10-24" data-total="28"/);
+    assert.equal((html.match(/<rect[^>]*data-fecha="2026-10-24"/g)??[]).length,1);
+    assert.match(html,/<rect[^>]*data-fecha="2026-10-24"[^>]*data-valor="28"[^>]*data-valor-tematico="14"/);
+    assert.ok(!html.includes('data-segmento="editorial"'));
+    assert.match(html,/data-indicador-evento="2026-10-24" data-total="28"/);
     assert.match(html,/<text[^>]*data-etiqueta-total="2026-10-24"[^>]*>28<\/text>/);
     assert.match(html,/<rect[^>]*data-fecha="2026-10-23"[^>]*data-valor="14"/);
+    assert.match(html,/data-marcador-concierto/);
     assert.match(html,/24 OCT · CONCIERTO DE FONSECA/);
+    const {default:Impacto}=await server.ssrLoadModule('/src/sections/Impacto.jsx');
+    const cap=renderToStaticMarkup(createElement(Impacto));
+    assert.equal((cap.match(/data-referencias-combinadas/g)??[]).length,1);
+    assert.equal((cap.match(/data-nota-medicion/g)??[]).length,1);
+    assert.ok(!cap.includes('data-universo'));
+    assert.ok(!/captura complementaria|validadas editorialmente|pendientes de cotejo|Protegido|dos fuentes independientes/i.test(cap));
   } finally {await server.close();}
 });

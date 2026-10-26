@@ -5,7 +5,7 @@
 // alcanzadas; el sentimiento es el tono hacia el tema, no favorabilidad hacia una marca; las
 // cifras bajo el umbral de publicación se expresan como «menos de N».
 import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, diasCubiertos, growth, marcasView, peaks, periodStats, tieneBaseMaestra, umbral, view } from './resultados.js';
-import { EVENTO, PERIODO_PREVIO } from '../../config/periodos.js';
+import { EVENTO, RANGO_DEFECTO, PERIODO_PREVIO } from '../../config/periodos.js';
 import { LABORATORIOS, entidad } from '../../config/marcas.js';
 import { PATRONES_SENTIMIENTO } from '../../config/patrones.js';
 import { nombreTema } from '../../config/clasificacion.js';
@@ -339,13 +339,14 @@ export function hechos(res, hoy = '2026-10-21') {
 
   const cp = vistaCampana(res);
   const referencias = res.campana?.referenciasAportadas;
-  const manualesCampana = referencias?.manuales;
   const referenciasAportadas = referencias?.total;
   out.campana = {
     disponible: cp.disponible, tipo: 'medido',
     cifra: referenciasAportadas == null ? 'Pendiente' : formatNumber(referenciasAportadas),
-    unidad: 'referencias reportadas alrededor del concierto; dos fuentes, no un total único del 24',
-    texto: `${referencias?.sentione == null ? 'Pendientes' : formatNumber(referencias.sentione)} menciones temáticas de SentiOne del 24 y ${manualesCampana == null ? 'referencias pendientes' : formatNumber(manualesCampana) + ' referencias adicionales de campaña validadas editorialmente'} amplían la lectura de la actividad alrededor de la iniciativa. El conjunto de referencias disponibles amplía lo que mostraba inicialmente la gráfica. La barra del concierto incorpora el aporte editorial como cifra combinada; los KPIs conservan solo menciones temáticas. La suma reconoce ambas fuentes: no equivale a publicaciones únicas verificadas del 24. Fechas, duplicados y contenido de las referencias adicionales requieren cotejo antes de sumarlas a la curva temática. El 24 no superó el gran pico del Día Mundial; la oportunidad es convertir la actividad identificada en mayor participación y continuidad digital. La variación frente al 23 se calcula solo con menciones únicas comparables, nunca con esta suma de referencias.`,
+    unidad: 'referencias identificadas alrededor de El Viaje de la Vida',
+    texto: 'La iniciativa reúne conversación identificada alrededor del concierto de Fonseca. Es un momento relevante para analizar y fortalecer la amplificación digital, sin atribuir resultados o causalidad no comprobados.',
   };
+  const picoOctubre = peaks(dailyTotals(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }))[0];
+  out.picoTematico = picoOctubre ? { disponible: true, tipo: 'medido', cifra: formatNumber(picoOctubre.v), unidad: `menciones en el pico del ${diaTexto(picoOctubre.d)}`, texto: 'Los momentos de concientización ofrecen una oportunidad para activar información útil y acompañamiento.' } : no();
   return out;
 }

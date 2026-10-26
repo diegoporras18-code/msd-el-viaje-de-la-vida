@@ -21,25 +21,26 @@ export const conclusiones = {
 
   hallazgos: [
     {
-      id: 'temas', hecho: 'temas', estado: 'preliminar',
-      pregunta: '¿Qué necesita la conversación antes del concierto?',
-      titulo: 'Llegar a tiempo, con acompañamiento',
-      significa: 'La detección temprana lidera el interés. La esperanza convive con barreras para acceder a la atención.',
-      oportunidad: 'Ofrecer información clara sobre señales de alerta, consulta y rutas de atención; acompañar sin prometer resultados clínicos.',
+      id: 'temas', hecho: 'picoTematico', estado: 'preliminar',
+      pregunta: '¿Qué activa la conversación sobre cáncer de mama?',
+      titulo: 'Los momentos de concientización movilizan',
+      significa: 'El Día Mundial concentró el principal pico temático del periodo. Las fechas clave abren espacio para hablar de prevención, diagnóstico y acompañamiento.',
+      oportunidad: 'Planificar información clara y útil alrededor de esos momentos, con orientación hacia consulta y atención oportuna.',
     },
     {
       id: 'impacto', hecho: 'campana', estado: 'preliminar',
-      pregunta: '¿Qué aportan juntas las dos fuentes de conversación?',
-      titulo: 'La captura complementaria amplía la conversación identificada',
-      significa: 'El comportamiento temático se calcula de los datos. No equivale al volumen específico del evento.',
-      oportunidad: 'Coordinar artista y aliados, un hashtag y llamados a participar; facilitar contenido audiovisual y completar la medición posterior.',
+      pregunta: '¿Qué conversación se identificó alrededor del concierto?',
+      titulo: 'Una experiencia para conectar y amplificar',
+      significa: 'La iniciativa reúne conversación identificada. El concierto es un momento relevante para analizar la amplificación digital, sin atribuir impacto o causalidad no comprobados.',
+      oportunidad: 'Dar continuidad a la conversación y medir cómo los contenidos de la iniciativa conectan con la concientización.',
     },
     {
-      id: 'oportunidad', hecho: 'laboratorios', estado: 'preliminar',
-      pregunta: '¿Cómo convertir la iniciativa en participación medible?',
-      titulo: 'Diseñar la amplificación desde el inicio',
-      significa: 'La experiencia abre una oportunidad para conectar entretenimiento y concientización con participación digital medible.',
-      oportunidad: 'Coordinar artista y aliados antes, facilitar contenidos y un QR durante, y sostener la educación después. Medir publicaciones verificadas y acciones, sin asumir impacto.',
+      id: 'oportunidad', hecho: 'campana', estado: 'preliminar', sinCifra: true,
+      pregunta: '¿Cómo ampliar la participación para MSD?',
+      titulo: 'Conectar la experiencia con la conversación digital',
+      observacion: 'La conversación identificada ofrece un punto de partida para sostener la participación más allá del evento.',
+      significa: 'La continuidad digital permite conectar entretenimiento, información útil y concientización.',
+      oportunidad: 'Coordinar artista y aliados, facilitar contenidos compartibles y educativos, sumar llamados a participar y amplificar después.',
     },
   ],
 
@@ -54,6 +55,6 @@ export const conclusiones = {
     { pregunta: '¿Qué laboratorios aparecen?', hecho: 'marcas' },
     { pregunta: '¿Qué tan confiable es la clasificación por contenido?', hecho: 'calidad' },
     { pregunta: '¿Cambió la conversación temática el día del concierto?', hecho: 'impacto' },
-    { pregunta: '¿Cuánta conversación confirmada se identificó sobre la campaña?', hecho: 'campana' },
+    { pregunta: '¿Qué conversación se identificó alrededor de la iniciativa?', hecho: 'campana' },
   ],
 };

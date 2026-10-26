@@ -63,8 +63,7 @@ export default function Antes() {
             <Legend
               className="mb-3"
               items={[
-                { label: 'SentiOne: menciones relevantes sobre cáncer de mama', color: '#F4A6C4' },
-                { label: 'Publicaciones adicionales: contenido de campaña validado editorialmente', color: '#F4A6C4' },
+                { label: 'Conversación identificada', color: '#F4A6C4' },
                 { label: 'Día pico', color: '#E2457F' },
                 ...(tieneHuecos([{ puntos: serie }]) ? [{ label: 'Aún sin datos', tipo: 'vacio' }] : []),
               ]}
@@ -73,15 +72,15 @@ export default function Antes() {
               series={[{ id: 'rel', nombre: clasificado ? 'Sobre cáncer de mama' : 'Menciones', color: '#F4A6C4', puntos: serie }]}
               apilados={clasificado ? visual.apilados : []}
               picos={peaks(serie).slice(0, 1)}
-              marcadores={[{ d: EVENTO.fecha, etiqueta: '24 OCT · CONCIERTO DE FONSECA' }]}
+              marcadores={[{ d: EVENTO.fecha, etiqueta: '24 OCT · CONCIERTO DE FONSECA', destacado: true }]}
               etiquetasPico={!clasificado}
               anotaciones={clasificado ? anotacionesPicos(res) : []}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}
               alto={240}
-              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes. El 24 añade un segmento editorial asociado al concierto, no comparable con las barras temáticas.`}
+              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes. El 24 presenta el indicador consolidado del concierto.`}
             />
             <p className="mt-4 max-w-3xl text-xs leading-relaxed text-bruma/80">
-              <strong className="text-rosa">El 24 muestra una cifra combinada asociada al evento: no es directamente comparable con las barras temáticas de los demás días.</strong> Las referencias adicionales no certifican fechas individuales ni suman menciones temáticas a los KPIs. {antes.criterio} {fuente}
+              Serie temática de octubre; el 24 presenta el indicador consolidado del concierto. Los KPIs resumen exclusivamente menciones sobre cáncer de mama. {fuente}
             </p>
           </div>
         </Scene>
