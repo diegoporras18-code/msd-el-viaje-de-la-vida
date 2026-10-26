@@ -184,7 +184,8 @@ export function buildResultados(maestra, referencia, { generado = new Date().toI
   // que termina a mitad de día) se conservan en la base y se publican cuando la cobertura lo incluya.
   let fueraDeCobertura = 0;
   for (const r of maestra.registros) {
-    // La captura complementaria alimenta su universo; no altera el denominador temático SentiOne.
+    // Las capturas externas sin texto clasificado se miden en campaña y en el control privado combinado.
+    // Al recibir una clasificación válida, se incorporan automáticamente a la serie temática.
     if (r.k === 'externo' && !r.c) continue;
     if (!isCovered(maestra.cobertura, r.d)) {
       fueraDeCobertura++;

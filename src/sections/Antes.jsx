@@ -70,7 +70,7 @@ export default function Antes() {
             <TimeChart
               series={[{ id: 'rel', nombre: clasificado ? 'Sobre cáncer de mama' : 'Menciones', color: '#F4A6C4', puntos: serie }]}
               picos={peaks(serie).slice(0, 1)}
-              marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto de Fonseca' }]}
+              marcadores={[{ d: EVENTO.fecha, etiqueta: '24 de octubre · Concierto de Fonseca' }]}
               etiquetasPico={!clasificado}
               anotaciones={clasificado ? anotacionesPicos(res) : []}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}

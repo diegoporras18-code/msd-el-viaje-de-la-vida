@@ -207,3 +207,36 @@ test('octubre completo conserva datos del 23 y 24, días pendientes y KPIs sobre
   assert.equal(dailyTotals(future,RANGO_DEFECTO)[24].v,12);
   assert.equal(periodStats(future,RANGO_DEFECTO).total,770);
 });
+
+test('la conciliación distingue capturas fechadas, duplicados, causa desconocida y pendientes',async()=>{
+  const {conciliarConcierto}=await import('../src/lib/data/conciliar-concierto.js');
+  const r=reg('s'),manual={...reg('m'),k:'externo',capturas:['complementaria']};delete manual.c;
+  const q={items:[{id:'nueva',registro:'m',validacionEditorial:{estado:'confirmada'}},{id:'dup',registro:'s',validacionEditorial:{estado:'confirmada'}},{id:'pendiente',validacionEditorial:{estado:'confirmada'}}]};
+  const m=maestra([r,manual,{...reg('prev','si'),d:'2026-10-23'}]);
+  const a=conciliarConcierto(m,q);assert.equal(a.totalUnicoCombinado24,2);assert.equal(a.totalRelevanteCombinado24,0);
+  assert.equal(a.duplicadasSentiOne.confirmadas,1);assert.equal(a.duplicadasSentiOne.sinResolver,1);
+  assert.equal(a.pendientesClasificacion24,1);assert.equal(a.manualesSinFecha,1);assert.equal(a.conciliacionCompleta,false);
+});
+
+test('una captura manual puede sumar A una vez tras revisar contenido, sin sobrescribir decisiones',()=>{
+  const input=entrada();delete input.registro.c;
+  const first=incorporarComplementaria(maestra([]),{publicaciones:{}},input);
+  const upgraded=entrada();upgraded.registro.c=c('si');
+  const next=incorporarComplementaria(first.maestra,first.indice,upgraded);
+  assert.equal(next.maestra.registros.length,1);assert.equal(next.maestra.registros[0].h,first.h);
+  assert.equal(buildResultados(next.maestra,null).diario[0].rel,1);
+  assert.deepEqual(incorporarComplementaria(next.maestra,next.indice,upgraded).maestra,next.maestra);
+  const bad=entrada();bad.registro.c=c('si');bad.verificacion.contenidoRevisado=false;
+  assert.throws(()=>incorporarComplementaria(first.maestra,first.indice,bad),/contenido revisado/);
+  upgraded.registro.c=c('no');assert.throws(()=>incorporarComplementaria(next.maestra,next.indice,upgraded),/temática existente protegida/);
+});
+
+test('comparación diaria y promedio previo son independientes; el escenario 28 solo sigue a los datos',async()=>{
+  const {resumenImpacto}=await import('../src/lib/data/impacto.js');
+  const res=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  assert.equal(resumenImpacto(res).cambioDiaAnterior,0);
+  const scenario=structuredClone(res);scenario.diario.find(x=>x.d==='2026-10-24').rel=28;
+  const r=resumenImpacto(scenario);assert.equal(r.cambioDiaAnterior,100);assert.ok(r.cambio<0);
+  const missing=structuredClone(res);missing.cobertura=[{desde:'2026-10-24',hasta:'2026-10-24'}];
+  assert.equal(resumenImpacto(missing).cambioDiaAnterior,null);
+});

@@ -156,3 +156,6 @@ pequeñas. No edites un contador fijo en textos editoriales.
 
 
 Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` confirman pertenencia editorial; fecha, identidad y métricas se verifican aparte. Aplicar [criterios de campaña v2](datos/CRITERIOS_CAMPANA.md). No asignar fechas ni clasificación A por pertenencia.
+
+
+Para conciliar captura manual y SentiOne del concierto, ejecutar `npm run sentione -- conciliar`: guarda tabla y detalle de pendientes únicamente en el repositorio privado. Una publicación externa ya incorporada puede recibir clasificación temática mediante `complementarias` cuando exista contenido revisado; se conserva su identidad y no se duplican registros. La pertenencia editorial nunca sustituye `contenidoRevisado`. Las clasificaciones existentes no se sobrescriben por este flujo; requieren revisión focalizada y protección manual. Ejecutar después `publicar` y `verificar`. La comparación diaria del capítulo 04 se recalcula automáticamente e independientemente del promedio previo.

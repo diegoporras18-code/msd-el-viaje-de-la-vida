@@ -51,6 +51,7 @@ export function indexarPublicaciones(procesados, anterior = { version: 1, public
 
 /** Incorpora solo registros ya verificados; no deduplica comentarios por la URL del hilo. */
 export function incorporarComplementaria(m, indice, entrada) {
+  if (entrada.registro?.c && !entrada.verificacion?.contenidoRevisado) throw new Error('La clasificación temática requiere contenido revisado; la pertenencia editorial no lo sustituye');
   const editorial = entrada.validacionEditorial?.fuente === 'validacion_usuario' && entrada.validacionEditorial?.estado === 'confirmada';
   if (entrada.estado !== 'verificada' || (!editorial && !entrada.verificacion?.contenidoRevisado) || !entrada.verificacion?.fechaConfirmada || (!editorial && !entrada.verificacion?.vinculoConfirmado)) throw new Error('Publicación externa sin verificación completa');
   if (!['post', 'tweet', 'quote tweet', 'video', 'reels', 'article'].includes(entrada.registro?.tp)) throw new Error('Un comentario externo requiere resolver su ID propio; no se incorpora mediante la URL de su publicación matriz');
@@ -83,11 +84,13 @@ export function incorporarComplementaria(m, indice, entrada) {
   if (validarCampana(cp, h).length) throw new Error('Clasificación de campaña inválida');
   if (matches.length && !existe) throw new Error('Índice inconsistente con la base');
   if (existe) {
+    const nuevaC = entrada.registro?.c;
+    if (existe.c && nuevaC && JSON.stringify(existe.c) !== JSON.stringify(nuevaC)) throw new Error('Clasificación temática existente protegida: usar revisión focalizada');
     const comparable = ({ prev, ...rest }) => rest;
     const igual = existe.cp && JSON.stringify(comparable(cp)) === JSON.stringify(comparable(existe.cp));
     if (['manual', 'validacion_usuario'].includes(existe.cp?.fuente) && !igual && cp.fuente !== 'validacion_usuario') throw new Error('Decisión manual de campaña protegida');
     // No duplicar ni sumar métricas de dos capturas de la misma publicación.
-    return { maestra: { ...m, version: 2, registros: m.registros.map(r => r.h === h ? { ...r, cp: igual ? r.cp : { ...cp, ...(r.cp ? { prev: r.cp } : {}) }, capturas: [...new Set([...(r.capturas ?? ['sentione']), 'complementaria'])] } : r) }, indice, nuevo: false, h };
+    return { maestra: { ...m, version: 2, registros: m.registros.map(r => r.h === h ? { ...r, ...(!r.c && nuevaC ? { c: structuredClone(nuevaC) } : {}), cp: igual ? r.cp : { ...cp, ...(r.cp ? { prev: r.cp } : {}) }, capturas: [...new Set([...(r.capturas ?? ['sentione']), 'complementaria'])] } : r) }, indice, nuevo: false, h };
   }
   const r = entrada.registro;
   if (!r || !/^\d{4}-\d{2}-\d{2}$/.test(r.d) || !r.p || r.cp?.estado !== 'confirmada') throw new Error('Faltan registro, fecha, plataforma o campaña confirmada');
