@@ -9,7 +9,7 @@ import { useResultados } from '../state/DataContext.jsx';
 import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { resumenImpacto } from '../lib/data/impacto.js';
 import { rangeLabel, todayBogota } from '../lib/data/dates.js';
-import { formatDecimal } from '../lib/format.js';
+import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
 import { impacto } from '../content/impacto.js';
 import { PERIODOS_IMPACTO } from '../config/periodos.js';
 
@@ -26,6 +26,11 @@ export default function Impacto() {
         {(r.disponible || res.campana) ? (
           <Scene index="04.1" kicker="24 DE OCTUBRE DE 2026 · CONCIERTO DE FONSECA" titulo={{ linea1: 'Una experiencia para conectar.', linea2: 'Una conversación por amplificar.' }} cta={<ExploreLink tab="impacto">Explorar el impacto y sus límites</ExploreLink>}>
             <UniversosConcierto />
+            <div data-comparacion-diaria className="mt-5 border-l-2 border-fucsia pl-4">
+              <h4 className="eyebrow text-rosa">Frente al día anterior · menciones relevantes</h4>
+              <p className="mt-2 font-display text-3xl text-marfil">{r.cambioDiaAnterior == null ? 'Comparación pendiente' : formatPct(r.cambioDiaAnterior, true)}</p>
+              <p className="mt-2 text-sm text-bruma">{r.diaAnterior && r.durante ? `${formatNumber(r.diaAnterior.total)} el 23 de octubre → ${formatNumber(r.durante.total)} el 24.` : 'Faltan días completos.'} Es una comparación de volumen, no evidencia causal del concierto. El valor comprobado puede ampliarse al verificar y clasificar las capturas manuales.</p>
+            </div>
             <p className="mt-5 max-w-3xl text-sm text-marfil">{h.impacto.significa} La oportunidad es conectar la emoción del encuentro con contenidos compartibles, concientización e interacciones medibles.</p>
             <GaleriaConcierto />
             <p className="mt-4 max-w-3xl text-xs text-bruma/80">Revisión focalizada de SentiOne · 22–24 de octubre: no se identificaron publicaciones adicionales del concierto en los registros revisados. Esto no equivale a ausencia de más actividad en las redes. La conexión de las referencias de campaña con mensajes de concientización sigue pendiente de comprobar en su contenido.</p>

@@ -24,6 +24,7 @@ import Papa from 'papaparse';
 import { CAMPOS, detectHeaderRow, suggestMapping, validateMapping } from '../src/lib/data/columns.js';
 import { processRows } from '../src/lib/data/process.js';
 import { CODIGOS_REVISION, aplicarRevision, aplicarResultados, buildLotes, clasificado, emptyMaestra, mergeExport, pendientes, serializarMaestra, validarMaestra } from '../src/lib/data/maestra.js';
+import { conciliarConcierto } from '../src/lib/data/conciliar-concierto.js';
 import { buildResultados, validarResultados } from '../src/lib/data/publicar.js';
 import { hechos } from '../src/lib/data/hechos.js';
 import { normalizeText } from '../src/lib/data/text.js';
@@ -371,6 +372,7 @@ function complementarias() {
   const item = cola.items.find(x => x.id === entrada.id);
   if (!item) fallar('Candidata no registrada en la cola privada.');
   if (!existsSync(RUTA.indice)) fallar('Falta el índice de publicaciones SentiOne: reconstruir antes de deduplicar.');
+  entrada.validacionEditorial = item.validacionEditorial ?? entrada.validacionEditorial;
   const maestra = leerMaestra();
   const out = incorporarComplementaria(maestra, leer(RUTA.indice), entrada);
   const errores = validarMaestra(out.maestra);
@@ -383,6 +385,27 @@ function complementarias() {
   writeFileSync(RUTA.complementarias, JSON.stringify({ ...cola, items: cola.items.map(x => x.id === entrada.id ? { ...x, estado: 'incorporada', registro: out.h, metodo: entrada.verificacion.metodo } : x) }, null, 1));
 }
 
-const COMANDOS = { inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar, 'auditar-campana': auditarCampana, complementarias };
+function conciliar() {
+  comprobarPrivado();
+  const control = conciliarConcierto(leerMaestra(), leer(RUTA.complementarias));
+  const destino = new URL(`informes/conciliacion-concierto-${hoy()}.json`, carpeta(DATOS));
+  writeFileSync(destino, JSON.stringify(control, null, 1) + '\n');
+  const filas = [
+    ['SentiOne del 23 · registros / A', `${control.sentione23.total} / ${control.sentione23.relevantes}`],
+    ['SentiOne del 24 · registros / A', `${control.sentione24.total} / ${control.sentione24.relevantes}`],
+    ['Capturas manuales de campaña', control.manualesCampana],
+    ['Capturas manuales fechadas el 24', control.manualesFechadas24],
+    ['Duplicados SentiOne confirmados / sin resolver', `${control.duplicadasSentiOne.confirmadas} / ${control.duplicadasSentiOne.sinResolver}`],
+    ['Capturas manuales A / sin clasificar', `${control.manualesA.confirmadas} / ${control.manualesA.sinClasificar}`],
+    ['Total único combinado conocido del 24', control.totalUnicoCombinado24],
+    ['Total A combinado comprobado del 24', control.totalRelevanteCombinado24],
+    ['Variación A frente al 23', control.variacionRelevanteVs23 == null ? 'Pendiente' : `${control.variacionRelevanteVs23} %`],
+  ];
+  const texto = `# Conciliación privada del concierto\n\n${control.nota} Cierre completo: ${control.conciliacionCompleta ? 'sí' : 'no'}.\n\n| Control | Valor |\n|---|---|\n` + filas.map(([k,v]) => `| ${k} | ${v} |`).join('\n') + '\n\n## Pendientes por referencia\n\n' + control.manuales.map(x => `- ${x.id} · ${x.plataforma}: ${x.faltan.join(', ')}. Fecha: ${x.fecha ?? 'pendiente'}${x.fuenteFecha ? ` (${x.fuenteFecha}; verificación en plataforma: ${x.fechaVerificadaEnPlataforma})` : ''}.`).join('\n') + '\n';
+  writeFileSync(new URL(`informes/conciliacion-concierto-${hoy()}.md`, carpeta(DATOS)), texto);
+  console.log(JSON.stringify(control, null, 1));
+}
+
+const COMANDOS = { conciliar, inicializar, importar, aplicar, revisar, publicar, guardar, estado, verificar, 'auditar-campana': auditarCampana, complementarias };
 if (!COMANDOS[cmd]) fallar(`Comando desconocido. Usa: ${Object.keys(COMANDOS).join(', ')}.`);
 await COMANDOS[cmd]();

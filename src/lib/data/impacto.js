@@ -9,10 +9,12 @@ export function resumenImpacto(res) {
   );
   const evento = PERIODOS_IMPACTO[1].desde;
   const reciente = periodStats(res, { ...FILTROS_VACIOS, desde: addDays(evento, -7), hasta: addDays(evento, -1) });
+  const diaAnterior = periodStats(res, { ...FILTROS_VACIOS, desde: addDays(evento, -1), hasta: addDays(evento, -1) });
+  const cambioDiaAnterior = diaAnterior?.total > 0 && durante ? (durante.total / diaAnterior.total - 1) * 100 : null;
   const cambio = antes?.promedioDiario > 0 && durante
     ? (durante.promedioDiario / antes.promedioDiario - 1) * 100 : null;
   return {
-    antes, durante, despues, reciente, cambio,
+    antes, durante, despues, reciente, cambio, diaAnterior, cambioDiaAnterior,
     disponible: Boolean(antes && durante && isCovered(res.cobertura, evento)),
     // Descripción de volumen, no una prueba de significancia ni de causalidad.
     superaPromedio: cambio == null ? null : cambio > 0,
