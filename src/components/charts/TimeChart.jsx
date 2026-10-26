@@ -128,6 +128,8 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
             return (
               <motion.rect
                 key={p.d}
+                data-fecha={p.d}
+                data-valor={p.v}
                 x={x(i) + Math.min(2, band * 0.15)}
                 width={Math.max(1, band - Math.min(4, band * 0.3))}
                 rx={Math.min(2, band / 4)}
@@ -147,6 +149,8 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
             return (
               <motion.rect
                 key={p.d}
+                data-fecha={p.d}
+                data-valor={p.v}
                 x={x(i) + Math.min(2, band * 0.15)}
                 width={Math.max(1, band - Math.min(4, band * 0.3))}
                 rx={Math.min(2, band / 4)}
@@ -172,7 +176,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
               {i1 > i0 && <line x1={x(i0) + 1} x2={x(i1 + 1) - 1} y1={M.t - 20} y2={M.t - 20} stroke={color} strokeWidth="2" strokeLinecap="round" />}
               <line x1={mx} x2={mx} y1={M.t - 20} y2={y(v) - 4} stroke={color} strokeOpacity="0.6" strokeDasharray="2 3" />
               <text x={mx} y={M.t - 42} textAnchor={anchor} className="text-[12px] font-semibold" fill={color}>
-                {a.titulo}
+                {W < 480 ? (a.tituloCorto ?? a.titulo) : a.titulo}
               </text>
               {a.detalle && (
                 <text x={mx} y={M.t - 28} textAnchor={anchor} className="num fill-bruma text-[11px]">
@@ -237,7 +241,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
           return (
             <g key={m.d}>
               <line x1={cx(i)} x2={cx(i)} y1={M.t - 6} y2={M.t + ih} stroke="#E2457F" strokeWidth="1.5" strokeDasharray="3 3" />
-              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t + 12 : M.t - 12} textAnchor={anotaciones.length ? 'start' : i > n * 0.7 ? 'end' : 'middle'} className="fill-fucsia text-[12px] font-semibold">
+              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t + 12 : M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'start'} className="fill-fucsia text-[12px] font-semibold">
                 {m.etiqueta}
               </text>
             </g>

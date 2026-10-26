@@ -30,15 +30,15 @@ export const conclusiones = {
     {
       id: 'impacto', hecho: 'campana', estado: 'preliminar',
       pregunta: '¿Qué base deja la activación para medir la campaña?',
-      titulo: 'Convertir las referencias de campaña en evidencia medible',
+      titulo: 'Una experiencia para conectar y amplificar',
       significa: 'El comportamiento temático se calcula de los datos. No equivale al volumen específico del evento.',
-      oportunidad: 'Completar fechas, deduplicación y métricas de las referencias validadas; incorporar los días posteriores para medir la continuidad del mensaje.',
+      oportunidad: 'Coordinar artista y aliados, un hashtag y llamados a participar; facilitar contenido audiovisual y completar la medición posterior.',
     },
     {
       id: 'oportunidad', hecho: 'laboratorios', estado: 'preliminar',
       pregunta: '¿Cómo convertir la iniciativa en participación medible?',
       titulo: 'Diseñar la amplificación desde el inicio',
-      significa: 'La presencia de laboratorios es acotada en esta consulta y no mide su posición competitiva. Hay una oportunidad de comunicación útil y sostenida.',
+      significa: 'La experiencia abre una oportunidad para conectar entretenimiento y concientización con participación digital medible.',
       oportunidad: 'Coordinar artista y aliados antes, facilitar contenidos y un QR durante, y sostener la educación después. Medir publicaciones verificadas y acciones, sin asumir impacto.',
     },
   ],

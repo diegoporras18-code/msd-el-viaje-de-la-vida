@@ -3,6 +3,7 @@ import ChapterOpener from '../components/ChapterOpener.jsx';
 import Scene, { ExploreLink } from '../components/Scene.jsx';
 import PeriodBars from '../components/charts/PeriodBars.jsx';
 import Pending from '../components/charts/Pending.jsx';
+import GaleriaConcierto from '../components/GaleriaConcierto.jsx';
 import UniversosConcierto from '../components/UniversosConcierto.jsx';
 import { useResultados } from '../state/DataContext.jsx';
 import { corteDatos, hechos } from '../lib/data/hechos.js';
@@ -23,8 +24,11 @@ export default function Impacto() {
       <ChapterOpener compacto capitulo={impacto.capitulo} titulo={impacto.titulo} tituloId="impacto-titulo" />
       <div className="shell mx-auto max-w-[1440px] pb-6">
         {(r.disponible || res.campana) ? (
-          <Scene index="04.1" kicker="La causa, el evento y su intersección" titulo={{ linea1: '¿Qué conversación dejó', linea2: 'la experiencia?' }} cta={<ExploreLink tab="impacto">Explorar el impacto y sus límites</ExploreLink>}>
+          <Scene index="04.1" kicker="24 DE OCTUBRE DE 2026 · CONCIERTO DE FONSECA" titulo={{ linea1: 'Una experiencia para conectar.', linea2: 'Una conversación por amplificar.' }} cta={<ExploreLink tab="impacto">Explorar el impacto y sus límites</ExploreLink>}>
             <UniversosConcierto />
+            <p className="mt-5 max-w-3xl text-sm text-marfil">{h.impacto.significa} La oportunidad es conectar la emoción del encuentro con contenidos compartibles, concientización e interacciones medibles.</p>
+            <GaleriaConcierto />
+            <p className="mt-4 max-w-3xl text-xs text-bruma/80">Revisión focalizada de SentiOne · 22–24 de octubre: no se identificaron publicaciones adicionales del concierto en los registros revisados. Esto no equivale a ausencia de más actividad en las redes. La conexión de las referencias de campaña con mensajes de concientización sigue pendiente de comprobar en su contenido.</p>
             <details className="mt-6 border-t border-rosa/15 pt-4">
               <summary className="min-h-[44px] cursor-pointer font-display text-xl italic text-rosa">Ver el comportamiento de la causa antes y durante</summary>
               <p className="mb-4 mt-3 text-sm text-bruma">{h.impacto.texto}</p>

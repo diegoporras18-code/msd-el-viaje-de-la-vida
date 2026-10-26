@@ -4,8 +4,8 @@
 // Si una actualización cambia el hallazgo, ajusta el titular para que siga siendo cierto.
 
 export const antes = {
-  capitulo: 'Capítulo 03 · Antes del concierto',
-  titulo: { linea1: 'La conversación', linea2: 'antes de la música' },
+  capitulo: 'Capítulo 03 · La conversación en octubre',
+  titulo: { linea1: 'La conversación', linea2: 'alrededor de la música' },
   entradilla: 'Solo cuenta lo que habla de verdad de cáncer de mama: el ruido político y las coincidencias quedan fuera.',
   escenas: {
     volumen: {
@@ -14,15 +14,15 @@ export const antes = {
       serie: 'Menciones sobre cáncer de mama por día',
     },
     tono: {
-      kicker: '¿De qué está hablando la gente?',
+      kicker: 'Antes del concierto · 1–23 de octubre',
       titulo: { linea1: 'Llegar a tiempo:', linea2: 'detección, conciencia y acceso' },
       pendiente: 'El análisis por contenido de temáticas, emociones e intenciones se incorporará en la próxima actualización de resultados.',
     },
   },
   // Lectura editorial de los picos de la conversación relevante (revisada por contenido en la base privada).
   picos: [
-    { desde: '2026-10-07', hasta: '2026-10-08', titulo: 'Apoyos y prótesis', tono: 'tema' },
-    { desde: '2026-10-18', hasta: '2026-10-20', titulo: 'Día Mundial y su eco', tono: 'tema' },
+    { desde: '2026-10-07', hasta: '2026-10-08', titulo: 'Apoyos y prótesis', tituloCorto: 'Apoyos', tono: 'tema' },
+    { desde: '2026-10-18', hasta: '2026-10-20', titulo: 'Día Mundial y su eco', tituloCorto: 'Día Mundial', tono: 'tema' },
   ],
   // Contexto del universo captado (solo en Explorar): el ruido que se excluye de la medición.
   ruido: [{ desde: '2026-10-03', hasta: '2026-10-05', titulo: 'Ruido político', tono: 'ajeno' }],

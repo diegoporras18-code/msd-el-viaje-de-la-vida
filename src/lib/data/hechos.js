@@ -341,8 +341,8 @@ export function hechos(res, hoy = '2026-10-21') {
   out.campana = {
     disponible: cp.disponible, tipo: 'medido',
     cifra: res.campana?.complementarias?.editoriales ? formatNumber(res.campana.complementarias.editoriales) : cp.confirmadas == null ? '< 10' : formatNumber(cp.confirmadas),
-    unidad: 'referencias de campaña validadas por el responsable; no son un total del 24',
-    texto: `${cp.complementarias} La medición fechada se protege por muestra pequeña. Completar fechas, contenidos y métricas permitirá evaluar la transmisión del mensaje; no hay una línea base completa para atribuir un pico a la campaña.`,
+    unidad: 'publicaciones identificadas de la campaña; no son un total del 24',
+    texto: `${cp.complementarias} Las fechas están parcialmente pendientes. ${impacto.cambio == null ? 'La comparación temática sigue pendiente.' : impacto.cambio > 0 ? 'La conversación temática del día supera el promedio previo; esto no demuestra un efecto del concierto.' : 'La escucha temática del día del concierto no registró un nuevo pico frente al promedio previo.'} La cobertura disponible no equivale a toda la actividad digital del evento; completar fechas, contenidos y métricas permitirá evaluar la transmisión del mensaje.`,
   };
   return out;
 }
