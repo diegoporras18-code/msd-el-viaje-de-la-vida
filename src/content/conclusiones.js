@@ -29,8 +29,8 @@ export const conclusiones = {
     },
     {
       id: 'impacto', hecho: 'campana', estado: 'preliminar',
-      pregunta: '¿Qué base deja la activación para medir la campaña?',
-      titulo: 'Una experiencia para conectar y amplificar',
+      pregunta: '¿Qué aportan juntas las dos fuentes de conversación?',
+      titulo: 'Dos fuentes para ampliar la lectura de la iniciativa',
       significa: 'El comportamiento temático se calcula de los datos. No equivale al volumen específico del evento.',
       oportunidad: 'Coordinar artista y aliados, un hashtag y llamados a participar; facilitar contenido audiovisual y completar la medición posterior.',
     },
