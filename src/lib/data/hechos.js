@@ -338,11 +338,14 @@ export function hechos(res, hoy = '2026-10-21') {
   } else out.impacto = no(hoy < EVENTO.fecha ? 'evento' : 'medicion');
 
   const cp = vistaCampana(res);
+  const referencias = res.campana?.referenciasAportadas;
+  const manualesCampana = referencias?.manuales;
+  const referenciasAportadas = referencias?.total;
   out.campana = {
     disponible: cp.disponible, tipo: 'medido',
-    cifra: res.campana?.complementarias?.editoriales ? formatNumber(res.campana.complementarias.editoriales) : cp.confirmadas == null ? '< 10' : formatNumber(cp.confirmadas),
-    unidad: 'publicaciones identificadas de la campaña; no son un total del 24',
-    texto: `${cp.complementarias} Las capturas manuales con identidad y fecha se incorporan a la base de campaña; solo el contenido verificado y clasificado A suma a la curva temática. ${impacto.cambioDiaAnterior == null ? 'La comparación diaria está pendiente.' : `Frente al 23, la variación temática comprobada es ${formatPct(impacto.cambioDiaAnterior, true)}.`} ${impacto.cambio == null ? 'La comparación temática sigue pendiente.' : impacto.cambio > 0 ? 'La conversación temática del día supera el promedio previo; esto no demuestra un efecto del concierto.' : 'La escucha temática del día del concierto no registró un nuevo pico frente al promedio previo.'} La cobertura disponible no equivale a toda la actividad digital del evento; completar fechas, contenidos y métricas permitirá evaluar la transmisión del mensaje.`,
+    cifra: referenciasAportadas == null ? 'Pendiente' : formatNumber(referenciasAportadas),
+    unidad: 'referencias aportadas entre SentiOne y la captura manual; no son publicaciones únicas del 24',
+    texto: `${referencias?.sentione == null ? 'Pendientes' : formatNumber(referencias.sentione)} menciones temáticas de SentiOne del 24 y ${manualesCampana == null ? 'referencias pendientes' : formatNumber(manualesCampana) + ' referencias manuales de campaña validadas editorialmente'} amplían la lectura de la actividad alrededor de la iniciativa. La suma reconoce ambas fuentes: no equivale a publicaciones únicas verificadas del 24. Fechas, duplicados y contenido de las referencias manuales requieren cotejo antes de sumarlas a la curva temática. El 24 no superó el gran pico del Día Mundial; la oportunidad es convertir la actividad identificada en mayor participación y continuidad digital. La variación frente al 23 se calcula solo con menciones únicas comparables, nunca con esta suma de referencias.`,
   };
   return out;
 }

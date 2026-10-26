@@ -240,3 +240,13 @@ test('comparación diaria y promedio previo son independientes; el escenario 28 
   const missing=structuredClone(res);missing.cobertura=[{desde:'2026-10-24',hasta:'2026-10-24'}];
   assert.equal(resumenImpacto(missing).cambioDiaAnterior,null);
 });
+
+test('referencias aportadas conservan atribución a SentiOne al incorporar capturas manuales A',()=>{
+  const sentione=Array.from({length:14},(_,i)=>reg(`s${i}`,'si'));
+  const manuales=Array.from({length:14},(_,i)=>({...reg(`m${i}`,'si'),k:'externo',capturas:['complementaria']}));
+  const cola={items:manuales.map(r=>({registro:r.h,estado:'incorporada',validacionEditorial:{fuente:'validacion_usuario',estado:'confirmada'}}))};
+  const resultado=buildResultados(maestra([...sentione,...manuales]),null,{complementarias:cola});
+  assert.equal(resultado.diario[0].rel,28);
+  assert.deepEqual(resultado.campana.referenciasAportadas,{sentione:14,manuales:14,total:28});
+  assert.deepEqual(validarResultados(resultado),[]);
+});

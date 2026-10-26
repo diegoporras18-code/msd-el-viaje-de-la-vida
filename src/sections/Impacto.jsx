@@ -29,9 +29,9 @@ export default function Impacto() {
             <div data-comparacion-diaria className="mt-5 border-l-2 border-fucsia pl-4">
               <h4 className="eyebrow text-rosa">Frente al día anterior · menciones relevantes</h4>
               <p className="mt-2 font-display text-3xl text-marfil">{r.cambioDiaAnterior == null ? 'Comparación pendiente' : formatPct(r.cambioDiaAnterior, true)}</p>
-              <p className="mt-2 text-sm text-bruma">{r.diaAnterior && r.durante ? `${formatNumber(r.diaAnterior.total)} el 23 de octubre → ${formatNumber(r.durante.total)} el 24.` : 'Faltan días completos.'} Es una comparación de volumen, no evidencia causal del concierto. El valor comprobado puede ampliarse al verificar y clasificar las capturas manuales.</p>
+              <p className="mt-2 text-sm text-bruma">{r.diaAnterior && r.durante ? `${formatNumber(r.diaAnterior.total)} el 23 de octubre → ${formatNumber(r.durante.total)} el 24.` : 'Faltan días completos.'} La comparación usa menciones temáticas únicas y comparables de ambos días; no se calcula con la suma de referencias aportadas. No demuestra causalidad del concierto.</p>
             </div>
-            <p className="mt-5 max-w-3xl text-sm text-marfil">{h.impacto.significa} La oportunidad es conectar la emoción del encuentro con contenidos compartibles, concientización e interacciones medibles.</p>
+            <p className="mt-5 max-w-3xl text-sm text-marfil">La escucha temática y la recopilación manual aportan perspectivas complementarias. El 24 no superó el gran pico temático del Día Mundial; la actividad de campaña identificada abre una oportunidad para amplificar contenidos compartibles, concientización e interacciones medibles.</p>
             <GaleriaConcierto />
             <p className="mt-4 max-w-3xl text-xs text-bruma/80">Revisión focalizada de SentiOne · 22–24 de octubre: no se identificaron publicaciones adicionales del concierto en los registros revisados. Esto no equivale a ausencia de más actividad en las redes. La conexión de las referencias de campaña con mensajes de concientización sigue pendiente de comprobar en su contenido.</p>
             <details className="mt-6 border-t border-rosa/15 pt-4">

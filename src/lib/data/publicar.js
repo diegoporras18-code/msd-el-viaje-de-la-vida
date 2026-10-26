@@ -9,7 +9,7 @@
 // Los cubos detallados y los registros individuales solo existen en el repositorio privado.
 import { clasificado } from './maestra.js';
 import { isCovered } from './dates.js';
-import { PERIODOS_BASE } from '../../config/periodos.js';
+import { EVENTO, PERIODOS_BASE } from '../../config/periodos.js';
 import { PATRONES_SENTIMIENTO, cumplePatron } from '../../config/patrones.js';
 import { LABORATORIOS } from '../../config/marcas.js';
 import { validarCampana } from './campana.js';
@@ -124,6 +124,12 @@ export function buildCampana(maestra, cola) {
       } : null };
   });
   const dias = [...new Set(rows.map(r => r.d))].sort();
+  const complementarias = resumenComplementarias(cola);
+  // Suma editorial de dos fuentes: conserva atribución aunque se incorporen A manuales después.
+  const sentioneEvento = celda(rows.filter(r => r.d === EVENTO.fecha && (r.k !== 'externo' || r.capturas?.includes('sentione')) && esCausa(r)).length);
+  const manuales = complementarias.editoriales;
+  const referenciasAportadas = { sentione: sentioneEvento, manuales,
+    total: sentioneEvento == null || manuales == null ? null : sentioneEvento + manuales };
   return { version: 1, cobertura: 'parcial', evaluadas: celda(evaluadas.length), sinEvaluar: celda(rows.length - evaluadas.length),
     estados: distribucionExclusiva(contar(evaluadas, r => r.cp.estado)),
     confirmadas: celda(confirmadas.length), interseccion: particion(confirmadas),
@@ -131,7 +137,7 @@ export function buildCampana(maestra, cola) {
       const rs = rows.filter(r => r.d === d);
       const completa = rs.every(cpVigente);
       return { d, archivoEvaluadoCompleto: completa, confirmadas: completa ? celda(rs.filter(cpConfirmada).length) : null };
-    }), periodos, complementarias: resumenComplementarias(cola) };
+    }), periodos, complementarias, referenciasAportadas };
 }
 
 function grupo(rows, dims) {
@@ -316,7 +322,7 @@ export function validarResultados(res) {
   visitar({ diario: res.diario, periodos: res.periodos });
   if (res.version >= 4) {
     const c = res.campana;
-    const keys = ['version', 'cobertura', 'evaluadas', 'sinEvaluar', 'estados', 'confirmadas', 'interseccion', 'diario', 'periodos', 'complementarias'];
+    const keys = ['version', 'cobertura', 'evaluadas', 'sinEvaluar', 'estados', 'confirmadas', 'interseccion', 'diario', 'periodos', 'complementarias', 'referenciasAportadas'];
     if (!c || c.version !== 1 || c.cobertura !== 'parcial' || Object.keys(c).some(k => !keys.includes(k))) errores.push('Esquema público de campaña inválido.');
     if (c) {
       visitar(c);
