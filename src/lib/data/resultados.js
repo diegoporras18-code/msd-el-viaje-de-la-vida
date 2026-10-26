@@ -4,6 +4,7 @@
 //   · la serie diaria admite cualquier rango; las distribuciones solo existen por periodo base
 //     completo y por grupo («relevantes» o el universo captado = relevantes + resto);
 //   · lo que no alcanza el umbral de privacidad se muestra agrupado o como muestra insuficiente.
+import { EVENTO } from '../../config/periodos.js';
 import { EMOCIONES, PLATAFORMAS, SENTIMIENTOS, TEMAS, INTENCIONES } from '../../config/clasificacion.js';
 import { ENTIDADES, entidad } from '../../config/marcas.js';
 import { addDays, dayRange, daysBetween, isCovered, rangeLabel } from './dates.js';
@@ -56,6 +57,21 @@ export function dailyTotals(res, f) {
     if (base?.bloques?.some((b) => b.desde <= d && d <= b.hasta)) return { d, v: null, src: 'bloque' };
     return { d, v: null, src: null };
   });
+}
+
+/** Capa editorial para el concierto: no altera dailyTotals ni los KPIs temáticos. */
+export function serieConAporteEditorial(res, filtro) {
+  const puntos = dailyTotals(res, filtro);
+  const referencias = res.campana?.referenciasAportadas;
+  const dia = puntos.find(p => p.d === EVENTO.fecha);
+  const v = referencias?.manuales;
+  const apilados = soloRelevantes(filtro) && dia?.v != null && v > 0 ? [{
+    d: EVENTO.fecha, base: dia.v, v, total: dia.v + v, color: '#F4A6C4',
+    nombre: 'Publicaciones adicionales',
+    descripcionBase: `${dia.v} menciones temáticas de SentiOne fechadas el 24.`,
+    descripcion: `${v} publicaciones adicionales vinculadas al concierto, con fechas individuales todavía pendientes de completar.`,
+  }] : [];
+  return { puntos, apilados };
 }
 
 function usableBlocks(res, f) {

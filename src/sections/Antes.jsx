@@ -9,7 +9,7 @@ import Legend from '../components/charts/Legend.jsx';
 import Pending from '../components/charts/Pending.jsx';
 import ExampleCards from '../components/ExampleCards.jsx';
 import { useResultados } from '../state/DataContext.jsx';
-import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, peaks, periodStats, relevanciaRango, view } from '../lib/data/resultados.js';
+import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, serieConAporteEditorial, peaks, periodStats, relevanciaRango, view } from '../lib/data/resultados.js';
 import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { longDate, todayBogota } from '../lib/data/dates.js';
 import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
@@ -35,6 +35,7 @@ export default function Antes() {
   const relevantes = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO }), [res]);
   const todas = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO, segmento: 'todas' }), [res]);
   const octubre = useMemo(() => dailyTotals(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }), [res]);
+  const visual = useMemo(() => serieConAporteEditorial(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }), [res]);
   const { escenas } = antes;
   const clasificado = todas.clasificados >= MUESTRA_MINIMA && relevantes.registros > 0;
   const cortePrevio = corteDatos({ ...res, cobertura: res.cobertura.filter(c => c.desde <= PERIODO_PREVIO.hasta).map(c => ({ ...c, hasta: c.hasta > PERIODO_PREVIO.hasta ? PERIODO_PREVIO.hasta : c.hasta })) });
@@ -62,23 +63,25 @@ export default function Antes() {
             <Legend
               className="mb-3"
               items={[
-                { label: escenas.volumen.serie, color: '#F4A6C4' },
+                { label: 'SentiOne: menciones relevantes sobre cáncer de mama', color: '#F4A6C4' },
+                { label: 'Publicaciones adicionales: contenido de campaña validado editorialmente', color: '#F4A6C4' },
                 { label: 'Día pico', color: '#E2457F' },
                 ...(tieneHuecos([{ puntos: serie }]) ? [{ label: 'Aún sin datos', tipo: 'vacio' }] : []),
               ]}
             />
             <TimeChart
               series={[{ id: 'rel', nombre: clasificado ? 'Sobre cáncer de mama' : 'Menciones', color: '#F4A6C4', puntos: serie }]}
+              apilados={clasificado ? visual.apilados : []}
               picos={peaks(serie).slice(0, 1)}
-              marcadores={[{ d: EVENTO.fecha, etiqueta: '24 de octubre · Concierto de Fonseca' }]}
+              marcadores={[{ d: EVENTO.fecha, etiqueta: '24 OCT · CONCIERTO DE FONSECA' }]}
               etiquetasPico={!clasificado}
               anotaciones={clasificado ? anotacionesPicos(res) : []}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}
               alto={240}
-              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes.`}
+              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes. El 24 añade un segmento editorial asociado al concierto, no comparable con las barras temáticas.`}
             />
             <p className="mt-4 max-w-3xl text-xs leading-relaxed text-bruma/80">
-              {antes.criterio} {fuente}
+              <strong className="text-rosa">El 24 muestra una cifra combinada asociada al evento: no es directamente comparable con las barras temáticas de los demás días.</strong> Las referencias adicionales no certifican fechas individuales ni suman menciones temáticas a los KPIs. {antes.criterio} {fuente}
             </p>
           </div>
         </Scene>

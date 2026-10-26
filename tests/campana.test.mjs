@@ -250,3 +250,36 @@ test('referencias aportadas conservan atribución a SentiOne al incorporar captu
   assert.deepEqual(resultado.campana.referenciasAportadas,{sentione:14,manuales:14,total:28});
   assert.deepEqual(validarResultados(resultado),[]);
 });
+
+test('la barra editorial del 24 apila 14 + 14 = 28 sin alterar la serie temática ni KPIs',async()=>{
+  const {serieConAporteEditorial,dailyTotals,periodStats}=await import('../src/lib/data/resultados.js');
+  const {RANGO_DEFECTO}=await import('../src/config/periodos.js');
+  const r=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  const antes=JSON.stringify(r),tematica=dailyTotals(r,RANGO_DEFECTO);
+  const visual=serieConAporteEditorial(r,RANGO_DEFECTO);
+  assert.deepEqual(visual.puntos,tematica);
+  assert.equal(visual.puntos[22].v,14);assert.equal(visual.puntos[23].v,14);
+  assert.equal(visual.apilados.length,1);
+  const segmento=visual.apilados[0];assert.equal(segmento.d,'2026-10-24');
+  assert.equal(segmento.base,14);assert.equal(segmento.v,14);assert.equal(segmento.total,28);
+  assert.equal(segmento.color,'#F4A6C4');assert.match(segmento.descripcion,/fechas individuales.*pendientes/);
+  assert.ok(visual.puntos.slice(24).every(p=>p.v===null));
+  assert.equal(periodStats(r,RANGO_DEFECTO).total,758);assert.equal(JSON.stringify(r),antes);
+  assert.deepEqual(serieConAporteEditorial(r,{...RANGO_DEFECTO,segmento:'todas'}).apilados,[]);
+});
+
+test('la gráfica principal renderiza dos aportes de 14 en el 24 y la etiqueta visual 28',async()=>{
+  const {createServer}=await import('vite');
+  const {createElement}=await import('react');
+  const {renderToStaticMarkup}=await import('react-dom/server');
+  const server=await createServer({server:{middlewareMode:true},appType:'custom',logLevel:'silent'});
+  try {
+    const {default:Antes}=await server.ssrLoadModule('/src/sections/Antes.jsx');
+    const html=renderToStaticMarkup(createElement(Antes));
+    assert.equal((html.match(/<rect[^>]*data-fecha="2026-10-24"[^>]*data-valor="14"/g)??[]).length,2);
+    assert.match(html,/data-apilado="2026-10-24" data-total="28"/);
+    assert.match(html,/<text[^>]*data-etiqueta-total="2026-10-24"[^>]*>28<\/text>/);
+    assert.match(html,/<rect[^>]*data-fecha="2026-10-23"[^>]*data-valor="14"/);
+    assert.match(html,/24 OCT · CONCIERTO DE FONSECA/);
+  } finally {await server.close();}
+});
