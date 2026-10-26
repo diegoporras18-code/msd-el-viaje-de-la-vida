@@ -92,7 +92,7 @@ export default function ImpactDashboard() {
           <StackBars filas={temasAD.map((p) => ({ id: p.id, nombre: p.nombre, segmentos: temasTop.map((id, i) => ({ id, nombre: p.v.temas.items.find((t) => t.id === id)?.nombre ?? id, v: p.v.temas.items.find((t) => t.id === id)?.v ?? 0, color: PALETA[i % PALETA.length] })) }))} />
         </ChartFrame>
 
-        <ChartFrame className="lg:col-span-12" index="07" titulo="Evidencias y captura complementaria" subtitulo="Solo referencias públicas verificadas" notas={[estadoComplementarias(res), impacto.indicadores]}>
+        <ChartFrame className="lg:col-span-12" index="07" titulo="Publicaciones de la iniciativa" subtitulo="Solo referencias públicas verificadas" notas={[estadoComplementarias(res), impacto.indicadores]}>
           <Highlights desde="2026-10-24" hasta="2026-10-31" />
         </ChartFrame>
       </div>

@@ -1,8 +1,8 @@
 // Lectura pública de agregados protegidos. No consulta registros ni infiere contenido multimedia.
 export function estadoComplementarias(res) {
   const e = res.campana?.complementarias;
-  if (!e) return 'La captura complementaria aún no tiene un estado de verificación publicado.';
-  if (e.editoriales) return `${e.editoriales} publicaciones identificadas de la campaña. La pertenencia editorial está confirmada; identidad, fecha y métricas se comprueban por separado. Las referencias sin fecha no se asignan al 24. El vínculo con mensajes de cáncer de mama requiere comprobar el contenido.`;
+  if (!e) return 'La conversación de la iniciativa se incorporará en la próxima actualización.';
+  if (e.editoriales) return 'La conversación identificada permite explorar la actividad alrededor de la iniciativa.';
   if (e.total === 0) return 'No hay publicaciones complementarias registradas.';
   if (e.verificadas == null || e.pendientes == null) return 'Hay publicaciones complementarias en revisión; el desglose se protege por muestra pequeña. Solo las verificadas e incorporadas pueden sumar a la campaña.';
   return `${e.total ?? 'Las'} publicaciones complementarias registradas: ${e.verificadas} verificadas y ${e.pendientes} pendientes${e.descartadas ? `; ${e.descartadas} descartadas` : ''}. Las pendientes no se suman a las métricas.`;

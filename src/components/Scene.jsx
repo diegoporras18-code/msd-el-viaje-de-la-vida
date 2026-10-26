@@ -5,7 +5,7 @@ import { duration, ease } from '../lib/motion.js';
 /**
  * Escena ejecutiva: un hallazgo (titular) + una visualización + una conclusión breve.
  */
-export default function Scene({ index, kicker, titulo, lead, conclusion, children, cta }) {
+export default function Scene({ index, kicker, titulo, tituloId, tituloAs = 'h3', lead, conclusion, children, cta }) {
   return (
     <article className="border-t border-rosa/15 py-10 sm:py-16">
       <p className="eyebrow flex items-center gap-3 text-rosa">
@@ -13,7 +13,8 @@ export default function Scene({ index, kicker, titulo, lead, conclusion, childre
         {kicker}
       </p>
       <LineReveal
-        as="h3"
+        as={tituloAs}
+        id={tituloId}
         className="display mt-4 max-w-[20ch] text-[length:var(--step-3)] text-marfil"
         lines={[{ text: titulo.linea1 }, ...(titulo.linea2 ? [{ text: titulo.linea2, className: 'italic text-rosa' }] : [])]}
       />

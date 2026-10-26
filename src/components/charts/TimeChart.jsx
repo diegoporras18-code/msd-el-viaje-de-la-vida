@@ -58,6 +58,11 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
 
   return (
     <div ref={wrapRef} className="relative w-full select-none">
+      {marcadores.filter(m => m.destacado).map(m => <div key={m.d} data-marcador-concierto className="mb-5 flex justify-end">
+        <span className="inline-flex max-w-full items-center gap-2 rounded-sm border border-fucsia/50 bg-fucsia/10 px-3 py-2 text-[11px] font-semibold tracking-[0.06em] text-rosa sm:text-xs">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-fucsia" aria-hidden="true" />{m.etiqueta}
+        </span>
+      </div>)}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
@@ -124,16 +129,19 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
         {(tipo === 'barras' || tipo === 'superpuestas') &&
           series[0]?.puntos.map((p, i) => {
             if (p.v == null) return null;
+            const indicador = apilados.find(a => a.d === p.d);
+            const valorVisual = indicador?.total ?? p.v;
             const esPico = tipo === 'barras' && picoSet.has(p.d);
-            const h = Math.max(p.v > 0 ? 1.5 : 0, (p.v / max) * ih);
+            const h = Math.max(valorVisual > 0 ? 1.5 : 0, (valorVisual / max) * ih);
             return (
               <motion.rect
                 key={p.d}
                 data-fecha={p.d}
-                data-valor={p.v}
+                data-valor={valorVisual}
+                data-valor-tematico={p.v}
                 x={x(i) + Math.min(2, band * 0.15)}
                 width={Math.max(1, band - Math.min(4, band * 0.3))}
-                rx={apilados.some(a => a.d === p.d) ? 0 : Math.min(2, band / 4)}
+                rx={Math.min(2, band / 4)}
                 fill={esPico ? '#E2457F' : (series[0].color ?? '#F4A6C4')}
                 opacity={idx == null || idx === i ? (p.src === 'referencia' ? 0.92 : 1) : 0.35}
                 initial={{ height: 0, y: M.t + ih }}
@@ -167,14 +175,7 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
         {apilados.map(p => {
           const i = fechas.indexOf(p.d);
           if (i < 0) return null;
-          const h = (p.v / max) * ih;
-          return <g key={`editorial-${p.d}`} data-apilado={p.d} data-total={p.total}>
-            <motion.rect data-segmento="editorial" data-fecha={p.d} data-valor={p.v}
-              x={x(i) + Math.min(2, band * 0.15)} width={Math.max(1, band - Math.min(4, band * 0.3))}
-              fill={p.color} rx={0}
-              initial={{ height: 0, y: y(p.base) }}
-              animate={inView ? { height: h, y: y(p.total) } : { height: 0, y: y(p.base) }}
-              transition={{ duration: dur, ease: ease.out }} />
+          return <g key={`evento-${p.d}`} data-indicador-evento={p.d} data-total={p.total}>
             <text data-etiqueta-total={p.d} x={cx(i)} y={y(p.total) - 7} textAnchor="middle" className="num fill-marfil text-[14px] font-semibold">{formatNumber(p.total)}</text>
           </g>;
         })}
@@ -257,9 +258,9 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
           return (
             <g key={m.d}>
               <line x1={cx(i)} x2={cx(i)} y1={M.t - 6} y2={M.t + ih} stroke="#E2457F" strokeWidth="1.5" strokeDasharray="3 3" />
-              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t - 8 : M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'start'} className="fill-fucsia text-[12px] font-semibold">
+              {!m.destacado && <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t - 8 : M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'start'} className="fill-fucsia text-[12px] font-semibold">
                 {m.etiqueta}
-              </text>
+              </text>}
             </g>
           );
         })}
@@ -282,15 +283,13 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
       {idx != null && fechas[idx] && (
         <div
           role="tooltip"
-          className="pointer-events-none absolute top-0 z-10 w-48 rounded-sm border border-rosa/30 bg-ciruela-900/95 px-3 py-2 text-xs shadow-xl backdrop-blur"
+          className="pointer-events-none absolute top-full mt-2 z-10 w-48 rounded-sm border border-rosa/30 bg-ciruela-900/95 px-3 py-2 text-xs shadow-xl backdrop-blur"
           style={{ left: Math.min(Math.max(0, (cx(idx) / W) * (w || W) - 96), Math.max(0, (w || W) - 192)) }}
         >
           <p className="font-semibold text-marfil">{longDate(fechas[idx])}</p>
           {aporteActivo && <div data-tooltip-combinado>
             <p className="mt-2 font-semibold text-rosa">{formatNumber(aporteActivo.total)} referencias reportadas</p>
-            <p className="mt-2 text-bruma">{aporteActivo.descripcionBase}</p>
-            <p className="mt-2 text-bruma">{aporteActivo.descripcion}</p>
-            <p className="mt-2 text-bruma/80">Cifra combinada asociada al evento, no comparable directamente con otros días.</p>
+            <p className="mt-2 text-bruma">Conversación identificada alrededor de El Viaje de la Vida.</p>
           </div>}
           {!aporteActivo && series.map((s) => {
             const p = s.puntos[idx];
@@ -332,7 +331,6 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
                   {s.nombre}
                 </th>
               ))}
-              {apilados.length > 0 && <th scope="col">Aporte editorial asociado al evento (fechas individuales pendientes)</th>}
             </tr>
           </thead>
           <tbody>
@@ -340,9 +338,8 @@ export default function TimeChart({ series, tipo = 'barras', apilados = [], alto
               <tr key={d}>
                 <th scope="row">{longDate(d)}</th>
                 {series.map((s) => (
-                  <td key={s.id}>{s.puntos[i].v ?? 'Sin datos'}</td>
+                  <td key={s.id}>{apilados.find(p => p.d === d)?.total != null ? `${apilados.find(p => p.d === d).total} referencias identificadas (indicador del evento)` : s.puntos[i].v ?? 'Sin datos'}</td>
                 ))}
-                {apilados.length > 0 && <td>{apilados.find(p => p.d === d)?.v ?? 'Sin aporte asignado'}</td>}
               </tr>
             ))}
           </tbody>
