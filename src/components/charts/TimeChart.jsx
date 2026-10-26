@@ -22,7 +22,7 @@ const SRC = {
  * tipo: 'barras' (una serie), 'superpuestas' (la segunda serie, parte de la primera, se dibuja
  * dentro de cada barra) o 'lineas'. anotaciones: [{ d | desde+hasta, titulo, detalle, tono }] sobre días o tramos.
  */
-export default function TimeChart({ series, tipo = 'barras', alto = 260, picos = [], etiquetasPico = true, marcadores = [], bloques = [], anotaciones = [], unidad = 'registros', descripcion }) {
+export default function TimeChart({ series, tipo = 'barras', apilados = [], alto = 260, picos = [], etiquetasPico = true, marcadores = [], bloques = [], anotaciones = [], unidad = 'registros', descripcion }) {
   const [wrapRef, w] = useMeasure();
   const inView = useInView(wrapRef, { once: true, amount: 0.25 });
   const reduce = useReducedMotion();
@@ -38,7 +38,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
   const valores = series
     .flatMap((s) => s.puntos.map((p) => p.v))
     .filter((v) => v != null)
-    .concat(bloques.map((b) => b.promedio));
+    .concat(bloques.map((b) => b.promedio), apilados.map(p => p.total));
   const max = niceMax(Math.max(4, ...valores));
   const band = n ? iw / n : iw;
   const x = (i) => M.l + i * band;
@@ -50,6 +50,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
   const dur = reduce ? 0 : 0.7;
   const sig = series.map((s) => s.puntos.map((p) => p.v ?? '·').join(',')).join('|');
 
+  const aporteActivo = apilados.find(p => p.d === fechas[idx]);
   const pick = (clientX, rect) => {
     const i = Math.floor(((clientX - rect.left) * (W / rect.width) - M.l) / band);
     setIdx(i >= 0 && i < n ? i : null);
@@ -132,7 +133,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
                 data-valor={p.v}
                 x={x(i) + Math.min(2, band * 0.15)}
                 width={Math.max(1, band - Math.min(4, band * 0.3))}
-                rx={Math.min(2, band / 4)}
+                rx={apilados.some(a => a.d === p.d) ? 0 : Math.min(2, band / 4)}
                 fill={esPico ? '#E2457F' : (series[0].color ?? '#F4A6C4')}
                 opacity={idx == null || idx === i ? (p.src === 'referencia' ? 0.92 : 1) : 0.35}
                 initial={{ height: 0, y: M.t + ih }}
@@ -162,6 +163,21 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
               />
             );
           })}
+
+        {apilados.map(p => {
+          const i = fechas.indexOf(p.d);
+          if (i < 0) return null;
+          const h = (p.v / max) * ih;
+          return <g key={`editorial-${p.d}`} data-apilado={p.d} data-total={p.total}>
+            <motion.rect data-segmento="editorial" data-fecha={p.d} data-valor={p.v}
+              x={x(i) + Math.min(2, band * 0.15)} width={Math.max(1, band - Math.min(4, band * 0.3))}
+              fill={p.color} rx={0}
+              initial={{ height: 0, y: y(p.base) }}
+              animate={inView ? { height: h, y: y(p.total) } : { height: 0, y: y(p.base) }}
+              transition={{ duration: dur, ease: ease.out }} />
+            <text data-etiqueta-total={p.d} x={cx(i)} y={y(p.total) - 7} textAnchor="middle" className="num fill-marfil text-[14px] font-semibold">{formatNumber(p.total)}</text>
+          </g>;
+        })}
 
         {anotaciones.map((a, k) => {
           const i0 = fechas.indexOf(a.desde ?? a.d);
@@ -241,7 +257,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
           return (
             <g key={m.d}>
               <line x1={cx(i)} x2={cx(i)} y1={M.t - 6} y2={M.t + ih} stroke="#E2457F" strokeWidth="1.5" strokeDasharray="3 3" />
-              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t + 12 : M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'start'} className="fill-fucsia text-[12px] font-semibold">
+              <text x={anotaciones.length ? cx(i) + 4 : cx(i)} y={anotaciones.length ? M.t - 8 : M.t - 12} textAnchor={i > n * 0.7 ? 'end' : 'start'} className="fill-fucsia text-[12px] font-semibold">
                 {m.etiqueta}
               </text>
             </g>
@@ -270,7 +286,13 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
           style={{ left: Math.min(Math.max(0, (cx(idx) / W) * (w || W) - 96), Math.max(0, (w || W) - 192)) }}
         >
           <p className="font-semibold text-marfil">{longDate(fechas[idx])}</p>
-          {series.map((s) => {
+          {aporteActivo && <div data-tooltip-combinado>
+            <p className="mt-2 font-semibold text-rosa">{formatNumber(aporteActivo.total)} referencias reportadas</p>
+            <p className="mt-2 text-bruma">{aporteActivo.descripcionBase}</p>
+            <p className="mt-2 text-bruma">{aporteActivo.descripcion}</p>
+            <p className="mt-2 text-bruma/80">Cifra combinada asociada al evento, no comparable directamente con otros días.</p>
+          </div>}
+          {!aporteActivo && series.map((s) => {
             const p = s.puntos[idx];
             return (
               <p key={s.id} className="mt-1 flex items-start gap-2 text-bruma">
@@ -310,6 +332,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
                   {s.nombre}
                 </th>
               ))}
+              {apilados.length > 0 && <th scope="col">Aporte editorial asociado al evento (fechas individuales pendientes)</th>}
             </tr>
           </thead>
           <tbody>
@@ -319,6 +342,7 @@ export default function TimeChart({ series, tipo = 'barras', alto = 260, picos =
                 {series.map((s) => (
                   <td key={s.id}>{s.puntos[i].v ?? 'Sin datos'}</td>
                 ))}
+                {apilados.length > 0 && <td>{apilados.find(p => p.d === d)?.v ?? 'Sin aporte asignado'}</td>}
               </tr>
             ))}
           </tbody>
