@@ -177,7 +177,7 @@ test('validación editorial conserva pertenencia sin inventar fecha, causa o mé
   assert.equal(out.maestra.registros[0].c,undefined);assert.equal(out.maestra.registros[0].m,undefined);
   const res=buildResultados(out.maestra,null,{complementarias:{items:Array.from({length:14},()=>({estado:'pendiente',validacionEditorial:input.validacionEditorial}))}});
   assert.equal(res.totales.unicos,0);assert.equal(res.campana.complementarias.editoriales,14);
-  assert.equal(res.campana.confirmadas,null);assert.match(estadoComplementarias(res),/14 referencias.*validadas/);
+  assert.equal(res.campana.confirmadas,null);assert.match(estadoComplementarias(res),/14 publicaciones identificadas de la campaña/);
   assert.deepEqual(validarResultados(res),[]);
   const unresolved={publicaciones:{},sinResolver:{historica:'x'}};
   const old={...reg('historica'),d:'2026-09-24'};
@@ -192,4 +192,18 @@ test('noticias genéricas del concierto quedan fuera; causa desconocida no equiv
   const res=buildResultados(maestra(regs),null);
   assert.equal(res.campana.interseccion.v.causa_pendiente,12);
   assert.equal(vistaCampana(res).porcentajeCausa,null);
+});
+
+test('octubre completo conserva datos del 23 y 24, días pendientes y KPIs sobre días cubiertos', async()=>{
+  const {dailyTotals,periodStats}=await import('../src/lib/data/resultados.js');
+  const {RANGO_DEFECTO,PERIODO_PREVIO}=await import('../src/config/periodos.js');
+  const r=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  const ds=dailyTotals(r,RANGO_DEFECTO),s=periodStats(r,RANGO_DEFECTO);
+  assert.equal(ds.length,31);assert.equal(ds[22].v,14);assert.equal(ds[23].v,14);
+  assert.ok(ds.slice(24).every(d=>d.v===null));assert.equal(s.total,758);
+  assert.equal(s.diasConDatos,24);assert.equal(s.promedioDiario,758/24);
+  assert.equal(periodStats(r,PERIODO_PREVIO).total,744);
+  const future=structuredClone(r);future.cobertura[0].hasta='2026-10-25';future.diario.push({d:'2026-10-25',n:12,cl:12,rel:12});
+  assert.equal(dailyTotals(future,RANGO_DEFECTO)[24].v,12);
+  assert.equal(periodStats(future,RANGO_DEFECTO).total,770);
 });

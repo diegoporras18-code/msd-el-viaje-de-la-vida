@@ -7,7 +7,7 @@ import { formatNumber } from '../../lib/format.js';
  */
 export default function KpiRow({ items }) {
   return (
-    <dl className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+    <dl className={`grid grid-cols-2 gap-x-6 gap-y-8 ${items.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
       {items.map((k) => (
         <div key={k.id} className="border-l border-rosa/25 pl-4">
           <dt className="eyebrow text-bruma">{k.etiqueta}</dt>

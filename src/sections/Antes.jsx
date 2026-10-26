@@ -9,12 +9,12 @@ import Legend from '../components/charts/Legend.jsx';
 import Pending from '../components/charts/Pending.jsx';
 import ExampleCards from '../components/ExampleCards.jsx';
 import { useResultados } from '../state/DataContext.jsx';
-import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, peaks, relevanciaRango, view } from '../lib/data/resultados.js';
+import { FILTROS_VACIOS, MUESTRA_MINIMA, dailyTotals, peaks, periodStats, relevanciaRango, view } from '../lib/data/resultados.js';
 import { corteDatos, hechos } from '../lib/data/hechos.js';
 import { longDate, todayBogota } from '../lib/data/dates.js';
 import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
 import { antes } from '../content/antes.js';
-import { PERIODO_PREVIO } from '../config/periodos.js';
+import { EVENTO, RANGO_DEFECTO, PERIODO_PREVIO } from '../config/periodos.js';
 
 export const fuenteTexto = (res, corte) =>
   res.cobertura.length
@@ -34,26 +34,27 @@ export default function Antes() {
   const h = useMemo(() => hechos(res, todayBogota()), [res]);
   const relevantes = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO }), [res]);
   const todas = useMemo(() => view(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO, segmento: 'todas' }), [res]);
-  const octubre = useMemo(() => dailyTotals(res, { ...FILTROS_VACIOS, ...PERIODO_PREVIO }), [res]);
+  const octubre = useMemo(() => dailyTotals(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }), [res]);
   const { escenas } = antes;
   const clasificado = todas.clasificados >= MUESTRA_MINIMA && relevantes.registros > 0;
   const cortePrevio = corteDatos({ ...res, cobertura: res.cobertura.filter(c => c.desde <= PERIODO_PREVIO.hasta).map(c => ({ ...c, hasta: c.hasta > PERIODO_PREVIO.hasta ? PERIODO_PREVIO.hasta : c.hasta })) });
-  const fuente = fuenteTexto(res, cortePrevio?.hasta);
-  const vol = h.volumen;
-  const serie = clasificado ? octubre : dailyTotals(res, { ...PERIODO_PREVIO, segmento: 'todas' });
+  const fuente = fuenteTexto(res);
+  const stats = periodStats(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO });
+  const maximo = peaks(octubre)[0];
+  const vol = { disponible: !!stats, stats, maximo, texto: stats ? `${formatNumber(stats.total)} menciones relevantes en ${stats.diasConDatos} días completos de octubre. Los días sin cobertura permanecen pendientes.` : null };
+  const serie = clasificado ? octubre : dailyTotals(res, { ...RANGO_DEFECTO, segmento: 'todas' });
 
   return (
     <section id="antes" aria-labelledby="antes-titulo" className="relative scroll-mt-16">
       <ChapterOpener compacto capitulo={antes.capitulo} titulo={antes.titulo} entradilla={antes.entradilla} tituloId="antes-titulo" />
       <div className="shell mx-auto max-w-[1440px] pb-6">
-        <Scene index="03.1" kicker={escenas.volumen.kicker} titulo={escenas.volumen.titulo} lead={vol.disponible ? vol.texto : null} conclusion={h.picos.disponible ? h.picos.texto : null}>
+        <Scene index="03.1" kicker={escenas.volumen.kicker} titulo={escenas.volumen.titulo} lead={vol.disponible ? vol.texto : null} conclusion={maximo ? `El mayor volumen observado en octubre corresponde al ${longDate(maximo.d)}: ${formatNumber(maximo.v)} menciones relevantes.` : null}>
           {clasificado && vol.stats && (
             <KpiRow
               items={[
                 { id: 'total', etiqueta: 'Sobre cáncer de mama', valor: vol.stats.total, detalle: `${vol.stats.diasConDatos} días con datos` },
                 { id: 'promedio', etiqueta: 'Promedio diario', valor: vol.stats.promedioDiario, formato: formatDecimal, detalle: `Mediana ${formatDecimal(vol.stats.mediana)}` },
                 { id: 'pico', etiqueta: 'Día pico', valor: vol.maximo?.v ?? null, tono: 'text-fucsia', detalle: vol.maximo ? longDate(vol.maximo.d) : null },
-                { id: 'crecimiento', etiqueta: 'Frente a fin de sept.', valor: vol.crecimiento, formato: (n) => formatPct(n, true), tono: 'text-rosa', detalle: 'Promedio diario', pendiente: 'Sin periodo comparable' },
               ]}
             />
           )}
@@ -69,14 +70,15 @@ export default function Antes() {
             <TimeChart
               series={[{ id: 'rel', nombre: clasificado ? 'Sobre cáncer de mama' : 'Menciones', color: '#F4A6C4', puntos: serie }]}
               picos={peaks(serie).slice(0, 1)}
+              marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto de Fonseca' }]}
               etiquetasPico={!clasificado}
               anotaciones={clasificado ? anotacionesPicos(res) : []}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}
               alto={240}
-              descripcion={`${escenas.volumen.serie} del 1 al 23 de octubre de 2026, antes del concierto.`}
+              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes.`}
             />
             <p className="mt-4 max-w-3xl text-xs leading-relaxed text-bruma/80">
-              {antes.criterio} {h.universo.disponible && h.universo.texto} {fuente}
+              {antes.criterio} {fuente}
             </p>
           </div>
         </Scene>
