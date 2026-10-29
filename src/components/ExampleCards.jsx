@@ -5,13 +5,15 @@ import { duration, ease } from '../lib/motion.js';
 /**
  * Tarjetas de patrones de conversación por sentimiento (máximo tres): síntesis anónimas en
  * tercera persona, nunca testimonios ni citas. Cada una solo se muestra
- * si su patrón alcanza el umbral de privacidad; si no, indica que no hay evidencia suficiente.
+ * si su patrón alcanza el umbral de privacidad; los patrones suprimidos se omiten.
  * En móvil se desplazan en horizontal para no alargar la escena.
  */
 export default function ExampleCards({ tarjetas, patrones, umbral }) {
+  const visibles = tarjetas.filter(t => patrones?.[t.patron] != null && patrones[t.patron] >= umbral).slice(0, 3);
+  if (!visibles.length) return null;
   return (
     <ul className="-mx-[var(--gutter)] flex snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-      {tarjetas.slice(0, 3).map((t, i) => {
+      {visibles.map((t, i) => {
         const n = patrones?.[t.patron];
         return (
           <motion.li
@@ -27,15 +29,9 @@ export default function ExampleCards({ tarjetas, patrones, umbral }) {
               {t.sentimiento}
               {n != null && <span className="num normal-case tracking-normal text-bruma">{formatNumber(n)} menciones</span>}
             </p>
-            {n != null ? (
-              <>
-                <p className="mt-4 font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{t.sintesis}</p>
-                <p className="mt-4 text-sm text-bruma">{t.revela}</p>
-                <p className="mt-auto pt-4 text-xs text-rosa">{t.tema}</p>
-              </>
-            ) : (
-              <p className="mt-4 text-sm text-bruma">Sin evidencia suficiente en este periodo: el patrón no alcanza {umbral} menciones.</p>
-            )}
+            <p className="mt-4 font-display text-[length:var(--step-1)] italic leading-snug text-marfil">{t.sintesis}</p>
+            <p className="mt-4 text-sm text-bruma">{t.revela}</p>
+            <p className="mt-auto pt-4 text-xs text-rosa">{t.tema}</p>
           </motion.li>
         );
       })}

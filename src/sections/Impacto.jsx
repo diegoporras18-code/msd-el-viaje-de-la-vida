@@ -11,8 +11,8 @@ export default function Impacto() {
         <UniversosConcierto />
         <p className="mt-5 max-w-3xl text-base leading-relaxed text-marfil">{balanceConcierto.resultado} {balanceConcierto.lectura}</p>
         <GaleriaConcierto />
-        <div data-voces-medios className="mt-5 grid gap-4 border-t border-rosa/15 pt-4 sm:grid-cols-2">
-          {balanceConcierto.voces.map(v => <div key={v.id}>
+        <div data-voces-medios className="mt-5 max-w-3xl border-t border-rosa/15 pt-4">
+          {balanceConcierto.voces.filter(v => v.id !== 'fonseca').map(v => <div key={v.id}>
             <p className="eyebrow text-rosa">{v.rol}</p>
             <h4 className="mt-1 font-display text-xl italic text-marfil">{v.nombre}</h4>
             <p className="mt-1 text-sm text-bruma">{v.texto}</p>

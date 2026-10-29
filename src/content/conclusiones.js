@@ -54,7 +54,6 @@ export const conclusiones = {
     { pregunta: '¿Qué presencia tenía MSD antes del concierto?', hecho: 'msd' },
     { pregunta: '¿Qué laboratorios aparecen?', hecho: 'marcas' },
     { pregunta: '¿Qué tan confiable es la clasificación por contenido?', hecho: 'calidad' },
-    { pregunta: '¿Cambió la conversación temática el día del concierto?', hecho: 'impacto' },
     { pregunta: '¿Qué conversación se identificó alrededor de la iniciativa?', hecho: 'campana' },
   ],
 };

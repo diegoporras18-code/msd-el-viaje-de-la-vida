@@ -9,7 +9,7 @@ import RelevanceCompare from '../components/charts/RelevanceCompare.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import Highlights from './Highlights.jsx';
 import { useFilters, useResultados } from '../state/DataContext.jsx';
-import { ESTADOS_RESTO, dailyTotals, growth, notasPrivacidad, relevanciaDia, view } from '../lib/data/resultados.js';
+import { ESTADOS_RESTO, serieConAporteEditorial, dailyTotals, growth, notasPrivacidad, relevanciaDia, view } from '../lib/data/resultados.js';
 import { daysBetween, longDate, rangeLabel, shortDate } from '../lib/data/dates.js';
 import { formatDecimal, formatNumber, formatPct } from '../lib/format.js';
 import { EVENTO } from '../config/periodos.js';
@@ -117,12 +117,13 @@ export default function ConversationDashboard() {
           {semantico && rel ? (
             <TimeChart
               series={[{ id: 'rel', nombre: 'Sobre cáncer de mama', color: '#F4A6C4', puntos: relDias }]}
+              apilados={serieConAporteEditorial(res, { ...f, segmento: 'relevantes' }).apilados}
               picos={v.picos.slice(0, 1)}
               etiquetasPico={false}
               anotaciones={anotacionesPicos(res)}
               marcadores={[{ d: EVENTO.fecha, etiqueta: 'Concierto' }]}
               unidad="menciones sobre cáncer de mama"
-              descripcion={`Menciones sobre cáncer de mama por día, ${rango}.`}
+              descripcion={`Menciones sobre cáncer de mama por día, ${rango}; el 24 muestra 28 referencias del concierto.`}
             />
           ) : semantico ? (
             <TimeChart
