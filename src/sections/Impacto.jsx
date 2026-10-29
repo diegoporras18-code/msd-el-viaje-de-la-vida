@@ -9,7 +9,7 @@ export default function Impacto() {
     <div className="shell mx-auto max-w-[1440px] pb-6 pt-12">
       <Scene tituloId="impacto-titulo" tituloAs="h2" index="04.1" kicker="24 DE OCTUBRE DE 2026 · CONCIERTO DE FONSECA" titulo={{ linea1: 'Una experiencia para conectar.', linea2: 'Una conversación por amplificar.' }} cta={<ExploreLink tab="impacto">Explorar la conversación</ExploreLink>}>
         <UniversosConcierto />
-        <p className="mt-5 max-w-3xl text-base leading-relaxed text-marfil">La iniciativa reúne actividad digital identificada alrededor del concierto de Fonseca. Para MSD, la oportunidad es dar continuidad a ese momento: conectar la experiencia con contenidos compartibles, participación y concientización sobre cáncer de mama.</p>
+        <p className="mt-5 max-w-3xl text-base leading-relaxed text-marfil">El registro del concierto conecta a Fonseca y MSD con prevención y diagnóstico temprano. La oportunidad es prolongar ese mensaje en digital.</p>
         <GaleriaConcierto />
         <details className="mt-6 border-t border-rosa/15 pt-4">
           <summary className="min-h-[44px] cursor-pointer font-display text-xl italic text-rosa">Cómo amplificar próximas experiencias</summary>

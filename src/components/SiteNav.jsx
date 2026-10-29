@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useSpring } from 'motion/react';
+import SelectorEscucha from './SelectorEscucha.jsx';
 import { capitulos, navegacion } from '../content/navegacion.js';
 import { useActiveSection } from '../lib/hooks.js';
 import { ease } from '../lib/motion.js';
@@ -67,6 +68,7 @@ export default function SiteNav({ route }) {
             </p>
           )}
           <div className="flex shrink-0 items-center gap-2">
+            <div className="hidden xl:block"><SelectorEscucha /></div>
             <div className="hidden rounded-full border border-rosa/25 p-1 md:flex">
               {[
                 ['#inicio', navegacion.modos.presentacion, presentacion],
@@ -142,6 +144,7 @@ export default function SiteNav({ route }) {
                   {navegacion.cerrar}
                 </button>
               </div>
+              <SelectorEscucha />
               <ol className="mt-6 flex-1">
                 {capitulos.map((c, i) => (
                   <motion.li key={c.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: ease.out, delay: 0.05 + i * 0.05 }} className="border-t border-rosa/10">

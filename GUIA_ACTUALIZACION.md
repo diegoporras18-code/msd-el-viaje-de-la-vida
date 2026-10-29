@@ -159,3 +159,13 @@ Cierre autorizado del 25 de octubre: las referencias con `validacion_usuario` co
 
 
 Para conciliar captura manual y SentiOne del concierto, ejecutar `npm run sentione -- conciliar`: guarda tabla y detalle de pendientes únicamente en el repositorio privado. Una publicación externa ya incorporada puede recibir clasificación temática mediante `complementarias` cuando exista contenido revisado; se conserva su identidad y no se duplican registros. La pertenencia editorial nunca sustituye `contenidoRevisado`. Las clasificaciones existentes no se sobrescriben por este flujo; requieren revisión focalizada y protección manual. Ejecutar después `publicar` y `verificar`. La comparación diaria del capítulo 04 se recalcula automáticamente e independientemente del promedio previo.
+
+## Dos alcances de escucha
+
+La actualización del 28 de octubre incorpora `#JuntasContraElCáncerdemama`, su variante sin tilde y la regla abierta `#Cancerdemama`. `consultasPorAlcance` conserva los OR/AND y prepara dos consultas: enfoque de campaña (sin la regla genérica abierta) y panorama amplio (con ella). No se elimina una publicación del enfoque si cumple otra regla, por ejemplo Colombia AND #CancerDeMama. La coincidencia literal local es un diagnóstico que debe cotejarse con los campos exportados y `Keywords`; no sustituye el motor SentiOne ni la clasificación semántica.
+
+La base maestra permanece acumulativa y las revisiones manuales protegidas. Los perfiles por consulta se guardan en el repositorio privado, con evidencia de pertenencia por registro sin persistir textos ni autores. Antes de publicar ambos agregados se deben validar las diferencias de cobertura y la protección de celdas pequeñas también entre versiones. No convertir diferencias de diseño de consulta en crecimiento de la campaña.
+
+El cliente está preparado para `src/data/resultados.json` (enfoque) y `src/data/resultados-amplio.json` (panorama amplio). El selector aparece solo cuando existen los dos conjuntos reales, conserva el capítulo abierto y comparte la elección mediante `?escucha=enfocada` o `?escucha=amplia`. No crear una copia del primer conjunto para simular el segundo. Mientras falte la importación del CSV, la segunda versión permanece sin publicar.
+
+El video del concierto aporta evidencia de campaña y causa, pero no se cuenta automáticamente como una publicación social adicional: faltan la identidad de publicación, su fecha y el cotejo con las referencias enlazadas. El dato de más de 30.000 asistentes está reportado en los rótulos del registro audiovisual; las proyecciones del PowerPoint no son resultados de asistencia, impresiones o audiencia observados.
