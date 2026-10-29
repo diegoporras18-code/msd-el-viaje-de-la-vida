@@ -344,7 +344,7 @@ export function hechos(res, hoy = '2026-10-21') {
     disponible: cp.disponible, tipo: 'medido',
     cifra: referenciasAportadas == null ? 'Pendiente' : formatNumber(referenciasAportadas),
     unidad: 'referencias identificadas alrededor de El Viaje de la Vida',
-    texto: 'La iniciativa reúne conversación identificada alrededor del concierto de Fonseca. Es un momento relevante para analizar y fortalecer la amplificación digital, sin atribuir resultados o causalidad no comprobados.',
+    texto: `El concierto del 24 de octubre cuenta con ${referenciasAportadas == null ? 'referencias por consolidar' : formatNumber(referenciasAportadas) + ' referencias identificadas'} alrededor de El Viaje de la Vida. El mensaje del artista y la difusión de Bésame Radio ofrecen una base para ampliar la conversación y la concientización.`,
   };
   const picoOctubre = peaks(dailyTotals(res, { ...FILTROS_VACIOS, ...RANGO_DEFECTO }))[0];
   out.picoTematico = picoOctubre ? { disponible: true, tipo: 'medido', cifra: formatNumber(picoOctubre.v), unidad: `menciones en el pico del ${diaTexto(picoOctubre.d)}`, texto: 'Los momentos de concientización ofrecen una oportunidad para activar información útil y acompañamiento.' } : no();

@@ -8,7 +8,7 @@ import { tieneBaseMaestra } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
 import { formatNumber } from '../lib/format.js';
-import { benchmark, lecturaPresencia, referenciasBenchmark, laboratoriosConReferencias } from '../content/benchmark.js';
+import { benchmark, referenciasBenchmark, laboratoriosConReferencias } from '../content/benchmark.js';
 import { entidad, LABORATORIOS } from '../config/marcas.js';
 import { duration, ease } from '../lib/motion.js';
 
@@ -79,7 +79,7 @@ export default function Benchmark() {
   const k = res.umbral;
   const { escena } = benchmark;
   const observacion = {
-    presencia: lecturaPresencia(labs, k),
+    presencia: 'Las menciones identificadas se concentran en pocas marcas; las publicaciones muestran distintas formas de abordar la causa.',
     temas: h.laboratorios.disponible ? h.laboratorios.texto : null,
   };
 

@@ -101,17 +101,17 @@ export default function Antes() {
                   <BarList items={relevantes.temas.items.slice(0, 5)} total={relevantes.registros} unidad="menciones sobre cáncer de mama" color="#E2457F" />
                 </div>
                 <div className="lg:col-span-5">
-                  <p className="eyebrow mb-4 text-bruma">Tono hacia el tema</p>
+                  <p className="eyebrow mb-4 text-bruma">Sentimiento de la conversación digital</p>
                   <Legend className="mb-3" items={relevantes.sentimiento.items.map((s) => ({ label: s.nombre, color: s.color }))} />
                   <StackBars filas={[{ id: 'sent', nombre: `${formatNumber(relevantes.registros)} menciones sobre cáncer de mama`, segmentos: relevantes.sentimiento.items }]} />
                   {h.preocupaciones.disponible && <p className="text-sm text-bruma">{h.preocupaciones.texto}</p>}
                 </div>
               </div>
-              <div className="mt-10">
+              {antes.ejemplos.tarjetas.some(t => h.ejemplos.patrones?.[t.patron] >= res.umbral) && <div className="mt-10">
                 <p className="eyebrow mb-4 text-rosa">{antes.ejemplos.titulo}</p>
                 <ExampleCards tarjetas={antes.ejemplos.tarjetas} patrones={h.ejemplos.patrones} umbral={res.umbral} />
                 <p className="mt-3 max-w-3xl text-xs text-bruma/80">{antes.ejemplos.aviso}</p>
-              </div>
+              </div>}
             </>
           ) : (
             <Pending compacto estado="analisis" titulo={escenas.tono.pendiente} />

@@ -7,7 +7,7 @@ export const benchmark = {
   texto: 'Qué laboratorios aparecen en la conversación sobre cáncer de mama y de qué se habla cuando aparecen. Es presencia en esta consulta, no un Share of Voice.',
   escena: {
     kicker: 'Laboratorios en la conversación',
-    titulo: { linea1: 'Los laboratorios aparecen poco', linea2: 'y casi siempre como innovación' },
+    titulo: { linea1: 'Cómo hablan los laboratorios', linea2: 'sobre cáncer de mama' },
     presencia: 'Presencia en las menciones sobre cáncer de mama',
   },
   // Síntesis por laboratorio: solo para los que alcanzan el umbral de 10 menciones relevantes.
@@ -24,12 +24,12 @@ export const benchmark = {
       id: 'presencia',
       observamos: 'La presencia publicada depende del umbral de cada periodo.',
       significa: 'La cobertura es desigual. Estas cifras no establecen liderazgo ni posición de mercado.',
-      oportunidad: 'Hay espacio para que MSD sea identificable por un aporte concreto, no por volumen.',
+      oportunidad: 'Dar continuidad al mensaje del concierto con información útil y contenidos fáciles de compartir.',
     },
     {
       id: 'temas',
-      observamos: 'Cuando aparecen, los laboratorios se asocian sobre todo a diagnóstico temprano, innovación y acceso: estudios, alianzas y congresos.',
-      significa: 'La industria habla desde la ciencia y la institución; casi no aparece en historias de pacientes ni en apoyo emocional, que es donde la conversación es más cercana.',
+      observamos: 'Las publicaciones muestran distintas formas de hablar de detección temprana, atención y acompañamiento.',
+      significa: 'Los ejemplos permiten reconocer mensajes y formatos que pueden ser útiles para MSD.',
       oportunidad: 'Conectar la emoción del concierto con información útil y verificable sobre detección y acceso, sin protagonismo de marca.',
     },
     {
@@ -67,7 +67,7 @@ export const benchmark = {
         nombre: 'Innpacto Rosa',
         pais: 'Colombia',
         marcas: 'AstraZeneca y Daiichi Sankyo, con la Pontificia Universidad Javeriana',
-        descripcion: 'Reto de innovación abierta para mejorar la ruta de atención de pacientes con cáncer de mama.',
+        descripcion: 'Convocatoria de proyectos para mejorar la atención de pacientes con cáncer de mama.',
         estado: 'verificado',
         fuente: { nombre: 'El Tiempo', url: 'https://www.eltiempo.com/salud/abren-convocatoria-para-iniciativas-que-mejoren-la-ruta-de-atencion-de-pacientes-con-cancer-de-mama-en-bogota-3511812' },
       },
