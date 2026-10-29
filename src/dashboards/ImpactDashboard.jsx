@@ -2,6 +2,7 @@ import { useResultados } from '../state/DataContext.jsx';
 import ChartFrame from '../components/charts/ChartFrame.jsx';
 import TimeChart from '../components/charts/TimeChart.jsx';
 import UniversosConcierto from '../components/UniversosConcierto.jsx';
+import TarjetasSentimientoConcierto from '../components/TarjetasSentimientoConcierto.jsx';
 import Highlights from './Highlights.jsx';
 import { serieConAporteEditorial } from '../lib/data/resultados.js';
 import { balanceConcierto } from '../content/balance-concierto.js';
@@ -14,6 +15,7 @@ export default function ImpactDashboard() {
   return <div className="space-y-10">
     <UniversosConcierto />
     <p className="max-w-3xl text-marfil">{balanceConcierto.resultado} {balanceConcierto.lectura}</p>
+    <TarjetasSentimientoConcierto />
     <ChartFrame titulo="La conversación alrededor del concierto" subtitulo="17 al 31 de octubre" notas={['El 24 destaca las 28 referencias del evento. Los demás días muestran la serie temática; este indicador no se utiliza para calcular una variación diaria ni cambia los KPIs temáticos.']}>
       <TimeChart series={[{ id: 'evento', nombre: 'Conversación identificada', color: '#F4A6C4', puntos: visual.puntos }]} apilados={visual.apilados} marcadores={[{ d: EVENTO.fecha, etiqueta: '24 OCT · CONCIERTO DE FONSECA', destacado: true }]} unidad="menciones temáticas" descripcion="Conversación del 17 al 31 de octubre; el 24 presenta 28 referencias del concierto." alto={240} />
     </ChartFrame>
