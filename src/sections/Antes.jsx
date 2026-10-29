@@ -77,10 +77,10 @@ export default function Antes() {
               anotaciones={clasificado ? anotacionesPicos(res) : []}
               unidad={clasificado ? 'menciones sobre cáncer de mama' : 'menciones'}
               alto={240}
-              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes. ${visual.apilados.length ? 'El 24 presenta el indicador consolidado del concierto.' : 'Las referencias del concierto se presentan en el capítulo 04.'}`}
+              descripcion={`${escenas.volumen.serie} del 1 al 31 de octubre de 2026; días sin cobertura pendientes. ${visual.apilados.length ? 'El 24 destaca 28 referencias identificadas alrededor del concierto, un indicador del evento distinto del volumen temático diario.' : 'Las referencias del concierto se presentan en el capítulo 04.'}`}
             />
             <p className="mt-4 max-w-3xl text-xs leading-relaxed text-bruma/80">
-              Serie temática de octubre. {visual.apilados.length ? 'El 24 presenta el indicador consolidado del concierto. ' : 'Las referencias del concierto se presentan en el capítulo 04. '}Los KPIs resumen exclusivamente menciones sobre cáncer de mama. {fuente}
+              Serie temática de octubre. {visual.apilados.length ? 'El 24 destaca 28 referencias identificadas alrededor del concierto, un indicador del evento distinto del volumen temático diario. ' : 'Las referencias del concierto se presentan en el capítulo 04. '}Los KPIs resumen exclusivamente menciones sobre cáncer de mama. {fuente}
             </p>
           </div>
         </Scene>

@@ -65,15 +65,15 @@ export function serieConAporteEditorial(res, filtro) {
   const referencias = res.campana?.referenciasAportadas;
   const dia = puntos.find(p => p.d === EVENTO.fecha);
   const v = referencias?.manuales;
-  // La aportación del evento solo complementa su misma base. Las menciones A
-  // adicionales de una consulta más amplia no son automáticamente campaña.
-  const mismaBase = dia?.v != null && dia.v === referencias?.sentione
+  // Indicador del evento: la cohorte aprobada no se sustituye por el volumen
+  // temático de una consulta nueva. No suma publicaciones a esa serie ni a sus KPIs.
+  const cohorteValida = dia?.v != null && referencias?.sentione >= 0 && v > 0
     && referencias.total === referencias.sentione + v;
-  const apilados = soloRelevantes(filtro) && mismaBase && v > 0 ? [{
-    d: EVENTO.fecha, base: dia.v, v, total: dia.v + v, color: '#F4A6C4',
-    nombre: 'Publicaciones adicionales',
-    descripcionBase: `${dia.v} menciones temáticas de SentiOne fechadas el 24.`,
-    descripcion: `${v} publicaciones adicionales vinculadas al concierto, con fechas individuales todavía pendientes de completar.`,
+  const apilados = soloRelevantes(filtro) && cohorteValida ? [{
+    d: EVENTO.fecha, base: referencias.sentione, v, total: referencias.total,
+    tematico: dia.v, color: '#F4A6C4', nombre: 'Referencias del concierto',
+    descripcionBase: 'Referencias identificadas alrededor de El Viaje de la Vida.',
+    descripcion: 'Indicador del evento; las fechas individuales de las referencias adicionales siguen pendientes de completar. La serie temática conserva su propio recuento.',
   }] : [];
   return { puntos, apilados };
 }

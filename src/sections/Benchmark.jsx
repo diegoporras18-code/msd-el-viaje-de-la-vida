@@ -8,7 +8,7 @@ import { tieneBaseMaestra } from '../lib/data/resultados.js';
 import { hechos } from '../lib/data/hechos.js';
 import { todayBogota } from '../lib/data/dates.js';
 import { formatNumber } from '../lib/format.js';
-import { benchmark, lecturaPresencia } from '../content/benchmark.js';
+import { benchmark, lecturaPresencia, referenciasBenchmark, laboratoriosConReferencias } from '../content/benchmark.js';
 import { entidad, LABORATORIOS } from '../config/marcas.js';
 import { duration, ease } from '../lib/motion.js';
 
@@ -22,7 +22,8 @@ const reveal = (delay = 0) => ({
 export function References({ plegado = false }) {
   const R = benchmark.referencias;
   const [laboratorio, setLaboratorio] = useState('todas');
-  const items = R.items.filter((r) => r.estado === 'verificado' && (laboratorio === 'todas' || r.marcasIds?.includes(laboratorio)));
+  const items = referenciasBenchmark(laboratorio);
+  const laboratorios = laboratoriosConReferencias(LABORATORIOS);
   const Cont = plegado ? 'details' : 'div';
   return (
     <Cont className={`group ${plegado ? 'mt-8 border-t border-rosa/20 pt-4' : 'mt-12'}`}>
@@ -38,13 +39,14 @@ export function References({ plegado = false }) {
         <p className="eyebrow text-rosa">{R.titulo}</p>
       )}
       <p className="mt-2 max-w-2xl text-xs text-bruma">{R.aviso}</p>
-      <label className="mt-4 block text-sm text-bruma">
-        Laboratorio de la referencia
-        <select className="ml-3 max-w-full rounded-sm border border-rosa/25 bg-ciruela px-3 py-2 text-marfil" value={laboratorio} onChange={(e) => setLaboratorio(e.target.value)}>
-          <option value="todas">Todos</option>
-          {LABORATORIOS.filter((l) => l.id !== 'otro-laboratorio').map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
-        </select>
-      </label>
+      <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Consultar referencias por laboratorio">
+        {[{ id: 'todas', nombre: 'Todas las iniciativas' }, ...laboratorios].map(l => (
+          <button key={l.id} type="button" aria-pressed={laboratorio === l.id} onClick={() => setLaboratorio(l.id)}
+            className={`min-h-[44px] rounded-full border px-4 py-2 text-sm transition-colors ${laboratorio === l.id ? 'border-rosa bg-rosa/15 text-rosa' : 'border-rosa/20 text-marfil hover:border-rosa/60'}`}>
+            {l.nombre}
+          </button>
+        ))}
+      </div>
       {!items.length && <p className="mt-4 text-sm text-bruma">Sin referencias públicas verificadas disponibles para este laboratorio. No implica ausencia de publicaciones.</p>}
       <ul className="mt-4 grid gap-x-8 border-t border-rosa/10 sm:grid-cols-2">
         {items.map((r) => (
@@ -138,7 +140,7 @@ export default function Benchmark() {
           ) : (
             <Pending estado="analisis" titulo={benchmark.pendiente} />
           )}
-          <References plegado />
+          <References />
         </Scene>
       </div>
     </section>
