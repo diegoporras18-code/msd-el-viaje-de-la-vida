@@ -29,7 +29,7 @@ test('balance distingue vocería del escenario, difusión de un medio y titulare
  assert.match(balanceConcierto.voces[0].texto,/No equivale a una publicación/);
  assert.match(balanceConcierto.voces[1].texto,/25 de octubre.*misma marca/);
  assert.match(balanceConcierto.prensa,/no acreditan noticias publicadas/);
- assert.match(balanceConcierto.creadores,/No hay publicaciones verificadas suficientes/);
+ assert.match(balanceConcierto.creadores,/forma anónima.*sin atribuir/);
  assert.equal(evidencias.length,2);assert.ok(evidencias.every(e=>e.tipo==='publicacion'&&e.fecha==='2026-10-25'));
  assert.ok(!/El Tiempo|El Espectador/.test(JSON.stringify(evidencias)));
 });

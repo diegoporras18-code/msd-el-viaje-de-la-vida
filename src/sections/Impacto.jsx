@@ -22,7 +22,7 @@ export default function Impacto() {
         <details className="mt-4 border-t border-rosa/15 pt-3">
           <summary className="min-h-[44px] cursor-pointer font-display text-xl italic text-rosa">El objetivo de campaña: balance y siguiente paso</summary>
           <div className="mt-3 grid gap-4 md:grid-cols-3">
-            <p className="text-sm text-bruma"><span className="text-marfil">Creadores. </span>{balanceConcierto.creadores}</p>
+            <p className="text-sm text-bruma"><span className="text-marfil">Comunidad. </span>{balanceConcierto.creadores}</p>
             <p className="text-sm text-bruma"><span className="text-marfil">Prensa. </span>{balanceConcierto.prensa}</p>
             <p className="text-sm text-bruma"><span className="text-rosa">Oportunidad para MSD. </span>{balanceConcierto.recomendacion}</p>
           </div>
