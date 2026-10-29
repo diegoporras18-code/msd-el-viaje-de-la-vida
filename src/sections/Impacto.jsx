@@ -1,4 +1,5 @@
 import Scene, { ExploreLink } from '../components/Scene.jsx';
+import TarjetasSentimientoConcierto from '../components/TarjetasSentimientoConcierto.jsx';
 import GaleriaConcierto from '../components/GaleriaConcierto.jsx';
 import UniversosConcierto from '../components/UniversosConcierto.jsx';
 import { balanceConcierto } from '../content/balance-concierto.js';
@@ -10,6 +11,7 @@ export default function Impacto() {
       <Scene tituloId="impacto-titulo" tituloAs="h2" index="04.1" kicker="24 DE OCTUBRE DE 2026 · CONCIERTO DE FONSECA" titulo={{ linea1: 'Una experiencia para conectar.', linea2: 'Una conversación por amplificar.' }} cta={<ExploreLink tab="impacto">Explorar la conversación</ExploreLink>}>
         <UniversosConcierto />
         <p className="mt-5 max-w-3xl text-base leading-relaxed text-marfil">{balanceConcierto.resultado} {balanceConcierto.lectura}</p>
+        <TarjetasSentimientoConcierto />
         <GaleriaConcierto />
         <div data-voces-medios className="mt-5 max-w-3xl border-t border-rosa/15 pt-4">
           {balanceConcierto.voces.filter(v => v.id !== 'fonseca').map(v => <div key={v.id}>
