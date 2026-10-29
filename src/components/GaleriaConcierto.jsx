@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { registroConcierto } from '../content/registro-concierto.js';
 
 const publicaciones = [
+  ['Instagram · mensaje de prevención · 25 OCT', 'https://www.instagram.com/reel/De7QuG3sv-9/'],
+  ['Facebook · mensaje de prevención · 25 OCT', 'https://www.facebook.com/reel/1488426926527256/'],
   ['Instagram · publicación', 'https://www.instagram.com/p/De5rdIpx2W8/'],
   ['Instagram · reel', 'https://www.instagram.com/reel/De5ragcuCp0/'],
   ['LinkedIn', 'https://lnkd.in/p/ex7BJQpq'],

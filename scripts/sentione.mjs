@@ -31,6 +31,8 @@ import { normalizeText } from '../src/lib/data/text.js';
 import { CRITERIOS_VERSION } from '../src/config/clasificacion.js';
 import { aplicarAuditoriaCampana } from '../src/lib/data/campana.js';
 import { incorporarComplementaria, indexarPublicaciones } from '../src/lib/data/complementarias.js';
+import { actualizarAlcances, maestraPorAlcance } from '../src/lib/data/alcances.js';
+import { protegerVersiones } from '../src/lib/data/privacidad-versiones.js';
 
 const [cmd, ...args] = process.argv.slice(2);
 const opt = (name) => {
@@ -48,11 +50,14 @@ const RUTA = {
   informes: new URL('informes/', carpeta(DATOS)),
   referencia: new URL('../datos/maestra/referencia.json', import.meta.url),
   resultados: process.env.SENTIONE_RESULTADOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS)) : new URL('../src/data/resultados.json', import.meta.url),
+  alcances: new URL('maestra/alcances.json', carpeta(DATOS)),
   // Las pruebas usan una carpeta temporal para no tocar los lotes locales de trabajo.
   lotes: process.env.SENTIONE_LOTES ? pathToFileURL(`${resolve(process.env.SENTIONE_LOTES)}/`) : new URL('../entradas/lotes/', import.meta.url),
   complementarias: new URL('maestra/complementarias.json', carpeta(DATOS)),
   indice: new URL('maestra/publicaciones-indice.json', carpeta(DATOS)),
 };
+// Junto al destino principal también cuando las pruebas lo redirigen a una carpeta temporal.
+RUTA.amplios = process.env.SENTIONE_RESULTADOS_AMPLIOS ? pathToFileURL(resolve(process.env.SENTIONE_RESULTADOS_AMPLIOS)) : new URL('resultados-amplio.json', RUTA.resultados);
 
 const leer = (url) => JSON.parse(readFileSync(url, 'utf8'));
 const hoy = () => new Date().toISOString().slice(0, 10);
@@ -166,6 +171,7 @@ async function importar() {
   const maestra = leerMaestra();
   const meta = { desde: opt('desde') ?? s.desde, hasta: opt('hasta') ?? s.hasta, filasBrutas: s.filasBrutas };
   const { maestra: nueva, informe } = mergeExport(maestra, out.registros, meta);
+  const alcances = existsSync(RUTA.alcances) ? actualizarAlcances(leer(RUTA.alcances), out.registros) : null;
 
   console.log(`
 Filas brutas ${fmt(s.filasBrutas)} · únicas en el archivo ${fmt(s.unicasArchivo)} · duplicadas ${fmt(s.duplicadosArchivo)} · fechas no reconocidas ${fmt(s.invalidas)}
@@ -177,6 +183,7 @@ Cobertura: ${informe.cobertura.map((c) => `${c.desde} → ${c.hasta}`).join(', '
 
   if (args.includes('--seco')) return console.log('\nModo --seco: no se guardó nada.');
   guardarMaestra(nueva);
+  if (alcances) writeFileSync(RUTA.alcances, `${JSON.stringify(alcances, null, 1)}\n`);
 
   const indice = indexarPublicaciones(out.registros, existsSync(RUTA.indice) ? leer(RUTA.indice) : undefined, nueva.registros);
   writeFileSync(RUTA.indice, JSON.stringify(indice, null, 1));
@@ -234,8 +241,19 @@ function cifrasClave(res) {
 function publicar() {
   const maestra = leerMaestra();
   const referencia = existsSync(RUTA.referencia) ? leer(RUTA.referencia) : null;
-  const res = buildResultados(maestra, referencia, { complementarias: existsSync(RUTA.complementarias) ? leer(RUTA.complementarias) : undefined });
+  const opciones = { complementarias: existsSync(RUTA.complementarias) ? leer(RUTA.complementarias) : undefined };
+  let res, amplia;
+  if (existsSync(RUTA.alcances)) {
+    const alcances = leer(RUTA.alcances);
+    const protegidas = protegerVersiones(
+      buildResultados(maestraPorAlcance(maestra, alcances, 'enfocada'), referencia, opciones),
+      buildResultados(maestraPorAlcance(maestra, alcances, 'amplia'), referencia, opciones),
+    );
+    res = protegidas.enfocada;
+    amplia = protegidas.amplia;
+  } else res = buildResultados(maestra, referencia, opciones);
   const errores = validarResultados(res);
+  if (amplia) errores.push(...validarResultados(amplia).map(e => `Panorama amplio: ${e}`));
   if (errores.length) fallar(`Resultados no válidos:\n  ${errores.join('\n  ')}`);
   const previo = existsSync(RUTA.resultados) ? leer(RUTA.resultados) : null;
   const antes = cifrasClave(previo);
@@ -243,6 +261,10 @@ function publicar() {
   const cambios = [...new Set([...Object.keys(antes), ...Object.keys(despues)])].filter((k) => String(antes[k]) !== String(despues[k])).map((k) => `| ${k} | ${antes[k] ?? '—'} | ${despues[k] ?? '—'} |`);
   mkdirSync(new URL('.', RUTA.resultados), { recursive: true });
   writeFileSync(RUTA.resultados, `${JSON.stringify(res)}\n`);
+  if (amplia) {
+    mkdirSync(new URL('.', RUTA.amplios), { recursive: true });
+    writeFileSync(RUTA.amplios, `${JSON.stringify(amplia)}\n`);
+  }
 
   const ult = maestra.importaciones[maestra.importaciones.length - 1];
   const motivos = [];
@@ -273,6 +295,7 @@ ${cambios.length ? `| Cifra | Antes | Ahora |\n|---|---|---|\n${cambios.join('\n
   writeFileSync(new URL(nombre, RUTA.informes), informe);
   console.log(informe);
   console.log('✓ src/data/resultados.json actualizado. Revisa src/content/conclusiones.js si los hechos cambiaron.');
+  if (amplia) console.log(`✓ Panorama amplio actualizado (${fmt(amplia.totales.unicos)} registros); protección conjunta de privacidad aplicada.`);
 }
 
 function estado() {
@@ -286,6 +309,7 @@ function estado() {
 
 function verificar() {
   const e2 = validarResultados(leer(RUTA.resultados));
+  if (existsSync(RUTA.amplios)) e2.push(...validarResultados(leer(RUTA.amplios)).map(e => `Panorama amplio: ${e}`));
   const e1 = existsSync(DATOS) ? validarMaestra(leerMaestra()) : [];
   if (e1.length || e2.length) fallar([...e1, ...e2].join('\n  '));
   console.log(`✓ Resultados públicos válidos${existsSync(DATOS) ? ' y base maestra privada válida' : ' (repositorio privado no conectado: base maestra no comprobada)'}.`);

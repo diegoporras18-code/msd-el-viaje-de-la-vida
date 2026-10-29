@@ -1,10 +1,10 @@
 // Segunda dimensión privada: nunca sustituye ni deriva la clasificación temática A/B/C.
 export const CAMPANA_VERSION = 2;
 export const ESTADOS_CAMPANA = ['confirmada', 'posible', 'no_relacionada'];
-export const EVIDENCIAS_CAMPANA = ['texto_identifica_iniciativa', 'evento_identificado', 'original_verificado', 'captura_verificada', 'evento_sin_vinculo_msd', 'homonimo', 'otra_actividad', 'solo_enlace_relacionado', 'sin_vinculo_en_contenido', 'contexto_otra_actividad', 'contenido_insuficiente', 'vinculo_validado_usuario', 'concierto_sin_vinculo_campana'];
+export const EVIDENCIAS_CAMPANA = ['texto_identifica_iniciativa', 'contexto_exportado_identifica_iniciativa', 'evento_identificado', 'original_verificado', 'captura_verificada', 'evento_sin_vinculo_msd', 'homonimo', 'otra_actividad', 'solo_enlace_relacionado', 'sin_vinculo_en_contenido', 'contexto_otra_actividad', 'contenido_insuficiente', 'vinculo_validado_usuario', 'concierto_sin_vinculo_campana'];
 export const VINCULOS_CAMPANA = ['asistente', 'organizador', 'aliado', 'artista', 'medio', 'tercero', 'indeterminado'];
 export const TEMAS_CAMPANA = ['experiencia', 'convocatoria', 'concientizacion', 'amplificacion', 'informacion_evento', 'otro'];
-const PRUEBA_CONFIRMADA = new Set(['texto_identifica_iniciativa', 'original_verificado', 'captura_verificada', 'vinculo_validado_usuario']);
+const PRUEBA_CONFIRMADA = new Set(['texto_identifica_iniciativa', 'contexto_exportado_identifica_iniciativa', 'original_verificado', 'captura_verificada', 'vinculo_validado_usuario']);
 
 export function validarCampana(c, h) {
   const e = [];

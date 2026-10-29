@@ -97,7 +97,7 @@ export function processRows(rows, headerIndex, mapping) {
       ...(tg.length ? { tg } : {}),
       ...(ent.length ? { ent } : {}),
       ...(th ? { th } : {}),
-      _local: { fila, texto, url: urlRaw, autor, pais },
+      _local: { fila, texto, contexto: str(cell(row, mapping.contexto)), url: urlRaw, autor, pais },
     };
 
     if (porClave.has(h)) {

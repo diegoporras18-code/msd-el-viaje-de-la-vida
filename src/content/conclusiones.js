@@ -16,7 +16,7 @@ export const conclusiones = {
   // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
   periodo: (corte) =>
     corte
-      ? `Primera lectura · datos hasta el ${corte.dia} de ${corte.anio}; conversación previa y día del concierto`
+      ? `Primera lectura · datos hasta el ${corte.dia} de ${corte.anio}; conversación antes y después del concierto`
       : 'Antes del concierto',
 
   hallazgos: [
