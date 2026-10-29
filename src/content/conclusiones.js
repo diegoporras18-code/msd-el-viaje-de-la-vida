@@ -31,7 +31,7 @@ export const conclusiones = {
       id: 'impacto', hecho: 'campana', estado: 'preliminar',
       pregunta: '¿Qué conversación se identificó alrededor del concierto?',
       titulo: 'Una experiencia para conectar y amplificar',
-      significa: 'El registro del concierto conecta a Fonseca y MSD con prevención y diagnóstico temprano. El escenario abre una oportunidad para prolongar el mensaje en la conversación digital.',
+      significa: 'La iniciativa reúne 28 referencias identificadas. Fonseca llevó el mensaje al escenario y Bésame Radio lo difundió en redes: un avance del objetivo, con cobertura periodística más amplia aún por acreditar.',
       oportunidad: 'Convertir el mensaje del artista en piezas breves, educativas y compartibles; activar a los aliados y medir su continuidad.',
     },
     {

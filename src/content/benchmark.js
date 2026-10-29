@@ -41,8 +41,26 @@ export const benchmark = {
   ],
   referencias: {
     titulo: 'Referencias públicas verificadas',
-    aviso: 'Iniciativas documentadas en fuentes públicas e independientes de la escucha social. No son datos medidos en esta consulta.',
+    aviso: 'Campañas e iniciativas documentadas para inspirar la comunicación de MSD. Estos ejemplos no representan volumen de menciones ni un ranking de laboratorios.',
     items: [
+      {
+        id: 'novartis-deteccion-2026', marcasIds: ['novartis'], nombre: 'Controles incluso sin síntomas',
+        pais: 'Colombia', marcas: 'Novartis',
+        descripcion: 'Educación sobre detección temprana y consulta oportuna. Contenido de marca publicado con apoyo declarado de Novartis; no se presenta como prensa independiente.',
+        estado: 'verificado', fuente: { nombre: 'Semana · Hablan las marcas', url: 'https://www.semana.com/hablan-las-marcas/articulo/el-cancer-de-mama-puede-desarrollarse-sin-sintomas-visibles-la-importancia-de-la-deteccion-temprana/202600/' },
+      },
+      {
+        id: 'pfizer-bienestar-2026', marcasIds: ['pfizer'], nombre: 'Salud sexual y bienestar integral',
+        pais: 'España', marcas: 'Pfizer',
+        descripcion: 'Corresponsables difunde una iniciativa documental de Pfizer para abrir la conversación sobre salud sexual en mujeres con cáncer de mama metastásico.',
+        estado: 'verificado', fuente: { nombre: 'Publicación de Corresponsables', url: 'https://twitter.com/Corresponsables/status/2107757195496509862' },
+      },
+      {
+        id: 'msd-matices-2026', marcasIds: ['msd'], nombre: 'Matices que importan',
+        pais: 'España', marcas: 'MSD',
+        descripcion: 'Activación de concientización en el Metro de Madrid que reconoce distintos diagnósticos y experiencias. Es otra campaña de MSD, distinta de El Viaje de la Vida.',
+        estado: 'verificado', fuente: { nombre: 'Publicación de MSD España', url: 'https://twitter.com/MSDEspana/status/2109909516460421423' },
+      },
       {
         id: 'innpacto-rosa',
         marcasIds: ["astrazeneca", "daiichi-sankyo"],
@@ -86,6 +104,17 @@ export const benchmark = {
     ],
   },
 };
+
+/** El acceso editorial depende de fuentes verificadas, nunca del umbral estadístico. */
+export function referenciasBenchmark(laboratorio = 'todas') {
+  return benchmark.referencias.items.filter(r => r.estado === 'verificado'
+    && (laboratorio === 'todas' || r.marcasIds?.includes(laboratorio)));
+}
+
+export function laboratoriosConReferencias(laboratorios) {
+  const referencias = referenciasBenchmark();
+  return laboratorios.filter(l => referencias.some(r => r.marcasIds?.includes(l.id)));
+}
 
 /** Lectura de umbrales actual, sin fijar cifras de una importación anterior. */
 export function lecturaPresencia(labs, k) {

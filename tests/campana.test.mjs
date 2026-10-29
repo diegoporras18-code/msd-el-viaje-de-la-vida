@@ -314,7 +314,8 @@ test('la cohorte aprobada del concierto no crece al ampliar la consulta temátic
     assert.deepEqual(validarResultados(r),[]);
   }
   assert.equal(serieConAporteEditorial(enfocada,RANGO_DEFECTO).apilados[0].total,28);
-  assert.deepEqual(serieConAporteEditorial(amplia,RANGO_DEFECTO).apilados,[]);
+  assert.equal(serieConAporteEditorial(amplia,RANGO_DEFECTO).apilados[0].total,28);
+  assert.equal(serieConAporteEditorial(amplia,RANGO_DEFECTO).apilados[0].tematico,120);
   assert.equal(serieConAporteEditorial(amplia,RANGO_DEFECTO).puntos.find(p=>p.d==='2026-10-24').v,120);
   assert.equal(amplia.totales.relevantes,120);
   assert.deepEqual(indicadorEvento,{sentione:14,manuales:14,total:28});

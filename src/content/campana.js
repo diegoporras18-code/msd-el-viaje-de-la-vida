@@ -2,7 +2,7 @@
 export const campana = {
   capitulo: 'Capítulo 02 · La campaña',
   titulo: { linea1: 'Más tiempo para la música.', linea2: 'Más tiempo para la vida.' },
-  texto: 'Lotengo y MSD plantearon extender Fonseca en la Casa para hablar del tiempo que importa: cuidarse, reconocer cambios y consultar. El Viaje de la Vida conecta la emoción del concierto con la concientización sobre el cáncer de mama.',
+  texto: 'Lotengo y MSD plantearon extender Fonseca en la Casa para hablar del tiempo que importa: cuidarse, reconocer cambios y consultar. El objetivo: generar conversación y presencia en medios, conectando la emoción del concierto con la concientización sobre el cáncer de mama.',
   estado: 'MSD × Lotengo · Fonseca en la Casa — Extendido',
   flujo: {
     etiqueta: 'El concepto: tiempo extra, artista, mensaje, cuidado y continuidad',

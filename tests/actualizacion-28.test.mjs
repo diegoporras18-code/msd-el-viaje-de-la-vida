@@ -50,10 +50,9 @@ test('actualización 28: aporte visual del concierto conserva serie y KPI temát
   const evento=visual.apilados.find(p=>p.d==='2026-10-24');
   const baseEvento=r.campana.referenciasAportadas.sentione;
   const valorTematico=tematica.find(p=>p.d==='2026-10-24').v;
-  if(valorTematico===baseEvento) {
-   assert.ok(evento);assert.equal(evento.base,valorTematico);
-   assert.equal(evento.v,14);assert.equal(evento.total,evento.base+14);
-  } else assert.equal(evento,undefined,'Una base temática diferente no recibe el aporte de la cohorte');
+  assert.ok(evento);assert.equal(evento.base,baseEvento);
+  assert.equal(evento.tematico,valorTematico);
+  assert.equal(evento.v,14);assert.equal(evento.total,28);
   assert.equal(r.campana.referenciasAportadas.total,28);
   assert.deepEqual(visual.puntos,tematica);assert.deepEqual(r,antes);
   assert.equal(periodStats(r,RANGO_DEFECTO).total,tematica.reduce((n,d)=>n+(d.v??0),0));
