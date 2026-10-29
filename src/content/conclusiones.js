@@ -16,7 +16,7 @@ export const conclusiones = {
   // La fecha de corte se toma de resultados.cobertura (corteDatos en hechos.js).
   periodo: (corte) =>
     corte
-      ? `Primera lectura · datos hasta el ${corte.dia} de ${corte.anio}; conversación previa y día del concierto`
+      ? `Primera lectura · datos hasta el ${corte.dia} de ${corte.anio}; conversación antes y después del concierto`
       : 'Antes del concierto',
 
   hallazgos: [
@@ -31,8 +31,8 @@ export const conclusiones = {
       id: 'impacto', hecho: 'campana', estado: 'preliminar',
       pregunta: '¿Qué conversación se identificó alrededor del concierto?',
       titulo: 'Una experiencia para conectar y amplificar',
-      significa: 'La iniciativa reúne conversación identificada. El concierto es un momento relevante para analizar la amplificación digital, sin atribuir impacto o causalidad no comprobados.',
-      oportunidad: 'Dar continuidad a la conversación y medir cómo los contenidos de la iniciativa conectan con la concientización.',
+      significa: 'El registro del concierto conecta a Fonseca y MSD con prevención y diagnóstico temprano. El escenario abre una oportunidad para prolongar el mensaje en la conversación digital.',
+      oportunidad: 'Convertir el mensaje del artista en piezas breves, educativas y compartibles; activar a los aliados y medir su continuidad.',
     },
     {
       id: 'oportunidad', hecho: 'campana', estado: 'preliminar', sinCifra: true,

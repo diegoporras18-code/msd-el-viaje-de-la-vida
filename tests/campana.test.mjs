@@ -145,7 +145,7 @@ test('estado externo se actualiza desde la cola y protege categorías pequeñas'
 });
 
 test('la lectura de picos y umbrales cambia con los datos', () => {
-  const publicado = JSON.parse(readFileSync(new URL('../src/data/resultados.json', import.meta.url)));
+  const publicado = JSON.parse(readFileSync(new URL('./fixtures/resultados-24oct.json', import.meta.url)));
   assert.match(hechos(publicado, '2026-10-25').impacto.titulo, /sin un pico/);
   const distinto = structuredClone(publicado);distinto.diario.find(x => x.d === '2026-10-24').rel = 300;
   assert.match(hechos(distinto, '2026-10-25').impacto.titulo, /aumento/);
@@ -197,7 +197,7 @@ test('noticias genéricas del concierto quedan fuera; causa desconocida no equiv
 test('octubre completo conserva datos del 23 y 24, días pendientes y KPIs sobre días cubiertos', async()=>{
   const {dailyTotals,periodStats}=await import('../src/lib/data/resultados.js');
   const {RANGO_DEFECTO,PERIODO_PREVIO}=await import('../src/config/periodos.js');
-  const r=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  const r=JSON.parse(readFileSync(new URL('./fixtures/resultados-24oct.json',import.meta.url)));
   const ds=dailyTotals(r,RANGO_DEFECTO),s=periodStats(r,RANGO_DEFECTO);
   assert.equal(ds.length,31);assert.equal(ds[22].v,14);assert.equal(ds[23].v,14);
   assert.ok(ds.slice(24).every(d=>d.v===null));assert.equal(s.total,758);
@@ -233,7 +233,7 @@ test('una captura manual puede sumar A una vez tras revisar contenido, sin sobre
 
 test('comparación diaria y promedio previo son independientes; el escenario 28 solo sigue a los datos',async()=>{
   const {resumenImpacto}=await import('../src/lib/data/impacto.js');
-  const res=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  const res=JSON.parse(readFileSync(new URL('./fixtures/resultados-24oct.json',import.meta.url)));
   assert.equal(resumenImpacto(res).cambioDiaAnterior,0);
   const scenario=structuredClone(res);scenario.diario.find(x=>x.d==='2026-10-24').rel=28;
   const r=resumenImpacto(scenario);assert.equal(r.cambioDiaAnterior,100);assert.ok(r.cambio<0);
@@ -254,7 +254,7 @@ test('referencias aportadas conservan atribución a SentiOne al incorporar captu
 test('el indicador consolidado conserva su composición interna 14 + 14 sin alterar la serie ni KPIs',async()=>{
   const {serieConAporteEditorial,dailyTotals,periodStats}=await import('../src/lib/data/resultados.js');
   const {RANGO_DEFECTO}=await import('../src/config/periodos.js');
-  const r=JSON.parse(readFileSync(new URL('../src/data/resultados.json',import.meta.url)));
+  const r=JSON.parse(readFileSync(new URL('./fixtures/resultados-24oct.json',import.meta.url)));
   const antes=JSON.stringify(r),tematica=dailyTotals(r,RANGO_DEFECTO);
   const visual=serieConAporteEditorial(r,RANGO_DEFECTO);
   assert.deepEqual(visual.puntos,tematica);
@@ -273,7 +273,13 @@ test('la gráfica principal renderiza una única barra 28, etiqueta completa e i
   const {createElement}=await import('react');
   const {renderToStaticMarkup}=await import('react-dom/server');
   const server=await createServer({server:{middlewareMode:true},appType:'custom',logLevel:'silent'});
+  let datosSitio, respaldo;
   try {
+    // La regresión visual usa el corte congelado; la actualización tiene pruebas propias.
+    datosSitio=(await server.ssrLoadModule('/src/data/resultados.json')).default;
+    respaldo=structuredClone(datosSitio);
+    for(const key of Object.keys(datosSitio)) delete datosSitio[key];
+    Object.assign(datosSitio,JSON.parse(readFileSync(new URL('./fixtures/resultados-24oct.json',import.meta.url))));
     const {default:Antes}=await server.ssrLoadModule('/src/sections/Antes.jsx');
     const html=renderToStaticMarkup(createElement(Antes));
     assert.equal((html.match(/<rect[^>]*data-fecha="2026-10-24"/g)??[]).length,1);
@@ -290,5 +296,27 @@ test('la gráfica principal renderiza una única barra 28, etiqueta completa e i
     assert.equal((cap.match(/data-nota-medicion/g)??[]).length,1);
     assert.ok(!cap.includes('data-universo'));
     assert.ok(!/captura complementaria|validadas editorialmente|pendientes de cotejo|Protegido|dos fuentes independientes/i.test(cap));
-  } finally {await server.close();}
+  } finally {
+    if(datosSitio && respaldo) {for(const key of Object.keys(datosSitio)) delete datosSitio[key];Object.assign(datosSitio,respaldo);}
+    await server.close();
+  }
+});
+
+test('la cohorte aprobada del concierto no crece al ampliar la consulta temática',async()=>{
+  const {serieConAporteEditorial}=await import('../src/lib/data/resultados.js');
+  const {RANGO_DEFECTO}=await import('../src/config/periodos.js');
+  const indicadorEvento={sentione:14,manuales:14,total:28};
+  const cola={indicadorEvento,items:Array.from({length:14},()=>({estado:'pendiente',validacionEditorial:{fuente:'validacion_usuario',estado:'confirmada'}}))};
+  const construir=n=>buildResultados(maestra(Array.from({length:n},(_,i)=>reg(`evento${i}`,'si'))),null,{complementarias:cola});
+  const enfocada=construir(14),amplia=construir(120);
+  for(const r of [enfocada,amplia]) {
+    assert.deepEqual(r.campana.referenciasAportadas,indicadorEvento);
+    assert.deepEqual(validarResultados(r),[]);
+  }
+  assert.equal(serieConAporteEditorial(enfocada,RANGO_DEFECTO).apilados[0].total,28);
+  assert.deepEqual(serieConAporteEditorial(amplia,RANGO_DEFECTO).apilados,[]);
+  assert.equal(serieConAporteEditorial(amplia,RANGO_DEFECTO).puntos.find(p=>p.d==='2026-10-24').v,120);
+  assert.equal(amplia.totales.relevantes,120);
+  assert.deepEqual(indicadorEvento,{sentione:14,manuales:14,total:28});
+  assert.throws(()=>buildResultados(maestra([]),null,{complementarias:{indicadorEvento:{sentione:14,manuales:14,total:99}}}),/cohorte/);
 });

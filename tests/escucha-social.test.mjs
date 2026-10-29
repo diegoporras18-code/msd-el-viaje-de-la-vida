@@ -19,7 +19,7 @@ import { ENTIDADES } from '../src/config/marcas.js';
 
 const leer = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
 const referencia = leer('../datos/maestra/referencia.json');
-const publicado = leer('../src/data/resultados.json');
+const publicado = leer('./fixtures/resultados-24oct.json');
 const TODAS = { ...FILTROS_VACIOS, segmento: 'todas' };
 const OCT = { ...TODAS, desde: '2026-10-01', hasta: '2026-10-20' };
 
@@ -471,7 +471,7 @@ test('las fechas de corte de los textos salen de resultados.cobertura', async ()
   assert.equal(corte.hasta, publicado.cobertura[publicado.cobertura.length - 1].hasta);
   assert.equal(corte.hasta, '2026-10-24');
   assert.match(antes.alcance(corte), /^Datos hasta el 24 de octubre\./);
-  assert.equal(conclusiones.periodo(corte), 'Primera lectura · datos hasta el 24 de octubre de 2026; conversación previa y día del concierto');
+  assert.equal(conclusiones.periodo(corte), 'Primera lectura · datos hasta el 24 de octubre de 2026; conversación antes y después del concierto');
   const siguiente = corteDatos({ ...publicado, cobertura: [{ desde: '2026-09-21', hasta: '2026-10-26' }] });
   assert.equal(antes.alcance(siguiente).split('.')[0], 'Datos hasta el 26 de octubre');
   assert.match(conclusiones.periodo(siguiente), /hasta el 26 de octubre/);

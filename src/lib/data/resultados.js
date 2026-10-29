@@ -65,7 +65,11 @@ export function serieConAporteEditorial(res, filtro) {
   const referencias = res.campana?.referenciasAportadas;
   const dia = puntos.find(p => p.d === EVENTO.fecha);
   const v = referencias?.manuales;
-  const apilados = soloRelevantes(filtro) && dia?.v != null && v > 0 ? [{
+  // La aportación del evento solo complementa su misma base. Las menciones A
+  // adicionales de una consulta más amplia no son automáticamente campaña.
+  const mismaBase = dia?.v != null && dia.v === referencias?.sentione
+    && referencias.total === referencias.sentione + v;
+  const apilados = soloRelevantes(filtro) && mismaBase && v > 0 ? [{
     d: EVENTO.fecha, base: dia.v, v, total: dia.v + v, color: '#F4A6C4',
     nombre: 'Publicaciones adicionales',
     descripcionBase: `${dia.v} menciones temáticas de SentiOne fechadas el 24.`,
@@ -163,7 +167,9 @@ export function sumarExclusivas(partes) {
 /** Suma distribuciones multietiqueta: si una etiqueta está bajo el umbral en alguna parte, no se cifra. */
 export function sumarMultiples(partes) {
   const menores = new Set(partes.flatMap((p) => p.dist?.menores ?? []));
+  const incompleta = partes.some(p => p.dist == null && p.n !== 0);
   const v = new Map();
+  if (incompleta) return { v, menores: [...menores].sort(), incompleta: true };
   for (const { dist } of partes) for (const [id, x] of Object.entries(dist?.v ?? {})) if (!menores.has(id)) v.set(id, (v.get(id) ?? 0) + x);
   return { v, menores: [...menores].filter((id) => !v.has(id)).sort() };
 }
@@ -196,7 +202,7 @@ function lista(sum, catalogo, { excluir = [], nombreDe } = {}) {
       color: OTRAS_COLOR,
       agrupa: grupoOtras ? sum.otras.ids.map(nombre) : [],
     });
-  return { items, incompleta: Boolean((sum.otras && !grupoOtras) || (sum.sinDesglose && excluir.length)), menores: (sum.menores ?? []).map(nombre) };
+  return { items, incompleta: Boolean(sum.incompleta || (sum.otras && !grupoOtras) || (sum.sinDesglose && excluir.length)), menores: (sum.menores ?? []).map(nombre) };
 }
 
 const vacia = { items: [], incompleta: false, menores: [] };
@@ -271,7 +277,7 @@ export function view(res, f) {
       : periodos.some((p) => p.relevantes.conLaboratorio !== 0 && p.relevantes.temasConLaboratorio == null)
         ? { ...vacia, incompleta: true }
         : mu('temasConLaboratorio', TEMAS),
-    conLaboratorio: sumarCeldas(periodos.map((p) => ({ x: p.relevantes.conLaboratorio ?? 0 }))).x ?? null,
+    conLaboratorio: sumarCeldas(periodos.map((p) => ({ x: p.relevantes.conLaboratorio }))).x ?? null,
     interacciones: inter.length && inter.every(Boolean) ? { total: inter.reduce((a, x) => a + x.total, 0), registros: inter.reduce((a, x) => a + x.registros, 0) } : null,
     notas,
   };
@@ -280,10 +286,10 @@ export function view(res, f) {
 /** Presencia de cada marca en la consulta: menciones sobre cáncer de mama y en el universo captado. */
 export function marcasView(res, f, ids) {
   const { periodos } = periodosDe(res, f);
-  const sumar = (gs) => sumarMultiples(periodos.flatMap((p) => gs.map((g) => ({ dist: p[g].marcas }))));
+  const sumar = (gs) => sumarMultiples(periodos.flatMap((p) => gs.map((g) => ({ dist: p[g].marcas, n: p[g].n }))));
   const r = sumar(['relevantes']);
   const t = sumar(['relevantes', 'resto']);
-  const valor = (s, id) => (s.menores.includes(id) ? null : s.v.get(id) ?? 0);
+  const valor = (s, id) => (s.incompleta || s.menores.includes(id) ? null : s.v.get(id) ?? 0);
   return ids.map((id) => ({ id, info: entidad(id), relevantes: valor(r, id), todas: valor(t, id) }));
 }
 

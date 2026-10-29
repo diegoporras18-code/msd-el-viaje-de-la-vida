@@ -10,6 +10,7 @@ export const CAMPOS = [
   { id: 'fuente', nombre: 'Fuente o plataforma', requerido: true, sinonimos: ['source', 'fuente', 'source type', 'tipo de fuente', 'platform', 'plataforma', 'channel', 'canal', 'medium', 'media type', 'source name'] },
   { id: 'dominio', nombre: 'Dominio', sinonimos: ['domain', 'dominio', 'site', 'sitio', 'host', 'website'] },
   { id: 'texto', nombre: 'Texto', sinonimos: ['text', 'texto', 'content', 'contenido', 'mention', 'mencion', 'message', 'mensaje', 'body', 'snippet', 'mention text'] },
+  { id: 'contexto', nombre: 'Contexto (solo uso local)', sinonimos: ['context', 'contexto', 'mention context', 'parent content', 'contenido del contexto'] },
   { id: 'titulo', nombre: 'Título', sinonimos: ['title', 'titulo', 'headline'] },
   { id: 'autor', nombre: 'Autor (solo uso local)', sinonimos: ['author', 'autor', 'user', 'usuario', 'username', 'nombre de usuario', 'profile', 'perfil', 'author name'] },
   { id: 'sentimiento', nombre: 'Sentimiento', sinonimos: ['sentiment', 'sentimiento', 'tone', 'tono'] },

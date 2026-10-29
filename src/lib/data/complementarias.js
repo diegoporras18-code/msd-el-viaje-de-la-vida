@@ -55,7 +55,7 @@ export function incorporarComplementaria(m, indice, entrada) {
   const editorial = entrada.validacionEditorial?.fuente === 'validacion_usuario' && entrada.validacionEditorial?.estado === 'confirmada';
   if (entrada.estado !== 'verificada' || (!editorial && !entrada.verificacion?.contenidoRevisado) || !entrada.verificacion?.fechaConfirmada || (!editorial && !entrada.verificacion?.vinculoConfirmado)) throw new Error('Publicación externa sin verificación completa');
   if (!['post', 'tweet', 'quote tweet', 'video', 'reels', 'article'].includes(entrada.registro?.tp)) throw new Error('Un comentario externo requiere resolver su ID propio; no se incorpora mediante la URL de su publicación matriz');
-  if (!['acceso_directo', 'metadatos_publicos', 'captura_aportada', 'validacion_usuario'].includes(entrada.verificacion.metodo)) throw new Error('Método de verificación inválido');
+  if (!['acceso_directo', 'metadatos_publicos', 'captura_aportada', 'validacion_usuario', 'exportacion_sentione'].includes(entrada.verificacion.metodo)) throw new Error('Método de verificación inválido');
   if (entrada.verificacion.metodo === 'validacion_usuario' && !editorial) throw new Error('Falta validación editorial del responsable');
   const key = identidadPublicacion(entrada.urlCanonica);
   if (!key) throw new Error('Falta URL canónica con ID estable');

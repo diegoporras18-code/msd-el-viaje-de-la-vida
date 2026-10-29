@@ -128,8 +128,17 @@ export function buildCampana(maestra, cola) {
   // Suma editorial de dos fuentes: conserva atribución aunque se incorporen A manuales después.
   const sentioneEvento = celda(rows.filter(r => r.d === EVENTO.fecha && (r.k !== 'externo' || r.capturas?.includes('sentione')) && esCausa(r)).length);
   const manuales = complementarias.editoriales;
-  const referenciasAportadas = { sentione: sentioneEvento, manuales,
-    total: sentioneEvento == null || manuales == null ? null : sentioneEvento + manuales };
+  // Una cohorte editorial aprobada pertenece al evento, no al universo temático
+  // completo de cada consulta. Ampliar hashtags no amplía por sí solo esta cohorte.
+  const indicador = cola?.indicadorEvento;
+  if (indicador && (!['sentione', 'manuales', 'total'].every(k => Number.isInteger(indicador[k]) && indicador[k] >= UMBRAL)
+    || indicador.sentione + indicador.manuales !== indicador.total)) {
+    throw new Error('La cohorte del indicador del evento debe contener dos recuentos publicables y una suma coherente.');
+  }
+  const referenciasAportadas = indicador
+    ? { sentione: indicador.sentione, manuales: indicador.manuales, total: indicador.total }
+    : { sentione: sentioneEvento, manuales,
+      total: sentioneEvento == null || manuales == null ? null : sentioneEvento + manuales };
   return { version: 1, cobertura: 'parcial', evaluadas: celda(evaluadas.length), sinEvaluar: celda(rows.length - evaluadas.length),
     estados: distribucionExclusiva(contar(evaluadas, r => r.cp.estado)),
     confirmadas: celda(confirmadas.length), interseccion: particion(confirmadas),
