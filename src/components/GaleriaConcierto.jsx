@@ -15,7 +15,7 @@ export default function GaleriaConcierto() {
     <figcaption className="font-display text-2xl italic text-rosa">La campaña en el escenario</figcaption>
     <div className="mt-3 grid gap-4 md:grid-cols-12 md:items-center">
       <div className="overflow-hidden rounded-sm border border-rosa/15 bg-black md:col-span-8">
-        <video controls playsInline preload="none" poster={`${raiz}escenario.webp`} className="aspect-video w-full object-contain md:h-[160px]" aria-label="Registro del concierto de Fonseca y el mensaje de El Viaje de la Vida" aria-describedby="registro-mensaje">
+        <video controls playsInline preload="none" width="848" height="480" poster={`${raiz}escenario.webp`} className="block h-auto w-full object-contain" aria-label="Registro del concierto de Fonseca y el mensaje de El Viaje de la Vida" aria-describedby="registro-mensaje">
           <source src={`${raiz}mensaje-fonseca.mp4`} type="video/mp4" />Tu navegador no puede reproducir el video.
         </video>
       </div>
