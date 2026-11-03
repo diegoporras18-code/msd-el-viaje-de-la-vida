@@ -59,7 +59,6 @@ export default function Realidad() {
           {cifras.map((c, i) => (
             <StatFigure
               key={c.id}
-              index={String(i + 1).padStart(2, '0')}
               value={c.valor}
               label={c.etiqueta}
               detail={c.detalle}

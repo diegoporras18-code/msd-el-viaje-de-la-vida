@@ -1,6 +1,8 @@
 import {
   resultadosCampana,
   consolidarBesame,
+  cifraVisualizaciones,
+  nombresRedesBesame,
 } from '../content/resultados-campana.js';
 import { formatNumber } from '../lib/format.js';
 const pct = (n) =>
@@ -37,7 +39,9 @@ export default function ResultadosBesame() {
       aria-labelledby="besame-titulo"
       className="mt-10 border-t border-rosa/20 pt-7"
     >
-      <p className="eyebrow text-rosa">Bésame Radio · Facebook + Instagram</p>
+      <p className="eyebrow text-rosa">
+        Bésame Radio · Facebook, Instagram y TikTok
+      </p>
       <h3
         id="besame-titulo"
         className="mt-3 font-display text-[length:var(--step-2)] italic text-marfil"
@@ -46,28 +50,46 @@ export default function ResultadosBesame() {
       </h3>
       <p className="mt-3 max-w-3xl text-sm text-bruma">
         Bésame llevó el llamado de Fonseca a sus redes con un reel sobre
-        prevención del cáncer de mama. Las publicaciones del 25 de octubre
-        ampliaron la exposición del mensaje después del concierto.
+        prevención del cáncer de mama. El reel publicado en Facebook e Instagram
+        el 25 de octubre amplió la exposición del mensaje después del concierto.
+        Bésame también lo llevó a TikTok.
+      </p>
+      <p data-cobertura-numerica className="eyebrow mt-5 text-bruma">
+        {c.redesSinMetricas.length
+          ? 'Consolidado de cifras verificadas'
+          : 'Consolidado · Facebook + Instagram + TikTok'}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="border-l-2 border-fucsia py-2 pl-4">
           <p className="display num text-[length:var(--step-3)] text-rosa">
-            ≈9,6 mil
+            {cifraVisualizaciones}
           </p>
           <p className="eyebrow mt-2 text-marfil">
             Visualizaciones consolidadas
           </p>
           <p className="mt-2 text-xs text-bruma">
-            1.144 en Facebook + aproximadamente 8.500 en Instagram.
+            {c.redesVisualizaciones
+              .map(
+                (id) =>
+                  `${b[id].visualizacionesAproximadas ? 'aproximadamente ' : ''}${formatNumber(b[id].visualizaciones)} en ${nombresRedesBesame[id]}`,
+              )
+              .join(' + ')}
+            .
           </p>
         </div>
         <div className="border-l-2 border-rosa py-2 pl-4">
           <p className="display num text-[length:var(--step-3)] text-rosa">
             {formatNumber(c.interacciones)}
           </p>
-          <p className="eyebrow mt-2 text-marfil">Interacciones reportadas</p>
+          <p className="eyebrow mt-2 text-marfil">Interacciones registradas</p>
           <p className="mt-2 text-xs text-bruma">
-            33 en Facebook + 554 en Instagram.
+            {c.redesInteracciones
+              .map(
+                (id) =>
+                  `${formatNumber(b[id].interacciones)} ${b[id].fuenteInteracciones === 'suma_acciones_visibles_print_actualizado' ? 'acciones visibles en el print' : 'registradas'} de ${nombresRedesBesame[id]}`,
+              )
+              .join(' + ')}
+            .
           </p>
         </div>
       </div>
@@ -90,11 +112,17 @@ export default function ResultadosBesame() {
           <strong className="num text-marfil">{c.reaccionesYMeGusta}</strong>{' '}
           reacciones y me gusta
         </span>
+        <span>
+          <strong className="num text-marfil">
+            {b.instagram.republicaciones}
+          </strong>{' '}
+          republicaciones en Instagram
+        </span>
       </div>
       <div className="mt-7 grid gap-5 lg:grid-cols-12">
         <figure className="lg:col-span-4">
           <a
-            href={b.enlaces[0].url}
+            href={b.enlaces.find((e) => e.url.includes('instagram.com'))?.url}
             target="_blank"
             rel="noopener noreferrer"
             className="block overflow-hidden rounded-sm border border-rosa/20"
@@ -133,18 +161,11 @@ export default function ResultadosBesame() {
             <strong className="text-marfil">81,6 % Colombia</strong> ·{' '}
             <strong className="text-marfil">70,1 % entre 35 y 64 años</strong>.
           </p>
-          <p className="mt-2 text-xs text-bruma/80">
-            {b.audiencia.cobertura}. Perfil del panel aportado, mostrado por
-            separado de las cifras consolidadas entre redes.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <p className="mt-2 text-xs text-bruma/80">{b.audiencia.cobertura}.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <Perfil titulo="Género" items={b.audiencia.genero} />
             <Perfil titulo="Edades" items={b.audiencia.edades} />
             <Perfil titulo="Países" items={b.audiencia.paises} />
-            <Perfil
-              titulo="Seguidores y no seguidores"
-              items={b.audiencia.seguidores}
-            />
           </div>
         </div>
       </div>
@@ -173,11 +194,13 @@ export default function ResultadosBesame() {
         </details>
       )}
       <p className="mt-5 max-w-3xl text-xs leading-relaxed text-bruma/70">
-        Fuente: capturas de los paneles de Bésame facilitadas por el cliente.
+        Fuente: capturas de Bésame facilitadas por el cliente.
         Las visualizaciones de Instagram están redondeadas; la suma es
-        aproximada y no equivale a personas únicas. Las interacciones son los
-        totales reportados por cada plataforma; los desgloses mostrados son
-        acciones seleccionadas.
+        aproximada y no equivale a personas únicas. Las interacciones suman los
+        totales reportados y las acciones visibles identificadas como tales.{' '}
+        {c.redesSinMetricas.length > 0
+          ? 'TikTok está enlazado y se incorporará a la suma al verificar sus cifras; actualmente los totales numéricos corresponden a Facebook e Instagram.'
+          : 'Las cifras verificadas de las tres redes están incorporadas al consolidado.'}
       </p>
     </section>
   );

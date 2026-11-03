@@ -1,3 +1,4 @@
+import VocesAudiencia from '../components/VocesAudiencia.jsx';
 import ResultadosBesame from '../components/ResultadosBesame.jsx';
 import TarjetasSentimientoConcierto from '../components/TarjetasSentimientoConcierto.jsx';
 import { resultadosCampana } from '../content/resultados-campana.js';
@@ -26,6 +27,7 @@ export default function ImpactDashboard() {
         </p>
       </div>
       <TarjetasSentimientoConcierto />
+          <VocesAudiencia />
     </div>
   );
 }

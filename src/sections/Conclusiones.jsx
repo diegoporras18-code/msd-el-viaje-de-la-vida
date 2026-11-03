@@ -9,7 +9,7 @@ export default function Conclusiones() {
     >
       <ChapterOpener
         compacto
-        capitulo="Capítulo 04 · Conclusiones y oportunidades"
+        capitulo="Conclusiones y oportunidades"
         titulo={{
           linea1: 'La atención ya está.',
           linea2: 'El siguiente paso es participar.',
@@ -19,12 +19,11 @@ export default function Conclusiones() {
       />
       <div className="shell mx-auto max-w-[1440px] pb-14">
         <ol className="grid gap-4 lg:grid-cols-3">
-          {conclusionesCampana.map((x, i) => (
+          {conclusionesCampana.map((x) => (
             <li
               key={x.id}
               className="flex flex-col rounded-sm border border-rosa/15 p-5 sm:p-6"
             >
-              <p className="eyebrow num text-fucsia">0{i + 1}</p>
               <h3 className="mt-3 font-display text-[length:var(--step-2)] italic leading-tight text-marfil">
                 {x.titulo}
               </h3>
