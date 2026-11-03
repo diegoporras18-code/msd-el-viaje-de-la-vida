@@ -41,7 +41,7 @@ export default function Impacto() {
             className="mt-7 border-l-2 border-fucsia pl-4"
           >
             <p className="eyebrow text-rosa">
-              Conversación identificada alrededor de la iniciativa
+              Referencias reunidas para la lectura de la iniciativa
             </p>
             <p className="mt-2 font-display text-3xl text-marfil">
               <span className="num">{resultadosCampana.referencias}</span>{' '}

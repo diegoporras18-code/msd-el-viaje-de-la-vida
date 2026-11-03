@@ -15,7 +15,7 @@ export default function ImpactDashboard() {
         className="border-l-2 border-fucsia pl-4"
       >
         <p className="eyebrow text-rosa">
-          Referencias identificadas alrededor de la iniciativa
+          Referencias reunidas para la lectura de la iniciativa
         </p>
         <p className="display num mt-2 text-rosa text-5xl">
           {resultadosCampana.referencias}
