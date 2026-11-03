@@ -12,7 +12,7 @@ import {
 import { capitulos } from '../src/content/navegacion.js';
 test('Bésame suma visualizaciones e interacciones sin duplicar fuentes ni inventar personas únicas', () => {
   const r = consolidarBesame();
-  assert.equal(r.visualizaciones, 9644);
+  assert.equal(r.visualizaciones, 13862);
   assert.equal(r.visualizacionesAproximadas, true);
   assert.equal(r.interacciones, 794);
   assert.equal(r.compartidos, 25);
@@ -21,8 +21,8 @@ test('Bésame suma visualizaciones e interacciones sin duplicar fuentes ni inven
   assert.equal(r.reaccionesYMeGusta, 672);
   assert.equal(r.personasUnicas, null);
   assert.equal(r.demografiaConsolidada, resultadosCampana.besame.audiencia);
-  assert.deepEqual(r.redesSinMetricas,['tiktok']);
-  assert.equal(resultadosCampana.besame.tiktok.visualizaciones,null);
+  assert.deepEqual(r.redesSinMetricas, []);
+  assert.equal(resultadosCampana.besame.tiktok.visualizaciones, 4218);
   assert.notEqual(
     r.interacciones,
     r.reaccionesYMeGusta + r.compartidos + r.guardados + r.comentarios,
@@ -73,7 +73,7 @@ test('la nueva lectura elimina comparación previa y competidores y conserva sol
         ),
       );
       assert.match(html, /794/);
-      assert.match(html, /9,6 mil/);
+      assert.match(html, /13,9 mil/);
       assert.ok(!/9.644 personas|9.600 personas/.test(html));
     }
   } finally {

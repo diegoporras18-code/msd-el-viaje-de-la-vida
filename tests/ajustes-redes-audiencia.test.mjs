@@ -31,7 +31,7 @@ test('el print actualizado suma acciones visibles y TikTok solo se suma con cifr
       b.tiktok.compartidos +
       b.tiktok.guardados,
   );
-  assert.equal(b.tiktok.visualizaciones, null);
+  assert.equal(b.tiktok.visualizaciones, 4218);
   const ejemplo = structuredClone(b);
   ejemplo.tiktok = {
     visualizaciones: 1000,

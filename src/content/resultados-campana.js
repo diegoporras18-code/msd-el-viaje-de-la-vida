@@ -35,7 +35,9 @@ export const resultadosCampana = {
     },
     // Me gusta: 179 confirmado por el usuario; demás acciones legibles en el print.
     tiktok: {
-      visualizaciones: null,
+      visualizaciones: 4218,
+      visualizacionesAproximadas: false,
+      fuenteVisualizaciones: 'confirmacion_usuario',
       interacciones: 186,
       fuenteInteracciones:
         'suma_acciones_verificadas_print_y_confirmacion_usuario',
@@ -43,7 +45,7 @@ export const resultadosCampana = {
       comentarios: 2,
       compartidos: 2,
       guardados: 3,
-      estadoMetricas: 'interacciones_verificadas_visualizaciones_no_aportadas',
+      estadoMetricas: 'interacciones_y_visualizaciones_confirmadas',
     },
     audiencia: {
       cobertura: 'Perfil general de Facebook, Instagram y TikTok',
