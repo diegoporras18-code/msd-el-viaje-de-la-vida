@@ -3,9 +3,7 @@ import { MotionConfig } from 'motion/react';
 import Portada from './sections/Portada.jsx';
 import Realidad from './sections/Realidad.jsx';
 import Campana from './sections/Campana.jsx';
-import Antes from './sections/Antes.jsx';
 import Impacto from './sections/Impacto.jsx';
-import Benchmark from './sections/Benchmark.jsx';
 import Conclusiones from './sections/Conclusiones.jsx';
 import SiteNav from './components/SiteNav.jsx';
 import Explorar from './views/Explorar.jsx';
@@ -15,7 +13,8 @@ import { useHashRoute } from './lib/hooks.js';
 function Presentacion() {
   // Al llegar desde Explorar con un ancla (#campana…), desplaza hasta el capítulo.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
+    const ancla = window.location.hash.slice(1);
+    const id = ['antes','benchmark'].includes(ancla) ? 'impacto' : ancla;
     if (id && !id.startsWith('/')) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
   }, []);
   return (
@@ -25,9 +24,7 @@ function Presentacion() {
       </div>
       <Realidad />
       <Campana />
-      <Antes />
       <Impacto />
-      <Benchmark />
       <Conclusiones />
     </>
   );
