@@ -21,17 +21,30 @@ export const resultadosCampana = {
       guardados: 1,
       comentarios: 0,
     },
+    // Print actualizado: 475 + 14 + 50 + 22 + 14 = 575 acciones visibles.
     instagram: {
       visualizaciones: 8500,
       visualizacionesAproximadas: true,
-      interacciones: 554,
-      meGusta: 455,
+      interacciones: 575,
+      fuenteInteracciones: 'suma_acciones_visibles_print_actualizado',
+      meGusta: 475,
+      republicaciones: 50,
       compartidos: 22,
       guardados: 14,
       comentarios: 14,
     },
+    tiktok: {
+      visualizaciones: null,
+      interacciones: null,
+      meGusta: null,
+      comentarios: null,
+      compartidos: null,
+      guardados: null,
+      estadoMetricas: 'por_verificar',
+    },
     audiencia: {
-      cobertura: 'Perfil reportado en el panel de Facebook',
+      cobertura: 'Perfil general de Facebook, Instagram y TikTok',
+      fuenteCobertura: 'aclaracion_usuario',
       genero: [
         { nombre: 'Mujeres', valor: 73 },
         { nombre: 'Hombres', valor: 26 },
@@ -56,6 +69,10 @@ export const resultadosCampana = {
     },
     enlaces: [
       {
+        nombre: 'Video de Bésame en TikTok',
+        url: 'https://www.tiktok.com/@besamecolombia/video/7700662006419950869',
+      },
+      {
         nombre: 'Reel de Bésame en Instagram',
         url: 'https://www.instagram.com/reel/De7QuG3sv-9/',
       },
@@ -67,20 +84,44 @@ export const resultadosCampana = {
   },
 };
 export function consolidarBesame(datos = resultadosCampana.besame) {
-  const { facebook: f, instagram: i } = datos;
+  const redes = ['facebook', 'instagram', 'tiktok'].filter((id) => datos[id]);
+  const conocidas = (campo) =>
+    redes.filter((id) => Number.isFinite(datos[id][campo]));
+  const suma = (campo) =>
+    conocidas(campo).reduce((n, id) => n + datos[id][campo], 0);
   return {
-    visualizaciones: f.visualizaciones + i.visualizaciones,
-    visualizacionesAproximadas:
-      f.visualizacionesAproximadas || i.visualizacionesAproximadas,
-    interacciones: f.interacciones + i.interacciones,
-    compartidos: f.compartidos + i.compartidos,
-    guardados: f.guardados + i.guardados,
-    comentarios: f.comentarios + i.comentarios,
-    reaccionesYMeGusta: f.reacciones + i.meGusta,
+    visualizaciones: suma('visualizaciones'),
+    visualizacionesAproximadas: conocidas('visualizaciones').some(
+      (id) => datos[id].visualizacionesAproximadas,
+    ),
+    redesVisualizaciones: conocidas('visualizaciones'),
+    redesInteracciones: conocidas('interacciones'),
+    redesSinMetricas: redes.filter(
+      (id) =>
+        !Number.isFinite(datos[id].visualizaciones) ||
+        !Number.isFinite(datos[id].interacciones),
+    ),
+    interacciones: suma('interacciones'),
+    compartidos: suma('compartidos'),
+    guardados: suma('guardados'),
+    comentarios: suma('comentarios'),
+    reaccionesYMeGusta:
+      (datos.facebook?.reacciones ?? 0) +
+      (datos.instagram?.meGusta ?? 0) +
+      (datos.tiktok?.meGusta ?? 0),
     personasUnicas: null,
-    demografiaConsolidada: null,
+    demografiaConsolidada: datos.audiencia,
   };
 }
+export const nombresRedesBesame = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+};
+export const textoRedesBesame = (ids) =>
+  ids.map((id) => nombresRedesBesame[id]).join(' + ');
+export const resumenBesame = consolidarBesame();
+export const cifraVisualizaciones = `${resumenBesame.visualizacionesAproximadas ? '≈' : ''}${(resumenBesame.visualizaciones / 1000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} mil`;
 export const conclusionesCampana = [
   {
     id: 'escenario',
@@ -96,11 +137,10 @@ export const conclusionesCampana = [
   },
   {
     id: 'amplificacion',
-    cifra: '≈9,6 mil',
-    unidad: 'visualizaciones entre Facebook e Instagram',
+    cifra: cifraVisualizaciones,
+    unidad: `visualizaciones en ${textoRedesBesame(resumenBesame.redesVisualizaciones)}`,
     titulo: 'El mensaje continuó con Bésame',
-    observamos:
-      'La publicación en las dos redes sumó 587 interacciones reportadas. El panel de Facebook muestra una audiencia mayoritariamente femenina y concentrada en Colombia.',
+    observamos: `Las cifras verificadas de ${textoRedesBesame(resumenBesame.redesInteracciones)} suman ${resumenBesame.interacciones} interacciones registradas. El perfil general de las tres redes muestra una audiencia mayoritariamente femenina y concentrada en Colombia.`,
     significa:
       'La amplificación conectó el mensaje con un entorno afín a la campaña y prolongó su exposición más allá del escenario.',
     recomendamos:

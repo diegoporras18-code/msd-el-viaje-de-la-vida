@@ -62,7 +62,6 @@ export default function SiteNav({ route }) {
           </a>
           {presentacion && actual && (
             <p className="hidden truncate text-sm text-bruma lg:block" aria-live="polite">
-              <span className="num mr-2 text-fucsia">{actual.numero}</span>
               {actual.nombre}
             </p>
           )}
@@ -152,7 +151,6 @@ export default function SiteNav({ route }) {
                       aria-current={presentacion && active === c.id ? 'location' : undefined}
                       className="group flex items-baseline gap-5 py-4"
                     >
-                      <span className="num w-8 text-sm text-fucsia">{c.numero}</span>
                       <span className={`font-display text-[length:var(--step-2)] leading-tight transition-colors group-hover:text-rosa ${presentacion && active === c.id ? 'italic text-rosa' : 'text-marfil'}`}>{c.nombre}</span>
                     </a>
                   </motion.li>

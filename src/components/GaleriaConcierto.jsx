@@ -1,11 +1,5 @@
 import { registroConcierto } from '../content/registro-concierto.js';
 
-const publicaciones = [
-  ['Instagram · publicación', 'https://www.instagram.com/p/De5rdIpx2W8/'],
-  ['Instagram · reel', 'https://www.instagram.com/reel/De5ragcuCp0/'],
-  ['LinkedIn', 'https://lnkd.in/p/ex7BJQpq'],
-  ['Facebook · video', 'https://www.facebook.com/share/v/1G1xocGG15/'],
-];
 const raiz = `${import.meta.env.BASE_URL}media/concierto/`;
 
 export default function GaleriaConcierto() {
@@ -24,9 +18,6 @@ export default function GaleriaConcierto() {
 
       </div>
     </div>
-    <details className="mt-3 border-t border-rosa/15 pt-2">
-      <summary className="min-h-[44px] cursor-pointer text-sm text-rosa">Consultar publicaciones de la iniciativa</summary>
-      <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">{publicaciones.map(([nombre,url]) => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center text-sm text-rosa underline underline-offset-4">Ver publicación original · {nombre}</a>)}</div>
-    </details>
+
   </figure>;
 }

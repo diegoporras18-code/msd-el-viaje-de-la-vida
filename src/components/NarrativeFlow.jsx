@@ -45,7 +45,6 @@ export default function NarrativeFlow({ pasos, etiqueta }) {
                 className={`absolute -left-[2.6rem] top-2 h-3.5 w-3.5 rounded-full border-2 transition-colors duration-500 lg:-top-[3.9rem] lg:left-0 ${on ? 'border-fucsia bg-fucsia' : 'border-rosa/50 bg-ciruela'}`}
                 aria-hidden="true"
               />
-              <span className="eyebrow num text-bruma">{String(i + 1).padStart(2, '0')}</span>
               <p className="mt-2 font-display text-[length:var(--step-2)] italic leading-none text-marfil">
                 {p.nombre}
                 {i < pasos.length - 1 && <span className="sr-only">, luego</span>}

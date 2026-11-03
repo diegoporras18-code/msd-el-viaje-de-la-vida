@@ -6,7 +6,7 @@
 // No son conteos observados de 2026. Si se actualizan, cambia también `fuente`.
 
 export const realidad = {
-  capitulo: 'Capítulo 01',
+  capitulo: 'La causa',
   titulo: {
     linea1: 'Una realidad que',
     linea2: 'no podemos ignorar', // se muestra en cursiva

@@ -1,6 +1,6 @@
 // Capítulo 02 · Síntesis de la propuesta creativa Lotengo, contrastada con el registro del concierto.
 export const campana = {
-  capitulo: 'Capítulo 02 · La campaña',
+  capitulo: 'La campaña',
   titulo: { linea1: 'Un concierto para conectar.', linea2: 'Un mensaje para cuidarse.' },
   texto: 'La propuesta de MSD y Lotengo era aprovechar el concierto de Fonseca para compartir un mensaje sencillo sobre cáncer de mama: reconocer cambios y consultar a tiempo. El Viaje de la Vida buscaba que ese mensaje llegara a las redes y a los medios.',
   estado: 'MSD × Lotengo · Fonseca en la Casa — Extendido',
