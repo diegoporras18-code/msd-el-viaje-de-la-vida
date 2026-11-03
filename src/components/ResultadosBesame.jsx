@@ -3,6 +3,7 @@ import {
   consolidarBesame,
   cifraVisualizaciones,
   nombresRedesBesame,
+  textoRedesBesame,
 } from '../content/resultados-campana.js';
 import { formatNumber } from '../lib/format.js';
 const pct = (n) =>
@@ -65,7 +66,7 @@ export default function ResultadosBesame() {
             {cifraVisualizaciones}
           </p>
           <p className="eyebrow mt-2 text-marfil">
-            Visualizaciones consolidadas
+            Visualizaciones en {textoRedesBesame(c.redesVisualizaciones)}
           </p>
           <p className="mt-2 text-xs text-bruma">
             {c.redesVisualizaciones
@@ -81,12 +82,12 @@ export default function ResultadosBesame() {
           <p className="display num text-[length:var(--step-3)] text-rosa">
             {formatNumber(c.interacciones)}
           </p>
-          <p className="eyebrow mt-2 text-marfil">Interacciones registradas</p>
+          <p className="eyebrow mt-2 text-marfil">{c.redesInteracciones.length === 3 ? 'Interacciones en las tres redes' : 'Interacciones registradas'}</p>
           <p className="mt-2 text-xs text-bruma">
             {c.redesInteracciones
               .map(
                 (id) =>
-                  `${formatNumber(b[id].interacciones)} ${b[id].fuenteInteracciones === 'suma_acciones_visibles_print_actualizado' ? 'acciones visibles en el print' : 'registradas'} de ${nombresRedesBesame[id]}`,
+                  `${formatNumber(b[id].interacciones)} ${b[id].fuenteInteracciones?.startsWith('suma_acciones_') ? 'acciones verificadas' : 'registradas'} de ${nombresRedesBesame[id]}`,
               )
               .join(' + ')}
             .
@@ -194,12 +195,12 @@ export default function ResultadosBesame() {
         </details>
       )}
       <p className="mt-5 max-w-3xl text-xs leading-relaxed text-bruma/70">
-        Fuente: capturas de Bésame facilitadas por el cliente.
-        Las visualizaciones de Instagram están redondeadas; la suma es
-        aproximada y no equivale a personas únicas. Las interacciones suman los
-        totales reportados y las acciones visibles identificadas como tales.{' '}
+        Fuente: capturas de Bésame facilitadas por el cliente. Las
+        visualizaciones de Instagram están redondeadas; la suma es aproximada y
+        no equivale a personas únicas. Las interacciones suman los totales
+        reportados y las acciones visibles identificadas como tales.{' '}
         {c.redesSinMetricas.length > 0
-          ? 'TikTok está enlazado y se incorporará a la suma al verificar sus cifras; actualmente los totales numéricos corresponden a Facebook e Instagram.'
+          ? 'Las interacciones incluyen Facebook, Instagram y TikTok. Las visualizaciones de TikTok aún no fueron aportadas: el subtotal de visualizaciones corresponde a Facebook e Instagram.'
           : 'Las cifras verificadas de las tres redes están incorporadas al consolidado.'}
       </p>
     </section>
