@@ -18,7 +18,7 @@ test('el concierto muestra un video, sin controles vacíos ni duplicación de vo
   assert.equal((html.match(/<video/g)??[]).length,1);assert.ok(!/Vocería del artista|Ver el registro|Contenido del concierto/.test(html));
   assert.ok(!/<button[^>]*aria-label="(?:El escenario|El mensaje)"/.test(html));assert.match(html,/Más de 30.000/);assert.match(html,/Bésame Radio/);
   const {default:Detalle}=await server.ssrLoadModule('/src/dashboards/ImpactDashboard.jsx');const detalle=renderToStaticMarkup(createElement(Detalle));
-  assert.match(detalle,/data-valor="28" data-valor-tematico="20"/);assert.ok(!/se observaron 20|20 el 24|-4,8|sin un pico/.test(detalle));
+  assert.match(detalle,/data-referencias-combinadas/);assert.match(detalle,/>28<\/p>/);assert.match(detalle,/587/);assert.ok(!detalle.includes('data-valor-tematico'));assert.ok(!/se observaron 20|20 el 24|-4,8|sin un pico/.test(detalle));
  } finally {await server.close();}
  assert.ok(!conclusiones.preguntas.some(p=>p.hecho==='impacto'));
  assert.ok(!JSON.stringify([benchmark.escena,benchmark.conclusiones]).includes('innovación'));

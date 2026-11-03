@@ -188,3 +188,11 @@ contra diferencias que revelen celdas pequeñas. `verificar` valida ambos archiv
 Sin `maestra/alcances.json`, el flujo original publica únicamente el conjunto principal.
 
 El video del concierto aporta evidencia de campaña y causa, pero no se cuenta automáticamente como una publicación social adicional: faltan la identidad de publicación, su fecha y el cotejo con las referencias enlazadas. El dato de más de 30.000 asistentes está reportado en los rótulos del registro audiovisual; las proyecciones del PowerPoint no son resultados de asistencia, impresiones o audiencia observados.
+
+### Presentación centrada en campaña
+
+La web presenta la activación y su amplificación desde el 24 de octubre, con resultados de los paneles de Bésame. La conversación previa y el benchmark se conservan en el histórico y sus componentes, pero no forman parte de la navegación ni de Explorar actuales. Las importaciones de SentiOne y las 288 revisiones siguen su procedimiento original; no se alteran para sostener las cifras editoriales.
+
+Los resultados nativos están en `src/content/resultados-campana.js`, separados de los agregados de escucha. Conservar la marca de aproximación de las 8,5 mil visualizaciones de Instagram. Las interacciones consolidadas suman los totales de cada plataforma, no esos totales más sus componentes. No sumar visualizaciones, espectadores y asistencia como personas únicas. La demografía corresponde al panel aportado; no ponderarla entre redes sin denominadores confirmados.
+
+Las capturas originales pueden incorporarse a `besame.capturas` con `src` y `alt`, una vez que estén disponibles como archivos publicables. El fotograma actualmente visible se identifica como registro del concierto; no se presenta como un print de los insights. No recrear capturas ni inventar métricas para completar componentes que no concilian con el total del panel.
