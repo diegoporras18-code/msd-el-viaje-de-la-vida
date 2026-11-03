@@ -16,12 +16,22 @@ test('el print actualizado suma acciones visibles y TikTok solo se suma con cifr
     i.meGusta + i.comentarios + i.republicaciones + i.compartidos + i.guardados,
     575,
   );
-  assert.equal(consolidarBesame().interacciones, 608);
+  assert.equal(consolidarBesame().interacciones, 794);
   assert.deepEqual(consolidarBesame().redesInteracciones, [
     'facebook',
     'instagram',
+    'tiktok',
   ]);
-  assert.equal(b.tiktok.interacciones, null);
+  assert.equal(b.tiktok.interacciones, 186);
+  assert.equal(b.tiktok.meGusta, 179);
+  assert.equal(
+    b.tiktok.interacciones,
+    b.tiktok.meGusta +
+      b.tiktok.comentarios +
+      b.tiktok.compartidos +
+      b.tiktok.guardados,
+  );
+  assert.equal(b.tiktok.visualizaciones, null);
   const ejemplo = structuredClone(b);
   ejemplo.tiktok = {
     visualizaciones: 1000,

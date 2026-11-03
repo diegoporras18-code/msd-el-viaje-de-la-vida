@@ -33,14 +33,17 @@ export const resultadosCampana = {
       guardados: 14,
       comentarios: 14,
     },
+    // Me gusta: 179 confirmado por el usuario; demás acciones legibles en el print.
     tiktok: {
       visualizaciones: null,
-      interacciones: null,
-      meGusta: null,
-      comentarios: null,
-      compartidos: null,
-      guardados: null,
-      estadoMetricas: 'por_verificar',
+      interacciones: 186,
+      fuenteInteracciones:
+        'suma_acciones_verificadas_print_y_confirmacion_usuario',
+      meGusta: 179,
+      comentarios: 2,
+      compartidos: 2,
+      guardados: 3,
+      estadoMetricas: 'interacciones_verificadas_visualizaciones_no_aportadas',
     },
     audiencia: {
       cobertura: 'Perfil general de Facebook, Instagram y TikTok',
@@ -148,7 +151,7 @@ export const conclusionesCampana = [
   },
   {
     id: 'accion',
-    cifra: '23',
+    cifra: String(resumenBesame.compartidos),
     unidad: 'veces que se compartió el contenido',
     titulo: 'De la atención a la participación',
     observamos:
